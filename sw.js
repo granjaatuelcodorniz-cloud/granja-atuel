@@ -1,7 +1,9 @@
-const CACHE = 'granja-atuel-v3';
+const CACHE = 'granja-atuel-v4';
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.add('./index.html')));
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll(['./index.html', './manifest.json']))
+  );
   self.skipWaiting();
 });
 
