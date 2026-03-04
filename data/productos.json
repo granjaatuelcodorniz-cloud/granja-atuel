@@ -1,0 +1,42 @@
+[
+  {
+    "nombre": "Huevos consumo x5 doc",
+    "descripcion": "Envío gratis a todo el país",
+    "precio": "$24.00",
+    "link_pago": "https://mpago.la/11TRxkJ",
+    "emoji": "🥚",
+    "activo": "si"
+  },
+  {
+    "nombre": "Huevos consumo x10 doc",
+    "descripcion": "Envío gratis a todo el país",
+    "precio": "$34.00",
+    "link_pago": "https://mpago.la/1HPrFSq",
+    "emoji": "🥚",
+    "activo": "si"
+  },
+  {
+    "nombre": "Huevos fértiles x5 doc",
+    "descripcion": "Envío gratis a todo el país",
+    "precio": "$50.00",
+    "link_pago": "https://mpago.la/2qbsnRt",
+    "emoji": "🐣",
+    "activo": "si"
+  },
+  {
+    "nombre": "Huevos fértiles x10 doc",
+    "descripcion": "Envío gratis a todo el país",
+    "precio": "$90.00",
+    "link_pago": "https://mpago.la/27Cp2BJ",
+    "emoji": "🐣",
+    "activo": "si"
+  },
+  {
+    "nombre": "Blíster 200 doc",
+    "descripcion": "Envío gratis a todo el país",
+    "precio": "$60.00",
+    "link_pago": "https://mpago.la/1yqnBnb",
+    "emoji": "📦",
+    "activo": "si"
+  }
+]

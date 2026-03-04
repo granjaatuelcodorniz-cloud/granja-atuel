@@ -1,0 +1,202 @@
+[
+  {
+    "nombre": "Frutas y Verduras El Depósito",
+    "direccion": "Av. Balloffet y Los Filtros",
+    "ciudad": "San Rafael",
+    "telefono": "260 461-0223",
+    "maps_link": "https://maps.app.goo.gl/tMjjjjxCgK8guaAZ9",
+    "latitud": "-34.638854",
+    "longitud": "-68.370905",
+    "activo": "si"
+  },
+  {
+    "nombre": "Adelcar s.a.s",
+    "direccion": "Montecaseros 1381",
+    "ciudad": "San Rafael",
+    "telefono": "260 469-5800",
+    "maps_link": "https://maps.app.goo.gl/Tprkcn9yoj8TZZLWA",
+    "latitud": "-34.627496",
+    "longitud": "-68.342928",
+    "activo": "si"
+  },
+  {
+    "nombre": "Adelcar s.a.s",
+    "direccion": "Av. 9 de Julio 1330",
+    "ciudad": "San Rafael",
+    "telefono": "260 469-5800",
+    "maps_link": "https://maps.app.goo.gl/DLAva7Qf77s55h8d7",
+    "latitud": "-34.61544",
+    "longitud": "-68.347692",
+    "activo": "si"
+  },
+  {
+    "nombre": "Guill-Mir",
+    "direccion": "Av. Deán Funes 2120",
+    "ciudad": "San Rafael",
+    "telefono": "260 468-8919",
+    "maps_link": "https://maps.app.goo.gl/YiYh4EYKrycma6ti8",
+    "latitud": "-34.620019",
+    "longitud": "-68.371717",
+    "activo": "si"
+  },
+  {
+    "nombre": "De mi Tierra",
+    "direccion": "Av. Balloffet 358",
+    "ciudad": "San Rafael",
+    "telefono": "260 439-4155",
+    "maps_link": "https://maps.app.goo.gl/zVFyME12wsXNb7Yd9",
+    "latitud": "-34.6162985",
+    "longitud": "-68.3428948",
+    "activo": "si"
+  },
+  {
+    "nombre": "Miss Verduras",
+    "direccion": "Montecaseros 499 esq. 25 de Mayo",
+    "ciudad": "San Rafael",
+    "telefono": "260 436-6293",
+    "maps_link": "https://maps.app.goo.gl/TnUv5hkVScFn9kXD6",
+    "latitud": "-34.620091",
+    "longitud": "-68.337386",
+    "activo": "si"
+  },
+  {
+    "nombre": "Miss Verduras",
+    "direccion": "Av. Balloffet y Montecaseros",
+    "ciudad": "San Rafael",
+    "telefono": "260 436-6293",
+    "maps_link": "https://maps.app.goo.gl/eg72PZiqzjejSmJH9",
+    "latitud": "-34.622343",
+    "longitud": "-68.345772",
+    "activo": "si"
+  },
+  {
+    "nombre": "Miss Verduras",
+    "direccion": "Av. Sarmiento 899 esq. Feliú",
+    "ciudad": "San Rafael",
+    "telefono": "260 436-6293",
+    "maps_link": "https://maps.app.goo.gl/8Wr8uujXRTWpAHBVA",
+    "latitud": "-34.617665",
+    "longitud": "-68.344622",
+    "activo": "si"
+  },
+  {
+    "nombre": "Dietética Ambay",
+    "direccion": "Almafuerte 287",
+    "ciudad": "San Rafael",
+    "telefono": "260 448-2438",
+    "maps_link": "https://maps.app.goo.gl/gAnPG4i2PVLrTbRp8",
+    "latitud": "-34.61849",
+    "longitud": "-68.334957",
+    "activo": "si"
+  },
+  {
+    "nombre": "Mercado Frutihortícola San Rafael",
+    "direccion": "Cmte. Torres 745",
+    "ciudad": "San Rafael",
+    "telefono": "260 463-5182",
+    "maps_link": "https://maps.app.goo.gl/UeXSazY8S7ceW3RD6",
+    "latitud": "-34.626558",
+    "longitud": "-68.327731",
+    "activo": "si"
+  },
+  {
+    "nombre": "ECO Supermercado",
+    "direccion": "Av. Juan B. Alberdi 1405",
+    "ciudad": "San Rafael",
+    "telefono": "260 468-5436",
+    "maps_link": "https://maps.app.goo.gl/26iAMMd9J7JRhdMx6",
+    "latitud": "-34.63269",
+    "longitud": "-68.314467",
+    "activo": "si"
+  },
+  {
+    "nombre": "Comerco",
+    "direccion": "El Turquito - Puestos 60, 61 y 67",
+    "ciudad": "San Rafael",
+    "telefono": "260 457-8341",
+    "maps_link": "https://maps.app.goo.gl/iojcJ78tQ1xJSJqU7",
+    "latitud": "-34.600198",
+    "longitud": "-68.310893",
+    "activo": "si"
+  },
+  {
+    "nombre": "El Mercado de la Zapata",
+    "direccion": "Av. José Vicente Zapata 801-849",
+    "ciudad": "San Rafael",
+    "telefono": "260 435-8558",
+    "maps_link": "https://maps.app.goo.gl/y9WSvQBrHbp3nWSd7",
+    "latitud": "",
+    "longitud": "",
+    "activo": "si"
+  },
+  {
+    "nombre": "Verdulería OKI",
+    "direccion": "Barcala y Las Heras",
+    "ciudad": "San Rafael",
+    "telefono": "260 468-5571",
+    "maps_link": "https://maps.app.goo.gl/Z2iAW5QRASmx94ck9",
+    "latitud": "-34.618369",
+    "longitud": "-68.327402",
+    "activo": "si"
+  },
+  {
+    "nombre": "Dietética 25 de Mayo",
+    "direccion": "25 de Mayo 35",
+    "ciudad": "San Rafael",
+    "telefono": "260 443-5245",
+    "maps_link": "https://maps.app.goo.gl/qrrMjaTi7xACh4eeA",
+    "latitud": "-34.615133",
+    "longitud": "-68.33498",
+    "activo": "si"
+  },
+  {
+    "nombre": "Verduleria Emmanuel",
+    "direccion": "Av. Moreno 508 esq. Av. Rivadavia",
+    "ciudad": "San Rafael",
+    "telefono": "260 443-1067",
+    "maps_link": "https://maps.app.goo.gl/USZPWErfi8GCaCMY6",
+    "latitud": "-34.608853",
+    "longitud": "-68.33325",
+    "activo": "si"
+  },
+  {
+    "nombre": "Verduleria Emmanuel",
+    "direccion": "Av. Rodolfo Iselin 471",
+    "ciudad": "San Rafael",
+    "telefono": "260 462-6363",
+    "maps_link": "https://maps.app.goo.gl/MPLDZ69UjYPU8t4X8",
+    "latitud": "-34.607167",
+    "longitud": "-68.340041",
+    "activo": "si"
+  },
+  {
+    "nombre": "Verdulería Iselín ll",
+    "direccion": "Avenida Julio A. Roca 1859",
+    "ciudad": "San Rafael",
+    "telefono": "260 462-9904",
+    "maps_link": "https://maps.app.goo.gl/epqdqkk51sNEjQuY6",
+    "latitud": "-34.6234514",
+    "longitud": "-68.3604887",
+    "activo": "si"
+  },
+  {
+    "nombre": "Verdulería Iselín l",
+    "direccion": "Av. Rodolfo Iselin 581",
+    "ciudad": "San Rafael",
+    "telefono": "",
+    "maps_link": "https://maps.app.goo.gl/h2Db5TavZKfV6yut6",
+    "latitud": "",
+    "longitud": "",
+    "activo": "si"
+  },
+  {
+    "nombre": "Mercado cooperativo de guaymallén - Puestos 340 y 370",
+    "direccion": "Sarmiento 1155",
+    "ciudad": "Guaymallen",
+    "telefono": "",
+    "maps_link": "https://maps.app.goo.gl/U8hFr5866wB9Seug8",
+    "latitud": "",
+    "longitud": "",
+    "activo": "si"
+  }
+]
