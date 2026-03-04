@@ -1,0 +1,68 @@
+name: Sync Google Sheets to JSON
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:        # Manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Fetch Recetas
+        run: |
+          curl -L "https://docs.google.com/spreadsheets/d/e/2PACX-1vQjWJOHT8Cjt3G-cgl604K1-rd4z4yCLAkBBybrlu2PUTfsHRXOm5UDnl3_DHoAy7sHFg7bqoRUGfcD/pub?gid=1581090933&single=true&output=csv" -o recetas.csv
+
+      - name: Fetch Productos
+        run: |
+          curl -L "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsC76qx4FO5h2pxukwbqxg_vq3X9R39YXUi1fALyjmdJe_SA9ZrvdeE7stZr2-7bpQvBzIkEwId_vF/pub?gid=0&single=true&output=csv" -o productos.csv
+
+      - name: Fetch Clientes
+        run: |
+          curl -L "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQEGrJOphbnrwMrcMjBZJjXPJe6BKDfnSsrONqGRnz52j2_o-F9qzTUGEaccmb3qzNfOSokmPUcWZs/pub?gid=0&single=true&output=csv" -o clientes.csv
+
+      - name: Convert CSV to JSON
+        run: |
+          python3 << 'PYEOF'
+          import csv, json, os
+
+          def csv_to_json(filename):
+              data = []
+              try:
+                  with open(filename, encoding='utf-8') as f:
+                      reader = csv.DictReader(f)
+                      for row in reader:
+                          clean = {k.strip(): v.strip() for k, v in row.items() if k}
+                          data.append(clean)
+              except Exception as e:
+                  print(f"Error: {e}")
+              return data
+
+          os.makedirs('data', exist_ok=True)
+
+          recetas = csv_to_json('recetas.csv')
+          with open('data/recetas.json', 'w', encoding='utf-8') as f:
+              json.dump(recetas, f, ensure_ascii=False, indent=2)
+
+          productos = csv_to_json('productos.csv')
+          with open('data/productos.json', 'w', encoding='utf-8') as f:
+              json.dump(productos, f, ensure_ascii=False, indent=2)
+
+          clientes = csv_to_json('clientes.csv')
+          with open('data/clientes.json', 'w', encoding='utf-8') as f:
+              json.dump(clientes, f, ensure_ascii=False, indent=2)
+
+          print(f"Recetas: {len(recetas)}")
+          print(f"Productos: {len(productos)}")
+          print(f"Clientes: {len(clientes)}")
+          PYEOF
+
+      - name: Commit JSON files
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git add data/
+          git diff --staged --quiet || git commit -m "Sync data from Google Sheets"
+          git push
