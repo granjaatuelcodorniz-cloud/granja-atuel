@@ -49,6 +49,7 @@
     #inicio { margin-top:64px; position:relative; height:calc(100vh - 64px); min-height:500px; overflow:hidden; }
     .hero-img { width:100%; height:100%; object-fit:cover; object-position:center; }
     .hero-overlay { position:absolute; inset:0; background:linear-gradient(135deg,rgba(61,34,16,0.65) 0%,rgba(61,34,16,0.2) 60%,transparent 100%); display:flex; align-items:center; padding:0 8vw; }
+    .hero-logo { position:absolute; top:1.5rem; left:8vw; height:52px; filter:brightness(0) invert(1); opacity:0.95; }
     .hero-content { max-width:560px; }
     .hero-tag { display:inline-block; background:var(--gold); color:white; font-size:0.72rem; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; padding:0.35rem 1rem; border-radius:20px; margin-bottom:1.2rem; }
     .hero-content h1 { font-size:clamp(2rem,5vw,3.2rem); color:white; line-height:1.15; margin-bottom:1rem; text-shadow:0 2px 12px rgba(0,0,0,0.3); }
@@ -92,8 +93,14 @@
 
     /* FERTILES */
     #fertiles { background:var(--cream); }
-    .fertiles-banner { width:100%; border-radius:16px; overflow:hidden; margin-bottom:3rem; box-shadow:var(--shadow-lg); }
-    .fertiles-banner img { width:100%; display:block; }
+    .fertiles-banner { width:100%; border-radius:16px; overflow:hidden; margin-bottom:3rem; box-shadow:var(--shadow-lg); position:relative; min-height:220px; }
+    .fertiles-banner img { width:100%; display:block; max-height:340px; object-fit:cover; }
+    .fertiles-banner-overlay { position:absolute; inset:0; background:linear-gradient(135deg,rgba(61,34,16,0.75) 0%,rgba(61,34,16,0.35) 55%,rgba(0,0,0,0.1) 100%); display:flex; align-items:center; padding:2.5rem 4%; border-radius:16px; }
+    .fertiles-banner-text { max-width:520px; }
+    .fertiles-banner-text .hero-tag { margin-bottom:0.8rem; }
+    .fertiles-banner-text h3 { font-family:'Playfair Display',serif; font-size:clamp(1.6rem,3.5vw,2.4rem); color:white; line-height:1.2; margin-bottom:0.7rem; text-shadow:0 2px 10px rgba(0,0,0,0.3); }
+    .fertiles-banner-text h3 em { font-style:italic; color:var(--gold-light); }
+    .fertiles-banner-text p { color:rgba(255,255,255,0.85); font-size:0.95rem; font-weight:300; line-height:1.6; }
     .fertiles-grid { display:grid; grid-template-columns:1fr 1fr; gap:3rem; align-items:center; }
     .fertiles-img { border-radius:16px; overflow:hidden; box-shadow:var(--shadow-lg); }
     .fertiles-img img { width:100%; display:block; }
@@ -121,6 +128,7 @@
     .recetas-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.5rem; }
     .receta-card { background:var(--white); border-radius:16px; overflow:hidden; box-shadow:var(--shadow); cursor:pointer; transition:transform 0.2s,box-shadow 0.2s; }
     .receta-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-lg); }
+    .receta-card.hidden { display:none; }
     .receta-img { width:100%; height:200px; object-fit:cover; }
     .receta-emoji-header { height:200px; display:flex; align-items:center; justify-content:center; font-size:5rem; background:linear-gradient(135deg,var(--cream-dark),var(--gold-pale)); }
     .receta-body { padding:1.2rem; }
@@ -131,6 +139,9 @@
     .dif-facil { background:#E8F5E9; color:#2E7D32; }
     .dif-media { background:#FFF8E1; color:#F57F17; }
     .dif-alta { background:#FFEBEE; color:#C62828; }
+    .recetas-ver-mas { text-align:center; margin-top:2rem; }
+    .btn-ver-mas { display:inline-flex; align-items:center; gap:0.5rem; background:var(--white); color:var(--brown-dark); padding:0.85rem 2.5rem; border-radius:30px; border:2px solid var(--gold); font-weight:700; font-size:0.9rem; cursor:pointer; transition:all 0.2s; font-family:'Lato',sans-serif; }
+    .btn-ver-mas:hover { background:var(--gold); color:white; }
 
     /* MODAL */
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center; padding:1rem; }
@@ -151,8 +162,9 @@
     /* MAPA */
     #puntos { background:var(--white); }
     .mapa-layout { display:grid; grid-template-columns:1fr 320px; gap:0; height:520px; border-radius:16px; overflow:hidden; box-shadow:var(--shadow-lg); border:1px solid rgba(201,162,39,0.2); }
-    #map { height:100%; z-index:1; }
+    #map { height:100%; z-index:1; min-height:350px; }
     .mapa-sidebar { background:var(--cream); overflow-y:auto; border-left:1px solid rgba(201,162,39,0.2); }
+
     .mapa-sidebar-header { padding:1rem 1.2rem; background:var(--brown-dark); color:white; position:sticky; top:0; z-index:5; }
     .mapa-sidebar-header h3 { font-size:0.95rem; }
     .mapa-sidebar-header p { font-size:0.72rem; opacity:0.7; margin-top:0.2rem; }
@@ -165,6 +177,17 @@
     .mapa-item-info { flex:1; min-width:0; }
     .mapa-item-name { font-size:0.82rem; font-weight:700; color:var(--brown-dark); line-height:1.3; }
     .mapa-item-addr { font-size:0.72rem; color:var(--text-light); font-weight:300; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    /* POPUP */
+    .popup-header { background:linear-gradient(135deg,#6B4226,#3D2210); padding:0.8rem 1rem; color:white; border-radius:8px 8px 0 0; }
+    .popup-header h4 { font-size:0.88rem; font-weight:700; line-height:1.3; color:white; }
+    .popup-body { padding:0.8rem 1rem; background:white; border-radius:0 0 8px 8px; }
+    .popup-addr { font-size:0.78rem; color:#7A5C3E; margin-bottom:0.5rem; }
+    .popup-btns { display:flex; gap:0.5rem; flex-wrap:wrap; }
+    .popup-btn { display:inline-flex; align-items:center; gap:0.3rem; padding:0.4rem 0.8rem; border-radius:6px; font-size:0.75rem; font-weight:700; text-decoration:none; color:white !important; }
+    .popup-btn-nav { background:#1558d6; }
+    .popup-btn-tel { background:#1a9e4a; }
+    .leaflet-popup-content-wrapper { border-radius:10px !important; box-shadow:0 8px 32px rgba(0,0,0,0.15) !important; padding:0 !important; overflow:hidden; }
+    .leaflet-popup-content { margin:0 !important; width:220px !important; }
 
     /* FAQ */
     #faq { background:var(--cream); }
@@ -232,16 +255,20 @@
       .nav-links { display:none; }
       .nav-links.open { display:flex; flex-direction:column; position:fixed; top:64px; left:0; right:0; background:var(--brown-dark); padding:1.5rem 5vw; gap:1rem; z-index:999; }
       .nav-toggle { display:flex; }
-      .fertiles-grid,.nutricion-inner,.faq-grid,.mayoristas-grid { grid-template-columns:1fr; }
+      .fertiles-grid,.nutricion-inner,.mayoristas-grid { grid-template-columns:1fr; }
+      .faq-grid { grid-template-columns:1fr; }
       .footer-grid { grid-template-columns:1fr 1fr; }
-      .mapa-layout { grid-template-columns:1fr; height:auto; }
-      .mapa-sidebar { height:300px; }
+      .mapa-layout { grid-template-columns:1fr !important; grid-template-rows:360px auto !important; height:auto !important; border-radius:12px; }
+      #map { height:360px !important; min-height:360px !important; }
+      .mapa-sidebar { height:280px; border-left:none; border-top:1px solid rgba(201,162,39,0.2); }
     }
     @media (max-width:600px) {
       section { padding:3.5rem 5vw; }
       .hero-btns { flex-direction:column; }
+      .hero-logo { height:38px; }
       .footer-grid { grid-template-columns:1fr; gap:2rem; }
       .footer-bottom { flex-direction:column; text-align:center; }
+      #map { height:300px !important; min-height:300px !important; }
     }
   </style>
 </head>
@@ -268,6 +295,7 @@
 <section id="inicio">
   <img src="hero-web.webp" alt="Granja Atuel — Huevos de Codorniz frescos en San Rafael Mendoza" class="hero-img" />
   <div class="hero-overlay">
+    <img src="logo-granja-atuel-web.webp" alt="Granja Atuel" class="hero-logo" />
     <div class="hero-content">
       <span class="hero-tag">🥚 San Rafael, Mendoza</span>
       <h1>Huevos de codorniz <em>frescos</em>, directo de nuestra granja</h1>
@@ -297,7 +325,14 @@
 
 <section id="fertiles">
   <div class="fertiles-banner">
-    <img src="huevos-fertiles.webp" alt="Más que huevos fértiles, resultados — Granja Atuel" />
+    <img src="huevos-fertiles.webp" alt="Huevos Fértiles Granja Atuel" />
+    <div class="fertiles-banner-overlay">
+      <div class="fertiles-banner-text">
+        <span class="hero-tag">🧬 Alta tasa de nacimiento</span>
+        <h3>Más que huevos fértiles, <em>resultados</em></h3>
+        <p>Selección rigurosa, sanitización con ozono y embalaje especial para envíos a todo el país. Incluye guía de incubación y acceso a nuestra app de control.</p>
+      </div>
+    </div>
   </div>
   <div class="fertiles-grid">
     <div class="fertiles-img">
@@ -364,6 +399,9 @@
   <div class="recetas-grid" id="recetasGrid">
     <div class="loading">Cargando recetas</div>
   </div>
+  <div class="recetas-ver-mas" id="recetasVerMas" style="display:none">
+    <button class="btn-ver-mas" onclick="toggleRecetas(this)">Ver todas las recetas ↓</button>
+  </div>
 </section>
 
 <section id="puntos">
@@ -393,7 +431,7 @@
   <div class="faq-grid">
     <div class="faq-item">
       <button class="faq-question" onclick="toggleFaq(this)">¿Cuánto tarda el envío? <span class="arrow">▼</span></button>
-      <div class="faq-answer"><div class="faq-answer-inner">Los envíos se realizan por Correo Argentino. El tiempo estimado es de 3 a 7 días hábiles dependiendo de tu provincia. Todos los envíos incluyen número de seguimiento.</div></div>
+      <div class="faq-answer"><div class="faq-answer-inner">Los envíos se realizan por Correo Argentino, Andreani o Micro según disponibilidad. El tiempo estimado es de 3 a 7 días hábiles dependiendo de tu provincia. Todos los envíos incluyen número de seguimiento.<br><br><strong>⚠️ Importante:</strong> Pueden existir demoras ajenas a nuestro control (clima, contingencias del correo, feriados). Siempre priorizamos la honestidad — si no estás de acuerdo con posibles demoras imprevistas, te pedimos que consultes antes de realizar la compra.</div></div>
     </div>
     <div class="faq-item">
       <button class="faq-question" onclick="toggleFaq(this)">¿Cómo llegan empaquetados? <span class="arrow">▼</span></button>
@@ -434,7 +472,7 @@
       <p class="section-subtitle">Dietéticas, verdulerías, restaurantes y almacenes. Precios especiales por volumen y entrega regular.</p>
       <div class="mayoristas-btns">
         <a href="https://wa.me/5492604351288?text=Hola%2C+me+interesa+informaci%C3%B3n+sobre+precios+mayoristas" target="_blank" class="btn-wsp-lg">💬 Consultar por WhatsApp</a>
-        <a href="mailto:granjaatuel.codorniz@gmail.com" class="btn-email">✉️ granjaatuel.codorniz@gmail.com</a>
+        <a href="/cdn-cgi/l/email-protection#d7b0a5b6b9bdb6b6a3a2b2bbf9b4b8b3b8a5b9bead97b0bab6bebbf9b4b8ba" class="btn-email">✉️ <span class="__cf_email__" data-cfemail="197e6b78777378786d6c7c75377a767d766b777063597e74787075377a7674">[email&#160;protected]</span></a>
       </div>
     </div>
     <div class="mayoristas-cards">
@@ -468,7 +506,7 @@
     <div class="footer-col footer-contact">
       <h4>Contacto</h4>
       <a href="https://wa.me/5492604351288" target="_blank">💬 WhatsApp 2604-351288</a>
-      <a href="mailto:granjaatuel.codorniz@gmail.com">✉️ granjaatuel.codorniz@gmail.com</a>
+      <a href="/cdn-cgi/l/email-protection#96f1e4f7f8fcf7f7e2e3f3fab8f5f9f2f9e4f8ffecd6f1fbf7fffab8f5f9fb">✉️ <span class="__cf_email__" data-cfemail="4c2b3e2d22262d2d38392920622f2328233e2225360c2b212d2520622f2321">[email&#160;protected]</span></a>
       <a href="https://www.mercadolibre.com.ar/tienda/granja-atuel" target="_blank">🏪 Tienda Mercado Libre</a>
       <a href="/incubacion">🐣 App Control de Incubaciones</a>
     </div>
@@ -495,7 +533,7 @@
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 const BASE = 'https://raw.githubusercontent.com/granjaatuelcodorniz-cloud/granja-atuel/main/';
 const WSP = '5492604351288';
 
@@ -539,6 +577,7 @@ async function loadRecetas() {
   try {
     const res = await fetch('data/recetas.json');
     const recetas = await res.json();
+    const INICIAL = 6;
     grid.innerHTML = recetas.map((r, i) => {
       const img = r['Imagen'] || r['imagen'];
       const titulo = r['Título'] || r['titulo'] || '';
@@ -548,13 +587,30 @@ async function loadRecetas() {
       const dif = r['Dif.'] || r['dificultad'] || '';
       const difClass = dif.toLowerCase().includes('alta') ? 'dif-alta' : dif.toLowerCase().includes('media') ? 'dif-media' : 'dif-facil';
       const imgHtml = img ? `<img src="${BASE}Recetas/${img}" alt="${titulo}" class="receta-img" loading="lazy" />` : `<div class="receta-emoji-header">${emoji}</div>`;
-      return `<div class="receta-card" onclick="openReceta(${i})">${imgHtml}<div class="receta-body"><div class="receta-meta"><span>⏱ ${tiempo}</span><span>👤 ${porciones} porciones</span></div><div class="receta-title">${titulo}</div><span class="receta-dif ${difClass}">${dif}</span></div></div>`;
+      const hidden = i >= INICIAL ? ' hidden' : '';
+      return `<div class="receta-card${hidden}" onclick="openReceta(${i})">${imgHtml}<div class="receta-body"><div class="receta-meta"><span>⏱ ${tiempo}</span><span>👤 ${porciones} porciones</span></div><div class="receta-title">${titulo}</div><span class="receta-dif ${difClass}">${dif}</span></div></div>`;
     }).join('');
     window._recetas = recetas;
+    if (recetas.length > INICIAL) {
+      document.getElementById('recetasVerMas').style.display = 'block';
+    }
   } catch(e) {
     grid.innerHTML = '<p style="color:var(--text-light);text-align:center;padding:2rem">No se pudieron cargar las recetas.</p>';
   }
 }
+
+window.toggleRecetas = function(btn) {
+  const hidden = document.querySelectorAll('.receta-card.hidden');
+  if (hidden.length > 0) {
+    hidden.forEach(c => c.classList.remove('hidden'));
+    btn.textContent = 'Ver menos ↑';
+  } else {
+    const cards = document.querySelectorAll('.receta-card');
+    cards.forEach((c, i) => { if (i >= 6) c.classList.add('hidden'); });
+    btn.textContent = 'Ver todas las recetas ↓';
+    document.getElementById('recetas').scrollIntoView({behavior:'smooth'});
+  }
+};
 
 window.openReceta = function(i) {
   const r = window._recetas[i];
@@ -632,6 +688,8 @@ function initMapa() {
   window._markers = markers;
   const group = L.featureGroup(markers);
   map.fitBounds(group.getBounds().pad(0.1));
+  // Fix rendering on mobile after layout settles
+  setTimeout(() => { map.invalidateSize(); }, 300);
 }
 
 window.focusPoint = function(i) {
@@ -640,21 +698,4 @@ window.focusPoint = function(i) {
 };
 
 window.toggleFaq = function(btn) {
-  const item = btn.closest('.faq-item');
-  const isOpen = item.classList.contains('open');
-  document.querySelectorAll('.faq-item.open').forEach(el=>el.classList.remove('open'));
-  if (!isOpen) item.classList.add('open');
-};
-
-window.toggleNav = function() {
-  document.getElementById('navLinks').classList.toggle('open');
-};
-
-document.addEventListener('DOMContentLoaded',()=>{
-  loadProductos();
-  loadRecetas();
-  initMapa();
-});
-</script>
-</body>
-</html>
+  const item = btn.closest('.faq-it
