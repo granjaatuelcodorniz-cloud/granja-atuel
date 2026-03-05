@@ -66,10 +66,14 @@
   }
   </script>
 
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="favicon.png" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'" />
   <style>
     :root {
       --gold:#C9A227; --gold-light:#E8C96A; --gold-pale:#FBF0D0;
@@ -330,7 +334,7 @@
 </nav>
 
 <section id="inicio">
-  <img src="hero-web.webp" alt="Granja Atuel — Huevos de Codorniz frescos en San Rafael Mendoza, codornices junto al río Atuel" class="hero-img" />
+  <img src="hero-web.webp" alt="Granja Atuel — Huevos de Codorniz frescos en San Rafael Mendoza, codornices junto al río Atuel" class="hero-img" fetchpriority="high" decoding="async" />
   <div class="hero-overlay">
     <div class="hero-content">
       <span class="hero-tag">🥚 San Rafael, Mendoza</span>
@@ -537,7 +541,7 @@
       <p class="section-subtitle">Dietéticas, verdulerías, restaurantes y almacenes. Precios especiales por volumen y entrega regular.</p>
       <div class="mayoristas-btns">
         <a href="https://wa.me/5492604351288?text=Hola%2C+me+interesa+informaci%C3%B3n+sobre+precios+mayoristas" target="_blank" class="btn-wsp-lg">💬 Consultar por WhatsApp</a>
-        <a href="mailto:granjaatuel.codorniz@gmail.com" class="btn-email">✉️ granjaatuel.codorniz@gmail.com</a>
+        <a href="/cdn-cgi/l/email-protection#482f3a29262229293c3d2d24662b272c273a262132082f25292124662b2725" class="btn-email">✉️ <span class="__cf_email__" data-cfemail="a2c5d0c3ccc8c3c3d6d7c7ce8cc1cdc6cdd0cccbd8e2c5cfc3cbce8cc1cdcf">[email&#160;protected]</span></a>
       </div>
     </div>
     <div class="mayoristas-cards">
@@ -571,7 +575,7 @@
     <div class="footer-col footer-contact">
       <h4>Contacto</h4>
       <a href="https://wa.me/5492604351288" target="_blank">💬 WhatsApp 2604-351288</a>
-      <a href="mailto:granjaatuel.codorniz@gmail.com">✉️ granjaatuel.codorniz@gmail.com</a>
+      <a href="/cdn-cgi/l/email-protection#caadb8aba4a0ababbebfafa6e4a9a5aea5b8a4a3b08aada7aba3a6e4a9a5a7">✉️ <span class="__cf_email__" data-cfemail="81e6f3e0efebe0e0f5f4e4edafe2eee5eef3efe8fbc1e6ece0e8edafe2eeec">[email&#160;protected]</span></a>
       <a href="https://www.mercadolibre.com.ar/tienda/granja-atuel" target="_blank">🏪 Tienda Mercado Libre</a>
       <a href="/incubacion">🐣 App Control de Incubaciones</a>
     </div>
@@ -599,7 +603,7 @@
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 const SITE_URL = 'https://granjaatuel.com.ar';
 const BASE = 'https://raw.githubusercontent.com/granjaatuelcodorniz-cloud/granja-atuel/main/';
 const WSP = '5492604351288';
@@ -814,7 +818,10 @@ window.toggleNav=function(){document.getElementById('navLinks').classList.toggle
 document.addEventListener('DOMContentLoaded',()=>{
   loadProductos();
   loadRecetas();
-  initMapa();
+  const script=document.createElement('script');
+  script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+  script.onload=()=>initMapa();
+  document.body.appendChild(script);
 });
 
 window.addEventListener('hashchange', checkHashReceta);
