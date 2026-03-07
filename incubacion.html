@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Control de Incubaciones — Granja Atuel</title>
+  <meta name="description" content="App de control de incubaciones de Granja Atuel. Seguimiento de lotes, ovoscopía y nacimientos." />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold:#C9A227; --gold-light:#E8C96A; --gold-pale:#FBF0D0;
+      --brown:#6B4226; --brown-dark:#3D2210;
+      --cream:#FBF5E6; --cream-dark:#F0E8D0; --white:#FFFFFF;
+      --text:#2C1A0E; --text-light:#7A5C3E;
+      --green:#2E7D32; --green-light:#E8F5E9;
+      --orange:#E65100; --orange-light:#FFF3E0;
+      --shadow:0 4px 24px rgba(61,34,16,0.10);
+      --shadow-lg:0 8px 40px rgba(61,34,16,0.15);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { font-family:'Lato',sans-serif; background:var(--cream); color:var(--text); min-height:100vh; }
+    h1,h2,h3,h4 { font-family:'Playfair Display',serif; }
+    nav { background:rgba(61,34,16,0.97); padding:0 5vw; display:flex; align-items:center; justify-content:space-between; height:60px; box-shadow:0 2px 20px rgba(0,0,0,0.3); position:sticky; top:0; z-index:100; }
+    .nav-brand { display:flex; align-items:center; gap:0.8rem; text-decoration:none; }
+    .nav-brand img { height:34px; }
+    .nav-brand span { color:var(--gold-light); font-family:'Playfair Display',serif; font-size:0.95rem; font-style:italic; }
+    .nav-back { color:rgba(255,255,255,0.7); text-decoration:none; font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; transition:color 0.2s; }
+    .nav-back:hover { color:var(--gold-light); }
+    main { max-width:900px; margin:0 auto; padding:2rem 5vw 4rem; }
+    .page-header { text-align:center; margin-bottom:2.5rem; padding-bottom:2rem; border-bottom:1px solid rgba(201,162,39,0.2); }
+    .page-tag { display:inline-block; background:var(--gold); color:white; font-size:0.7rem; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; padding:0.3rem 1rem; border-radius:20px; margin-bottom:0.8rem; }
+    .page-header h1 { font-size:clamp(1.8rem,4vw,2.4rem); color:var(--brown-dark); margin-bottom:0.5rem; }
+    .page-header p { color:var(--text-light); font-weight:300; font-size:0.95rem; }
+    .stats-bar { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:2rem; }
+    .stat-card { background:var(--white); border-radius:14px; padding:1.2rem; text-align:center; box-shadow:var(--shadow); border:1px solid rgba(201,162,39,0.15); }
+    .stat-num { font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; line-height:1; }
+    .stat-label { font-size:0.72rem; color:var(--text-light); font-weight:700; letter-spacing:0.1em; text-transform:uppercase; margin-top:0.3rem; }
+    .stat-card.activo .stat-num { color:var(--gold); }
+    .stat-card.ovoscopia .stat-num { color:var(--orange); }
+    .stat-card.nacimiento .stat-num { color:var(--green); }
+    .alertas { margin-bottom:1.5rem; display:flex; flex-direction:column; gap:0.6rem; }
+    .alerta { display:flex; align-items:center; gap:0.8rem; padding:0.9rem 1.2rem; border-radius:12px; font-size:0.88rem; font-weight:700; }
+    .alerta-ovoscopia { background:var(--orange-light); color:var(--orange); border:1px solid rgba(230,81,0,0.2); }
+    .alerta-nacimiento { background:var(--green-light); color:var(--green); border:1px solid rgba(46,125,50,0.2); }
+    .btn-nuevo { display:flex; align-items:center; justify-content:center; gap:0.6rem; width:100%; background:linear-gradient(135deg,var(--gold),#A07A10); color:white; padding:1rem; border-radius:14px; border:none; font-family:'Lato',sans-serif; font-size:1rem; font-weight:700; cursor:pointer; box-shadow:0 4px 16px rgba(201,162,39,0.35); transition:transform 0.15s,box-shadow 0.15s; margin-bottom:2rem; }
+    .btn-nuevo:hover { transform:translateY(-2px); }
+    .lotes-section h2, .historial-section h2 { font-size:1.2rem; color:var(--brown-dark); margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem; }
+    .badge { background:var(--gold-pale); color:var(--gold); font-size:0.7rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:20px; font-family:'Lato',sans-serif; }
+    .lotes-grid { display:flex; flex-direction:column; gap:1rem; }
+    .lote-card { background:var(--white); border-radius:16px; box-shadow:var(--shadow); border:1px solid rgba(201,162,39,0.15); overflow:hidden; transition:box-shadow 0.2s; }
+    .lote-card:hover { box-shadow:var(--shadow-lg); }
+    .lote-header { padding:1.2rem 1.4rem; display:flex; align-items:center; justify-content:space-between; cursor:pointer; gap:0.8rem; }
+    .lote-header-left { display:flex; align-items:center; gap:1rem; min-width:0; flex:1; }
+    .lote-especie-icon { width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,var(--gold-pale),var(--cream-dark)); display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; }
+    .lote-info h3 { font-size:1rem; color:var(--brown-dark); margin-bottom:0.15rem; }
+    .lote-info p { font-size:0.78rem; color:var(--text-light); font-weight:300; }
+    .lote-estado { display:flex; align-items:center; gap:0.6rem; flex-shrink:0; }
+    .estado-badge { font-size:0.68rem; font-weight:700; padding:0.3rem 0.8rem; border-radius:20px; white-space:nowrap; }
+    .estado-incubando { background:rgba(201,162,39,0.12); color:var(--gold); border:1px solid rgba(201,162,39,0.3); }
+    .estado-ovoscopia { background:var(--orange-light); color:var(--orange); border:1px solid rgba(230,81,0,0.2); }
+    .estado-nacimiento { background:var(--green-light); color:var(--green); border:1px solid rgba(46,125,50,0.2); }
+    .estado-completado { background:var(--cream-dark); color:var(--text-light); border:1px solid rgba(107,66,38,0.15); }
+    .lote-expand-btn { background:none; border:none; cursor:pointer; color:var(--gold); font-size:1.1rem; transition:transform 0.3s; flex-shrink:0; }
+    .lote-card.expanded .lote-expand-btn { transform:rotate(180deg); }
+    .lote-body { display:none; padding:0 1.4rem 1.4rem; border-top:1px solid rgba(201,162,39,0.1); }
+    .lote-card.expanded .lote-body { display:block; }
+    .lote-timeline { display:grid; grid-template-columns:repeat(3,1fr); gap:0.8rem; margin:1rem 0; }
+    .timeline-item { text-align:center; padding:0.8rem 0.5rem; border-radius:10px; background:var(--cream); }
+    .timeline-item.activo { background:rgba(201,162,39,0.1); border:1px solid rgba(201,162,39,0.3); }
+    .timeline-item.completado { background:var(--green-light); border:1px solid rgba(46,125,50,0.2); }
+    .timeline-item.pendiente { opacity:0.6; }
+    .timeline-fecha { font-size:0.72rem; font-weight:700; color:var(--brown-dark); }
+    .timeline-label { font-size:0.65rem; color:var(--text-light); margin-top:0.2rem; letter-spacing:0.08em; text-transform:uppercase; }
+    .timeline-dias { font-size:0.7rem; font-weight:700; color:var(--gold); margin-top:0.15rem; }
+    .lote-datos { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; margin-bottom:1rem; }
+    .dato-item { background:var(--cream); border-radius:8px; padding:0.7rem 0.9rem; }
+    .dato-label { font-size:0.65rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-light); margin-bottom:0.2rem; }
+    .dato-valor { font-size:0.95rem; font-weight:700; color:var(--brown-dark); }
+    .pct-bar { height:5px; border-radius:3px; background:rgba(201,162,39,0.15); overflow:hidden; margin:0.3rem 0 0.2rem; }
+    .pct-bar-fill { height:100%; border-radius:3px; }
+    .pct-alta { background:var(--green); }
+    .pct-media { background:var(--gold); }
+    .pct-baja { background:var(--orange); }
+    .pct-sub { font-size:0.72rem; color:var(--text-light); }
+    .mencion-badge { display:flex; align-items:center; gap:0.5rem; padding:0.8rem 1rem; border-radius:10px; font-size:0.88rem; font-weight:700; margin-top:0.5rem; }
+    .mencion-elite { background:linear-gradient(135deg,#E8F5E9,#C8E6C9); color:#1B5E20; border:1px solid rgba(46,125,50,0.3); }
+    .mencion-muybien { background:var(--green-light); color:var(--green); border:1px solid rgba(46,125,50,0.2); }
+    .mencion-estandar { background:var(--gold-pale); color:#7A5C00; border:1px solid rgba(201,162,39,0.3); }
+    .mencion-revisar { background:var(--orange-light); color:var(--orange); border:1px solid rgba(230,81,0,0.2); }
+    .lote-acciones { display:flex; gap:0.6rem; flex-wrap:wrap; margin-top:1rem; }
+    .btn-accion { display:inline-flex; align-items:center; gap:0.4rem; padding:0.6rem 1rem; border-radius:10px; font-family:'Lato',sans-serif; font-size:0.8rem; font-weight:700; border:none; cursor:pointer; transition:opacity 0.15s; }
+    .btn-accion:hover { opacity:0.85; }
+    .btn-ovo { background:var(--orange-light); color:var(--orange); }
+    .btn-nac { background:var(--green-light); color:var(--green); }
+    .btn-comp { background:rgba(201,162,39,0.12); color:var(--brown); }
+    .btn-share { background:linear-gradient(135deg,#E3F2FD,#BBDEFB); color:#1565C0; }
+    .btn-del { background:#FFEBEE; color:#C62828; margin-left:auto; }
+    .empty-state { text-align:center; padding:3rem 1rem; color:var(--text-light); }
+    .empty-state .icon { font-size:3rem; margin-bottom:1rem; opacity:0.5; }
+    .empty-state p { font-size:0.9rem; font-weight:300; }
+    .historial-section { margin-top:2.5rem; }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:500; align-items:center; justify-content:center; padding:1rem; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:var(--white); border-radius:20px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+    .modal-header { padding:1.5rem 1.5rem 1rem; border-bottom:1px solid rgba(201,162,39,0.15); display:flex; align-items:center; justify-content:space-between; }
+    .modal-header h2 { font-size:1.3rem; color:var(--brown-dark); }
+    .modal-close { background:var(--cream); border:none; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1.1rem; color:var(--brown); }
+    .modal-body { padding:1.5rem; }
+    .form-group { margin-bottom:1.2rem; }
+    .form-label { display:block; font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-light); margin-bottom:0.5rem; }
+    .form-input, .form-select { width:100%; padding:0.8rem 1rem; border:1.5px solid rgba(201,162,39,0.3); border-radius:10px; font-family:'Lato',sans-serif; font-size:0.95rem; color:var(--text); background:var(--white); outline:none; transition:border-color 0.2s; }
+    .form-input:focus, .form-select:focus { border-color:var(--gold); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:0.8rem; }
+    .form-hint { font-size:0.72rem; color:var(--text-light); margin-top:0.3rem; }
+    .form-calc { font-size:0.8rem; color:var(--gold); font-weight:700; margin-top:0.4rem; min-height:1.2em; }
+    .custom-dias { display:none; }
+    .custom-dias.visible { display:grid; }
+    .btn-guardar { width:100%; background:linear-gradient(135deg,var(--gold),#A07A10); color:white; padding:1rem; border-radius:12px; border:none; font-family:'Lato',sans-serif; font-size:1rem; font-weight:700; cursor:pointer; margin-top:0.5rem; transition:transform 0.15s; }
+    .btn-guardar:hover { transform:translateY(-1px); }
+    .reg-info { background:var(--cream); border-radius:10px; padding:1rem; margin-bottom:1.2rem; font-size:0.88rem; color:var(--text-light); line-height:1.6; }
+    .reg-info strong { color:var(--brown-dark); }
+    .share-canvas-wrap { text-align:center; margin-bottom:1.2rem; }
+    #shareCanvas { max-width:100%; border-radius:12px; box-shadow:var(--shadow-lg); }
+    .share-btns { display:flex; gap:0.8rem; flex-direction:column; }
+    .btn-wsp-share { display:flex; align-items:center; justify-content:center; gap:0.5rem; background:#25D366; color:white; padding:0.9rem; border-radius:12px; border:none; font-family:'Lato',sans-serif; font-size:0.95rem; font-weight:700; cursor:pointer; }
+    .btn-dl { display:flex; align-items:center; justify-content:center; gap:0.5rem; background:var(--cream-dark); color:var(--brown-dark); padding:0.9rem; border-radius:12px; border:none; font-family:'Lato',sans-serif; font-size:0.95rem; font-weight:700; cursor:pointer; }
+    @media (max-width:600px) {
+      .stats-bar { gap:0.6rem; }
+      .stat-card { padding:0.9rem 0.5rem; }
+      .stat-num { font-size:1.6rem; }
+      .lote-datos { grid-template-columns:1fr 1fr; }
+      .form-row { grid-template-columns:1fr; }
+      .estado-badge { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-brand">
+    <img src="logo-granja-atuel-web.webp" alt="Granja Atuel" />
+    <span>Control de Incubaciones</span>
+  </a>
+  <a href="/" class="nav-back">← Volver</a>
+</nav>
+
+<main>
+  <div class="page-header">
+    <span class="page-tag">🐣 Granja Atuel</span>
+    <h1>Control de Incubaciones</h1>
+    <p>Seguimiento de lotes, ovoscopía y nacimientos</p>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-card activo"><div class="stat-num" id="statA">0</div><div class="stat-label">En curso</div></div>
+    <div class="stat-card ovoscopia"><div class="stat-num" id="statO">0</div><div class="stat-label">Ovoscopía hoy</div></div>
+    <div class="stat-card nacimiento"><div class="stat-num" id="statN">0</div><div class="stat-label">Nacen hoy</div></div>
+  </div>
+
+  <div class="alertas" id="alertas"></div>
+  <button class="btn-nuevo" onclick="abrirNuevo()">🥚 + Ingresar nuevo lote</button>
+
+  <div class="lotes-section">
+    <h2>Lotes activos <span class="badge" id="bdgA">0</span></h2>
+    <div class="lotes-grid" id="gridA"><div class="empty-state"><div class="icon">🥚</div><p>No hay lotes activos.<br>Ingresá tu primer lote arriba.</p></div></div>
+  </div>
+
+  <div class="historial-section">
+    <h2>Historial <span class="badge" id="bdgH">0</span></h2>
+    <div class="lotes-grid" id="gridH"><div class="empty-state"><div class="icon">📋</div><p>Los lotes completados aparecerán acá.</p></div></div>
+  </div>
+</main>
+
+<!-- MODAL NUEVO -->
+<div class="modal-overlay" id="mNuevo" onclick="cSF(event,'mNuevo')">
+  <div class="modal-box">
+    <div class="modal-header"><h2>🥚 Nuevo lote</h2><button class="modal-close" onclick="cM('mNuevo')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Nombre del lote</label><input type="text" class="form-input" id="iNombre" placeholder="Ej: Lote Marzo #1" /></div>
+      <div class="form-group">
+        <label class="form-label">Especie</label>
+        <select class="form-select" id="iEspecie" onchange="chEsp()">
+          <option value="japonesa">🐦 Codorniz Japónica</option>
+          <option value="comun">🐦 Codorniz Común</option>
+          <option value="gallina">🐔 Gallina</option>
+          <option value="personalizado">⚙️ Personalizado</option>
+        </select>
+      </div>
+      <div class="form-row custom-dias" id="custDias">
+        <div class="form-group"><label class="form-label">Día ovoscopía</label><input type="number" class="form-input" id="iDiaO" placeholder="10" min="1" max="30" onchange="prevFechas()" /></div>
+        <div class="form-group"><label class="form-label">Día nacimiento</label><input type="number" class="form-input" id="iDiaN" placeholder="21" min="1" max="40" onchange="prevFechas()" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Fecha de entrada</label><input type="date" class="form-input" id="iFecha" onchange="prevFechas()" /></div>
+        <div class="form-group"><label class="form-label">Cantidad de huevos</label><input type="number" class="form-input" id="iCant" placeholder="60" min="1" /></div>
+      </div>
+      <div class="form-calc" id="prevF"></div>
+      <div class="form-group" style="margin-top:0.8rem"><label class="form-label">Notas (opcional)</label><input type="text" class="form-input" id="iNotas" placeholder="Ej: Lote nueva jaula" /></div>
+      <button class="btn-guardar" onclick="guardarLote()">Guardar lote</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL OVOSCOPÍA -->
+<div class="modal-overlay" id="mOvo" onclick="cSF(event,'mOvo')">
+  <div class="modal-box">
+    <div class="modal-header"><h2>🔦 Registrar ovoscopía</h2><button class="modal-close" onclick="cM('mOvo')">✕</button></div>
+    <div class="modal-body">
+      <div class="reg-info" id="oInfo"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Descartados</label>
+          <input type="number" class="form-input" id="oDesc" placeholder="0" min="0" oninput="calcOvoF()" />
+          <div class="form-hint">Infértiles sin desarrollo</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fértiles ✓ auto</label>
+          <input type="number" class="form-input" id="oFert" placeholder="0" min="0" oninput="calcOvoD()" />
+          <div class="form-hint">Continúan en incubación</div>
+        </div>
+      </div>
+      <div class="form-calc" id="oCalc"></div>
+      <button class="btn-guardar" onclick="guardarOvo()">Guardar ovoscopía</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NACIMIENTO -->
+<div class="modal-overlay" id="mNac" onclick="cSF(event,'mNac')">
+  <div class="modal-box">
+    <div class="modal-header"><h2>🐣 Registrar nacimiento</h2><button class="modal-close" onclick="cM('mNac')">✕</button></div>
+    <div class="modal-body">
+      <div class="reg-info" id="nInfo"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">No eclosionaron</label>
+          <input type="number" class="form-input" id="nNoEcl" placeholder="0" min="0" oninput="calcNacN()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nacidos ✓ auto</label>
+          <input type="number" class="form-input" id="nNac" placeholder="0" min="0" oninput="calcNacNoE()" />
+        </div>
+      </div>
+      <div class="form-calc" id="nCalc"></div>
+      <div class="form-group" style="margin-top:0.8rem"><label class="form-label">Notas finales (opcional)</label><input type="text" class="form-input" id="nNotas" placeholder="Ej: Muy buen lote" /></div>
+      <button class="btn-guardar" onclick="guardarNac()">Guardar y completar lote</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COMPARTIR -->
+<div class="modal-overlay" id="mShare" onclick="cSF(event,'mShare')">
+  <div class="modal-box">
+    <div class="modal-header"><h2>📤 Compartir resultado</h2><button class="modal-close" onclick="cM('mShare')">✕</button></div>
+    <div class="modal-body">
+      <div class="share-canvas-wrap"><canvas id="shareCanvas" width="1080" height="1080" style="width:100%;max-width:360px;border-radius:12px;"></canvas></div>
+      <div class="share-btns">
+        <button class="btn-wsp-share" onclick="shareWsp()">💬 Compartir por WhatsApp</button>
+        <button class="btn-dl" onclick="downloadImg()">⬇️ Guardar imagen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ESP = {
+  japonesa:     {n:'Codorniz Japónica', i:'🐦', o:10, d:16},
+  comun:        {n:'Codorniz Común',    i:'🐦', o:10, d:17},
+  gallina:      {n:'Gallina',           i:'🐔', o:7,  d:21},
+  personalizado:{n:'Personalizado',     i:'⚙️', o:null, d:null}
+};
+
+function getLotes(){ try{return JSON.parse(localStorage.getItem('ga_lotes')||'[]');}catch(e){return [];} }
+function saveLotes(l){ localStorage.setItem('ga_lotes',JSON.stringify(l)); }
+function hoy(){ return new Date().toISOString().split('T')[0]; }
+function addD(f,d){ const x=new Date(f+'T12:00:00'); x.setDate(x.getDate()+d); return x.toISOString().split('T')[0]; }
+function fmtF(f){ if(!f)return'—'; const[y,m,d]=f.split('-'); return`${d}/${m}/${y}`; }
+function dR(f){ return Math.round((new Date(f+'T12:00:00')-new Date(hoy()+'T12:00:00'))/86400000); }
+function getEst(l){
+  if(l.completado)return'completado';
+  const h=hoy();
+  if(h>=l.fNac)return'nacimiento';
+  if(h>=l.fOvo)return'ovoscopia';
+  return'incubando';
+}
+function getMen(p){
+  if(p>=85)return{c:'mencion-elite',t:'🏆 Lote excepcional — resultado de élite'};
+  if(p>=70)return{c:'mencion-muybien',t:'🌟 Muy buen lote'};
+  if(p>=60)return{c:'mencion-estandar',t:'✅ Lote estándar'};
+  return{c:'mencion-revisar',t:'⚠️ Revisar condiciones de incubación'};
+}
+function pctC(p){ return p>=70?'pct-alta':p>=55?'pct-media':'pct-baja'; }
+
+function render(){
+  const lotes=getLotes();
+  const act=lotes.filter(l=>!l.completado);
+  const hist=lotes.filter(l=>l.completado);
+  const h=hoy();
+  document.getElementById('statA').textContent=act.length;
+  document.getElementById('statO').textContent=act.filter(l=>l.fOvo===h&&!l.ovo).length;
+  document.getElementById('statN').textContent=act.filter(l=>l.fNac===h&&!l.nac).length;
+  document.getElementById('bdgA').textContent=act.length;
+  document.getElementById('bdgH').textContent=hist.length;
+
+  const als=[];
+  act.forEach(l=>{
+    const do_=dR(l.fOvo), dn=dR(l.fNac);
+    if(!l.ovo&&do_===0)als.push(`<div class="alerta alerta-ovoscopia">🔦 Hoy es la ovoscopía de <strong>${l.nom}</strong></div>`);
+    if(!l.ovo&&do_===1)als.push(`<div class="alerta alerta-ovoscopia">🔦 Mañana es la ovoscopía de <strong>${l.nom}</strong></div>`);
+    if(!l.nac&&dn===0)als.push(`<div class="alerta alerta-nacimiento">🐣 ¡Hoy nacen los pollitos de <strong>${l.nom}</strong>!</div>`);
+    if(!l.nac&&dn===1)als.push(`<div class="alerta alerta-nacimiento">🐣 Mañana nacen los pollitos de <strong>${l.nom}</strong></div>`);
+  });
+  document.getElementById('alertas').innerHTML=als.join('');
+
+  document.getElementById('gridA').innerHTML=act.length?act.map(rCard).join(''):'<div class="empty-state"><div class="icon">🥚</div><p>No hay lotes activos.<br>Ingresá tu primer lote arriba.</p></div>';
+  document.getElementById('gridH').innerHTML=hist.length?hist.map(rCard).join(''):'<div class="empty-state"><div class="icon">📋</div><p>Los lotes completados aparecerán acá.</p></div>';
+}
+
+function rCard(l){
+  const esp=ESP[l.esp]||ESP.personalizado;
+  const est=getEst(l);
+  const eL={incubando:'Incubando',ovoscopia:'Ovoscopía',nacimiento:'Nacimiento',completado:'Completado'};
+  const eC={incubando:'estado-incubando',ovoscopia:'estado-ovoscopia',nacimiento:'estado-nacimiento',completado:'estado-completado'};
+  const doV=dR(l.fOvo), dnV=dR(l.fNac);
+  const tlO=l.ovo?'completado':doV<=0?'activo':'pendiente';
+  const tlN=l.nac?'completado':dnV<=0?'activo':'pendiente';
+  const doT=l.ovo?'✓':doV===0?'¡Hoy!':doV>0?`en ${doV}d`:`hace ${Math.abs(doV)}d`;
+  const dnT=l.nac?'✓':dnV===0?'¡Hoy!':dnV>0?`en ${dnV}d`:`hace ${Math.abs(dnV)}d`;
+
+  let extras='', men='';
+  if(l.ovo){
+    const pF=l.cant>0?Math.round((l.ovo.f/l.cant)*100):0;
+    extras+=`<div class="dato-item"><div class="dato-label">Ovoscopía · fertilidad</div><div class="dato-valor">${l.ovo.f} fértiles · ${l.ovo.d} desc.</div><div class="pct-bar"><div class="pct-bar-fill ${pctC(pF)}" style="width:${pF}%"></div></div><div class="pct-sub">${pF}% sobre total ingresado</div></div>`;
+  }
+  if(l.nac){
+    const base=l.ovo?l.ovo.f:l.cant;
+    const pN=base>0?Math.round((l.nac.n/base)*100):0;
+    const pT=l.cant>0?Math.round((l.nac.n/l.cant)*100):0;
+    extras+=`<div class="dato-item"><div class="dato-label">Nacimiento · eclosión</div><div class="dato-valor">${l.nac.n} pollitos · ${l.nac.ne} no ecl.</div><div class="pct-bar"><div class="pct-bar-fill ${pctC(pN)}" style="width:${pN}%"></div></div><div class="pct-sub">${pN}% sobre fértiles · ${pT}% sobre total</div></div>`;
+    const m=getMen(pN);
+    men=`<div class="mencion-badge ${m.c}">${m.t}</div>`;
+  }
+
+  let btns='';
+  if(!l.completado){
+    if(est==='ovoscopia'&&!l.ovo)btns+=`<button class="btn-accion btn-ovo" onclick="abrirOvo('${l.id}')">🔦 Ovoscopía</button>`;
+    if((est==='nacimiento'||l.ovo)&&!l.nac)btns+=`<button class="btn-accion btn-nac" onclick="abrirNac('${l.id}')">🐣 Nacimiento</button>`;
+    if(l.nac)btns+=`<button class="btn-accion btn-comp" onclick="completar('${l.id}')">✓ Completar</button>`;
+    btns+=`<button class="btn-accion btn-del" onclick="eliminar('${l.id}')">🗑</button>`;
+  }
+  if(l.nac)btns+=`<button class="btn-accion btn-share" onclick="abrirShare('${l.id}')">📤 Compartir</button>`;
+
+  return`<div class="lote-card" id="card-${l.id}">
+    <div class="lote-header" onclick="toggleC('${l.id}')">
+      <div class="lote-header-left">
+        <div class="lote-especie-icon">${esp.i}</div>
+        <div class="lote-info"><h3>${l.nom}</h3><p>${esp.n} · ${l.cant} huevos · ${fmtF(l.fEnt)}</p></div>
+      </div>
+      <div class="lote-estado"><span class="estado-badge ${eC[est]}">${eL[est]}</span><button class="lote-expand-btn">▼</button></div>
+    </div>
+    <div class="lote-body">
+      <div class="lote-timeline">
+        <div class="timeline-item completado"><div class="timeline-fecha">${fmtF(l.fEnt)}</div><div class="timeline-label">Entrada</div><div class="timeline-dias">✓</div></div>
+        <div class="timeline-item ${tlO}"><div class="timeline-fecha">${fmtF(l.fOvo)}</div><div class="timeline-label">Ovoscopía</div><div class="timeline-dias">${doT}</div></div>
+        <div class="timeline-item ${tlN}"><div class="timeline-fecha">${fmtF(l.fNac)}</div><div class="timeline-label">Nacimiento</div><div class="timeline-dias">${dnT}</div></div>
+      </div>
+      <div class="lote-datos">
+        <div class="dato-item"><div class="dato-label">Especie</div><div class="dato-valor">${esp.n}</div></div>
+        <div class="dato-item"><div class="dato-label">Huevos ingresados</div><div class="dato-valor">${l.cant}</div></div>
+        ${extras}
+        ${l.nota?`<div class="dato-item" style="grid-column:1/-1"><div class="dato-label">Notas</div><div class="dato-valor" style="font-weight:400;font-size:0.88rem">${l.nota}</div></div>`:''}
+      </div>
+      ${men}
+      <div class="lote-acciones">${btns}</div>
+    </div>
+  </div>`;
+}
+
+window.toggleC=function(id){document.getElementById('card-'+id).classList.toggle('expanded');};
+
+// ---- NUEVO LOTE ----
+window.abrirNuevo=function(){
+  document.getElementById('iFecha').value=hoy();
+  ['iNombre','iCant','iNotas'].forEach(x=>document.getElementById(x).value='');
+  document.getElementById('iEspecie').value='japonesa';
+  document.getElementById('custDias').classList.remove('visible');
+  prevFechas();
+  document.getElementById('mNuevo').classList.add('open');
+};
+window.chEsp=function(){
+  document.getElementById('custDias').classList.toggle('visible',document.getElementById('iEspecie').value==='personalizado');
+  prevFechas();
+};
+window.prevFechas=function(){
+  const f=document.getElementById('iFecha').value;
+  const e=document.getElementById('iEspecie').value;
+  if(!f||e==='personalizado'){document.getElementById('prevF').textContent='';return;}
+  const esp=ESP[e];
+  document.getElementById('prevF').textContent=`🔦 Ovoscopía: ${fmtF(addD(f,esp.o))} · 🐣 Nacimiento: ${fmtF(addD(f,esp.d))}`;
+};
+window.guardarLote=function(){
+  const nom=document.getElementById('iNombre').value.trim();
+  const esp=document.getElementById('iEspecie').value;
+  const f=document.getElementById('iFecha').value;
+  const cant=parseInt(document.getElementById('iCant').value);
+  const nota=document.getElementById('iNotas').value.trim();
+  if(!nom||!f||!cant){alert('Completá nombre, fecha y cantidad.');return;}
+  let dO,dN;
+  if(esp==='personalizado'){
+    dO=parseInt(document.getElementById('iDiaO').value);
+    dN=parseInt(document.getElementById('iDiaN').value);
+    if(!dO||!dN){alert('Completá los días.');return;}
+  } else { dO=ESP[esp].o; dN=ESP[esp].d; }
+  const lotes=getLotes();
+  lotes.unshift({id:Date.now().toString(),nom,esp,cant,nota,fEnt:f,fOvo:addD(f,dO),fNac:addD(f,dN),ovo:null,nac:null,completado:false});
+  saveLotes(lotes); cM('mNuevo'); render();
+};
+
+// ---- OVOSCOPÍA ----
+let _oT=0;
+window.abrirOvo=function(id){
+  const l=getLotes().find(x=>x.id===id); if(!l)return;
+  window._lid=id; _oT=l.cant;
+  document.getElementById('oInfo').innerHTML=`<strong>${l.nom}</strong> · <strong>${l.cant}</strong> huevos ingresados · Ovoscopía: ${fmtF(l.fOvo)}`;
+  document.getElementById('oFert').value=''; document.getElementById('oDesc').value=''; document.getElementById('oCalc').textContent='';
+  document.getElementById('mOvo').classList.add('open');
+};
+window.calcOvoF=function(){
+  const d=parseInt(document.getElementById('oDesc').value)||0;
+  const f=Math.max(0,_oT-d);
+  document.getElementById('oFert').value=f;
+  const p=_oT>0?Math.round((f/_oT)*100):0;
+  document.getElementById('oCalc').textContent=`→ ${p}% de fertilidad sobre ${_oT} huevos`;
+};
+window.calcOvoD=function(){
+  const f=parseInt(document.getElementById('oFert').value)||0;
+  const d=Math.max(0,_oT-f);
+  document.getElementById('oDesc').value=d;
+  const p=_oT>0?Math.round((f/_oT)*100):0;
+  document.getElementById('oCalc').textContent=`→ ${p}% de fertilidad sobre ${_oT} huevos`;
+};
+window.guardarOvo=function(){
+  const f=parseInt(document.getElementById('oFert').value);
+  const d=parseInt(document.getElementById('oDesc').value)||0;
+  if(isNaN(f)){alert('Ingresá los fértiles.');return;}
+  const lotes=getLotes(); const i=lotes.findIndex(x=>x.id===window._lid);
+  if(i<0)return; lotes[i].ovo={f,d,fecha:hoy()}; saveLotes(lotes); cM('mOvo'); render();
+};
+
+// ---- NACIMIENTO ----
+let _nB=0;
+window.abrirNac=function(id){
+  const l=getLotes().find(x=>x.id===id); if(!l)return;
+  window._lid=id; _nB=l.ovo?l.ovo.f:l.cant;
+  document.getElementById('nInfo').innerHTML=`<strong>${l.nom}</strong> · <strong>${_nB}</strong> huevos en incubación · Nacimiento: ${fmtF(l.fNac)}`;
+  document.getElementById('nNac').value=''; document.getElementById('nNoEcl').value=''; document.getElementById('nNotas').value=''; document.getElementById('nCalc').textContent='';
+  document.getElementById('mNac').classList.add('open');
+};
+window.calcNacN=function(){
+  const ne=parseInt(document.getElementById('nNoEcl').value)||0;
+  const n=Math.max(0,_nB-ne);
+  document.getElementById('nNac').value=n;
+  const p=_nB>0?Math.round((n/_nB)*100):0;
+  document.getElementById('nCalc').textContent=`→ ${p}% de eclosión sobre ${_nB} fértiles`;
+};
+window.calcNacNoE=function(){
+  const n=parseInt(document.getElementById('nNac').value)||0;
+  const ne=Math.max(0,_nB-n);
+  document.getElementById('nNoEcl').value=ne;
+  const p=_nB>0?Math.round((n/_nB)*100):0;
+  document.getElementById('nCalc').textContent=`→ ${p}% de eclosión sobre ${_nB} fértiles`;
+};
+window.guardarNac=function(){
+  const n=parseInt(document.getElementById('nNac').value);
+  const ne=parseInt(document.getElementById('nNoEcl').value)||0;
+  const nota=document.getElementById('nNotas').value.trim();
+  if(isNaN(n)){alert('Ingresá los nacidos.');return;}
+  const lotes=getLotes(); const i=lotes.findIndex(x=>x.id===window._lid);
+  if(i<0)return; lotes[i].nac={n,ne,nota,fecha:hoy()}; saveLotes(lotes); cM('mNac'); render();
+};
+
+window.completar=function(id){
+  const l=getLotes(); const i=l.findIndex(x=>x.id===id); if(i<0)return;
+  l[i].completado=true; saveLotes(l); render();
+};
+window.eliminar=function(id){
+  if(!confirm('¿Eliminar este lote?'))return;
+  saveLotes(getLotes().filter(x=>x.id!==id)); render();
+};
+
+// ---- COMPARTIR ----
+window.abrirShare=function(id){
+  const l=getLotes().find(x=>x.id===id); if(!l||!l.nac)return;
+  window._sid=id; genImg(l);
+  document.getElementById('mShare').classList.add('open');
+};
+
+function rRect(ctx,x,y,w,h,r,fill,stroke){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath(); if(fill)ctx.fill(); if(stroke)ctx.stroke();
+}
+
+function genImg(l){
+  const cv=document.getElementById('shareCanvas');
+  const ctx=cv.getContext('2d');
+  const W=1080,H=1080;
+  cv.width=W; cv.height=H;
+  const esp=ESP[l.esp]||ESP.personalizado;
+  const base=l.ovo?l.ovo.f:l.cant;
+  const pF=l.ovo&&l.cant>0?Math.round((l.ovo.f/l.cant)*100):null;
+  const pN=base>0?Math.round((l.nac.n/base)*100):0;
+  const pT=l.cant>0?Math.round((l.nac.n/l.cant)*100):0;
+  const men=getMen(pN);
+
+  // Fondo
+  const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#3D2210'); bg.addColorStop(0.5,'#5C3418'); bg.addColorStop(1,'#3D2210');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+  // Grilla decorativa
+  ctx.strokeStyle='rgba(201,162,39,0.05)'; ctx.lineWidth=1;
+  for(let i=0;i<W;i+=60){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,H);ctx.stroke();}
+  for(let i=0;i<H;i+=60){ctx.beginPath();ctx.moveTo(0,i);ctx.lineTo(W,i);ctx.stroke();}
+
+  // Marco
+  ctx.strokeStyle='#C9A227'; ctx.lineWidth=5;
+  rRect(ctx,40,40,W-80,H-80,28,false,true);
+
+  // Emoji especie
+  ctx.font='80px serif'; ctx.textAlign='center';
+  ctx.fillText(esp.i,W/2,148);
+
+  // Nombre lote
+  ctx.fillStyle='#E8C96A'; ctx.font='bold 54px serif';
+  ctx.fillText(l.nom,W/2,232);
+
+  // Especie
+  ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font='30px sans-serif';
+  ctx.fillText(esp.n,W/2,278);
+
+  // Línea sep
+  const g1=ctx.createLinearGradient(100,0,W-100,0);
+  g1.addColorStop(0,'transparent'); g1.addColorStop(0.3,'#C9A227'); g1.addColorStop(0.7,'#C9A227'); g1.addColorStop(1,'transparent');
+  ctx.strokeStyle=g1; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(120,315); ctx.lineTo(W-120,315); ctx.stroke();
+
+  // Cajas de stats
+  const stats=[];
+  if(pF!==null) stats.push({lab:'FERTILIDAD',val:`${pF}%`,sub:`${l.ovo.f} fértiles de ${l.cant}`});
+  stats.push({lab:'ECLOSIÓN',val:`${pN}%`,sub:`${l.nac.n} pollitos de ${base} fértiles`});
+  stats.push({lab:'RESULTADO TOTAL',val:`${pT}%`,sub:`${l.nac.n} nacidos de ${l.cant}`});
+
+  const n=stats.length, gap=24;
+  const bW=Math.min(300,(W-120-gap*(n-1))/n);
+  const totalW=bW*n+gap*(n-1);
+  const sx=(W-totalW)/2;
+  const bH=185, by=350;
+
+  stats.forEach((s,i)=>{
+    const bx=sx+i*(bW+gap);
+    ctx.fillStyle='rgba(255,255,255,0.06)';
+    rRect(ctx,bx,by,bW,bH,16,true,false);
+    ctx.strokeStyle='rgba(201,162,39,0.22)'; ctx.lineWidth=1;
+    rRect(ctx,bx,by,bW,bH,16,false,true);
+    ctx.fillStyle='#C9A227'; ctx.font=`bold ${n===3?18:20}px sans-serif`; ctx.textAlign='center';
+    ctx.fillText(s.lab,bx+bW/2,by+36);
+    ctx.fillStyle='#FFFFFF'; ctx.font=`bold ${n===3?64:68}px serif`;
+    ctx.fillText(s.val,bx+bW/2,by+118);
+    ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font=`${n===3?17:19}px sans-serif`;
+    ctx.fillText(s.sub,bx+bW/2,by+152);
+  });
+
+  // Mención
+  ctx.fillStyle='rgba(255,255,255,0.07)';
+  rRect(ctx,120,580,W-240,88,20,true,false);
+  ctx.strokeStyle='rgba(201,162,39,0.18)'; ctx.lineWidth=1;
+  rRect(ctx,120,580,W-240,88,20,false,true);
+  ctx.fillStyle='#E8C96A'; ctx.font='bold 36px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(men.t,W/2,636);
+
+  // Fechas
+  ctx.fillStyle='rgba(255,255,255,0.32)'; ctx.font='25px sans-serif';
+  ctx.fillText(`Entrada: ${fmtF(l.fEnt)}  ·  Nacimiento: ${fmtF(l.fNac)}`,W/2,710);
+
+  // Notas
+  if(l.nac.nota){
+    ctx.fillStyle='rgba(255,255,255,0.38)'; ctx.font='italic 24px serif';
+    ctx.fillText(`"${l.nac.nota}"`,W/2,752);
+  }
+
+  // Línea pie
+  const g2=ctx.createLinearGradient(100,0,W-100,0);
+  g2.addColorStop(0,'transparent'); g2.addColorStop(0.3,'rgba(201,162,39,0.35)'); g2.addColorStop(0.7,'rgba(201,162,39,0.35)'); g2.addColorStop(1,'transparent');
+  ctx.strokeStyle=g2; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(100,800); ctx.lineTo(W-100,800); ctx.stroke();
+
+  // Marca de agua
+  ctx.fillStyle='rgba(255,255,255,0.18)'; ctx.font='21px sans-serif';
+  ctx.fillText('Registrado con App de Control de Incubaciones — Granja Atuel 🐣',W/2,852);
+  ctx.fillStyle='rgba(201,162,39,0.38)'; ctx.font='20px sans-serif';
+  ctx.fillText('granjaatuel.com.ar',W/2,890);
+}
+
+window.shareWsp=function(){
+  const cv=document.getElementById('shareCanvas');
+  cv.toBlob(blob=>{
+    const file=new File([blob],'incubacion-granja-atuel.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:'Resultado de incubación',text:'🐣 Resultado de mi lote de incubación'});
+    } else { downloadImg(); setTimeout(()=>window.open('https://wa.me/','_blank'),600); }
+  });
+};
+window.downloadImg=function(){
+  const cv=document.getElementById('shareCanvas');
+  const l=getLotes().find(x=>x.id===window._sid);
+  const nom=l?l.nom.replace(/\s+/g,'-').toLowerCase():'lote';
+  const a=document.createElement('a');
+  a.download=`incubacion-${nom}.png`;
+  a.href=cv.toDataURL('image/png');
+  a.click();
+};
+
+window.cM=function(id){document.getElementById(id).classList.remove('open');};
+window.cSF=function(e,id){if(e.target===document.getElementById(id))cM(id);};
+
+render();
+</script>
+</body>
+</html>
