@@ -296,6 +296,20 @@
     .btn-wsp-lg:hover { background:#1eba57; }
     .btn-email { display:flex; align-items:center; justify-content:center; gap:0.6rem; background:rgba(255,255,255,0.1); color:white; padding:1rem 2rem; border-radius:12px; text-decoration:none; font-weight:700; font-size:0.95rem; border:1px solid rgba(255,255,255,0.2); transition:background 0.15s; }
     .btn-email:hover { background:rgba(255,255,255,0.18); }
+
+    /* TESTIMONIOS */
+    #testimonios { background:var(--cream-dark); }
+    .testimonios-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.2rem; margin-bottom:2rem; }
+    .testimonio-card { background:var(--white); border-radius:16px; padding:1.5rem; box-shadow:var(--shadow); border:1px solid rgba(201,162,39,0.12); display:flex; flex-direction:column; gap:0.8rem; }
+    .testimonio-estrellas { color:var(--gold); font-size:1rem; }
+    .testimonio-texto { font-family:'Playfair Display',serif; font-style:italic; font-size:0.95rem; color:var(--brown-dark); line-height:1.7; flex:1; }
+    .testimonio-fuente { font-size:0.72rem; color:var(--text-light); font-weight:700; letter-spacing:0.08em; text-transform:uppercase; padding-top:0.5rem; border-top:1px solid rgba(201,162,39,0.12); }
+    .btn-ver-ml { display:inline-flex; align-items:center; gap:0.5rem; padding:0.8rem 1.8rem; border-radius:12px; background:rgba(201,162,39,0.1); border:1px solid rgba(201,162,39,0.3); color:var(--brown); text-decoration:none; font-weight:700; font-size:0.88rem; transition:background 0.15s; }
+    .btn-ver-ml:hover { background:rgba(201,162,39,0.2); }
+    .testimonios-cta { text-align:center; margin-top:0.5rem; }
+    @media(max-width:768px){ .testimonios-grid { grid-template-columns:1fr; } }
+    @media(min-width:769px) and (max-width:1024px){ .testimonios-grid { grid-template-columns:repeat(2,1fr); } }
+
     .corazon-banner { border-radius:16px; overflow:hidden; margin-top:3rem; }
     .corazon-banner img { width:100%; display:block; max-height:340px; object-fit:cover; }
 
@@ -523,6 +537,56 @@
       </div>
       <div id="mapaLista"></div>
     </div>
+  </div>
+</section>
+
+<section id="testimonios">
+  <div class="section-header" style="text-align:center;">
+    <span class="section-tag">Clientes reales</span>
+    <h2 class="section-title">Lo que dicen nuestros clientes</h2>
+    <p class="section-subtitle" style="margin:0 auto 3rem;">Opiniones verificadas de compradores reales en Mercado Libre.</p>
+  </div>
+  <div class="testimonios-grid">
+
+    <div class="testimonio-card">
+      <div class="testimonio-estrellas">★★★★★</div>
+      <p class="testimonio-texto">"Impecable. De los 60 huevos, eclosionaron 50 pollitos muy saludables. Super recomendable."</p>
+      <div class="testimonio-fuente">Comprador verificado · Mercado Libre · Sep 2024</div>
+    </div>
+
+    <div class="testimonio-card">
+      <div class="testimonio-estrellas">★★★★★</div>
+      <p class="testimonio-texto">"Muy bien todo, me nacieron el ochenta por ciento. Primera vez que incubo codornices y todas gozan de buena salud."</p>
+      <div class="testimonio-fuente">Comprador verificado · Mercado Libre · Ago 2025</div>
+    </div>
+
+    <div class="testimonio-card">
+      <div class="testimonio-estrellas">★★★★★</div>
+      <p class="testimonio-texto">"Veníamos bien con 50 y justo por la tormenta hubo corte de luz. Perdimos algunos, ya tenemos 25 y faltan nacer."</p>
+      <div class="testimonio-fuente">Comprador verificado · Mercado Libre · May 2025</div>
+    </div>
+
+    <div class="testimonio-card">
+      <div class="testimonio-estrellas">★★★★★</div>
+      <p class="testimonio-texto">"Super recomendable. Alta tasa de fertilidad. ¡Los míos ya nacieron!"</p>
+      <div class="testimonio-fuente">Comprador verificado · Mercado Libre · Ago 2025</div>
+    </div>
+
+    <div class="testimonio-card">
+      <div class="testimonio-estrellas">★★★★★</div>
+      <p class="testimonio-texto">"Muy buenos resultados, excelente calidad. Nacieron casi todos. Muy feliz, ya quiero volver a comprar. Los recomiendo 100%."</p>
+      <div class="testimonio-fuente">Comprador verificado · Mercado Libre · Ago 2024</div>
+    </div>
+
+    <div class="testimonio-card">
+      <div class="testimonio-estrellas">★★★★★</div>
+      <p class="testimonio-texto">"Nacieron la mayoría. El producto es bueno, tasa de éxito 70%. Excelente calidad."</p>
+      <div class="testimonio-fuente">Comprador verificado · Mercado Libre · Ene 2026</div>
+    </div>
+
+  </div>
+  <div class="testimonios-cta">
+    <a href="https://www.mercadolibre.com.ar/tienda/granja-atuel" target="_blank" rel="noopener" class="btn-ver-ml">Ver todas las opiniones en Mercado Libre →</a>
   </div>
 </section>
 
