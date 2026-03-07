@@ -829,6 +829,16 @@ window.openReceta = function(i) {
 
   // Actualizar hash en URL
   history.pushState(null,'',`#receta-${slug}`);
+
+  // OG tags dinámicas para compartir con imagen de la receta
+  const ogImg = imgUrl || `https://raw.githubusercontent.com/granjaatuelcodorniz-cloud/granja-atuel/main/hero-web.webp`;
+  document.querySelector('meta[property="og:title"]').setAttribute('content', `${titulo} — Receta con huevos de codorniz`);
+  document.querySelector('meta[property="og:description"]').setAttribute('content', `${emoji} Receta: ${titulo}. Tiempo: ${tiempo}. ${porciones} porciones. Por Granja Atuel, San Rafael, Mendoza.`);
+  document.querySelector('meta[property="og:image"]').setAttribute('content', ogImg);
+  document.querySelector('meta[property="og:url"]').setAttribute('content', shareUrl);
+  document.querySelector('meta[name="twitter:title"]').setAttribute('content', `${titulo} — Receta con huevos de codorniz`);
+  document.querySelector('meta[name="twitter:image"]').setAttribute('content', ogImg);
+
   document.getElementById('recetaModal').classList.add('open');
 };
 

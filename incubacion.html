@@ -8,6 +8,20 @@
   <meta name="robots" content="noindex" />
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="apple-touch-icon" href="favicon.png" />
+  <link rel="manifest" href="/incubacion-manifest.json" />
+  <meta name="theme-color" content="#3D2210" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Incubaciones" />
+  <!-- OG tags para preview WhatsApp -->
+  <meta property="og:title" content="App de Control de Incubaciones 🐣" />
+  <meta property="og:description" content="Seguimiento de lotes, ovoscopía y nacimientos. Herramienta gratuita de Granja Atuel — San Rafael, Mendoza." />
+  <meta property="og:image" content="https://raw.githubusercontent.com/granjaatuelcodorniz-cloud/granja-atuel/main/huevos-fertiles.webp" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:url" content="https://www.granjaatuel.com.ar/incubacion" />
+  <meta property="og:type" content="website" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
   <style>
@@ -31,6 +45,9 @@
     .nav-brand span { color:var(--gold-light); font-family:'Playfair Display',serif; font-size:0.95rem; font-style:italic; }
     .nav-back { color:rgba(255,255,255,0.7); text-decoration:none; font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; transition:color 0.2s; }
     .nav-back:hover { color:var(--gold-light); }
+    .btn-instalar { display:none; align-items:center; gap:0.4rem; background:rgba(201,162,39,0.15); border:1px solid rgba(201,162,39,0.4); color:var(--gold-light); padding:0.4rem 0.9rem; border-radius:20px; font-family:'Lato',sans-serif; font-size:0.75rem; font-weight:700; cursor:pointer; transition:background 0.2s; white-space:nowrap; }
+    .btn-instalar:hover { background:rgba(201,162,39,0.28); }
+    .btn-instalar.visible { display:flex; }
     main { max-width:900px; margin:0 auto; padding:2rem 5vw 4rem; }
     .page-header { text-align:center; margin-bottom:2.5rem; padding-bottom:2rem; border-bottom:1px solid rgba(201,162,39,0.2); }
     .page-tag { display:inline-block; background:var(--gold); color:white; font-size:0.7rem; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; padding:0.3rem 1rem; border-radius:20px; margin-bottom:0.8rem; }
@@ -146,7 +163,10 @@
     <img src="logo-granja-atuel-web.webp" alt="Granja Atuel" />
     <span>Control de Incubaciones</span>
   </a>
-  <a href="/" class="nav-back">← Volver</a>
+  <div style="display:flex;align-items:center;gap:0.8rem;">
+    <button class="btn-instalar" id="btnInstalar" onclick="instalarApp()">📲 Instalar app</button>
+    <a href="/" class="nav-back">← Volver</a>
+  </div>
 </nav>
 
 <main>
@@ -631,6 +651,33 @@ window.downloadImg=function(){
 
 window.cM=function(id){document.getElementById(id).classList.remove('open');};
 window.cSF=function(e,id){if(e.target===document.getElementById(id))cM(id);};
+
+// ---- PWA INSTALL ----
+let _deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredPrompt = e;
+  document.getElementById('btnInstalar').classList.add('visible');
+});
+window.instalarApp = async function() {
+  if(!_deferredPrompt) return;
+  _deferredPrompt.prompt();
+  const { outcome } = await _deferredPrompt.userChoice;
+  if(outcome === 'accepted') {
+    document.getElementById('btnInstalar').classList.remove('visible');
+  }
+  _deferredPrompt = null;
+};
+window.addEventListener('appinstalled', () => {
+  document.getElementById('btnInstalar').classList.remove('visible');
+});
+
+// ---- SERVICE WORKER ----
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
 
 render();
 </script>
