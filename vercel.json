@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/incubacion", "destination": "/incubacion.html" }
+  ]
+}
