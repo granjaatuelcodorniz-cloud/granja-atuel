@@ -812,13 +812,14 @@ window.openReceta = function(i) {
   const imgUrl=img?`${BASE}Recetas/${img}`:'';
   const slug=slugify(titulo);
   const shareUrl=`${SITE_URL}/#receta-${slug}`;
+  const shareUrlWsp=`${SITE_URL}/api/receta?slug=${slug}`;
 
   document.getElementById('modalImgContainer').innerHTML=imgUrl?`<img src="${imgUrl}" alt="${titulo}" class="modal-img"/>`:`<div class="modal-emoji-header">${emoji}</div>`;
   document.getElementById('modalTitulo').textContent=titulo;
   document.getElementById('modalMeta').innerHTML=`<span>⏱ ${tiempo}</span><span>👤 ${porciones} porciones</span><span>📊 ${dif}</span>`;
 
   // Botones compartir
-  const wspText=encodeURIComponent(`🥚 *${titulo}* — receta con huevos de codorniz\n\n${shareUrl}\n\n_Granja Atuel, San Rafael_`);
+  const wspText=encodeURIComponent(`🥚 *${titulo}* — receta con huevos de codorniz\n\n${shareUrlWsp}\n\n_Granja Atuel, San Rafael_`);
   document.getElementById('modalShare').innerHTML=`
     <a href="https://wa.me/?text=${wspText}" target="_blank" class="btn-share btn-share-wsp">💬 Compartir por WhatsApp</a>
     <button class="btn-share btn-share-copy" onclick="copyRecetaLink('${shareUrl}', this)">🔗 Copiar link</button>`;
@@ -829,16 +830,6 @@ window.openReceta = function(i) {
 
   // Actualizar hash en URL
   history.pushState(null,'',`#receta-${slug}`);
-
-  // OG tags dinámicas para compartir con imagen de la receta
-  const ogImg = imgUrl || `https://raw.githubusercontent.com/granjaatuelcodorniz-cloud/granja-atuel/main/hero-web.webp`;
-  document.querySelector('meta[property="og:title"]').setAttribute('content', `${titulo} — Receta con huevos de codorniz`);
-  document.querySelector('meta[property="og:description"]').setAttribute('content', `${emoji} Receta: ${titulo}. Tiempo: ${tiempo}. ${porciones} porciones. Por Granja Atuel, San Rafael, Mendoza.`);
-  document.querySelector('meta[property="og:image"]').setAttribute('content', ogImg);
-  document.querySelector('meta[property="og:url"]').setAttribute('content', shareUrl);
-  document.querySelector('meta[name="twitter:title"]').setAttribute('content', `${titulo} — Receta con huevos de codorniz`);
-  document.querySelector('meta[name="twitter:image"]').setAttribute('content', ogImg);
-
   document.getElementById('recetaModal').classList.add('open');
 };
 
