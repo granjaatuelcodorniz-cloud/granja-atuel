@@ -343,13 +343,37 @@
       .mapa-layout { grid-template-columns:1fr !important; grid-template-rows:360px auto !important; height:auto !important; border-radius:12px; }
       #map { height:360px !important; min-height:360px !important; }
       .mapa-sidebar { height:280px; border-left:none; border-top:1px solid rgba(201,162,39,0.2); }
+      .testimonios-grid { grid-template-columns:repeat(2,1fr); }
     }
     @media (max-width:600px) {
-      section { padding:3.5rem 5vw; }
+      section { padding:2.5rem 4vw; }
+      .section-title { margin-bottom:0.6rem; }
+      .section-subtitle { margin-bottom:1.8rem; }
       .hero-btns { flex-direction:column; }
       .footer-grid { grid-template-columns:1fr; gap:2rem; }
       .footer-bottom { flex-direction:column; text-align:center; }
       #map { height:300px !important; min-height:300px !important; }
+
+      /* Grilla 2 columnas productos */
+      .productos-grid { grid-template-columns:repeat(2,1fr); gap:0.8rem; }
+      .producto-card { border-radius:12px; }
+      .producto-img { height:120px; }
+      .producto-body { padding:0.8rem; }
+      .producto-badge { font-size:0.6rem; padding:0.2rem 0.5rem; margin-bottom:0.4rem; }
+      .producto-name { font-size:0.88rem; margin-bottom:0.3rem; }
+      .producto-desc { font-size:0.72rem; margin-bottom:0.5rem; display:none; }
+      .producto-precio { font-size:1rem; margin-bottom:0.6rem; }
+      .producto-btns { flex-direction:column; gap:0.4rem; }
+      .btn-comprar, .btn-wsp { font-size:0.72rem; padding:0.55rem 0.5rem; border-radius:8px; text-align:center; justify-content:center; }
+
+      /* Grilla 2 columnas recetas */
+      .recetas-grid { grid-template-columns:repeat(2,1fr); gap:0.8rem; }
+      .receta-card { border-radius:12px; }
+      .receta-img { height:100px; }
+      .receta-body { padding:0.7rem; }
+      .receta-meta { font-size:0.65rem; gap:0.3rem; margin-bottom:0.3rem; }
+      .receta-title { font-size:0.82rem; margin-bottom:0.3rem; }
+      .receta-dif { font-size:0.6rem; padding:0.15rem 0.5rem; }
     }
   </style>
 </head>
