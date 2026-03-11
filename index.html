@@ -441,15 +441,29 @@
     <li>Shakshuka mini con huevos de codorniz</li>
     <li>Risotto de hongos con huevos de codorniz</li>
   </ul>
-  <h2>Puntos de venta en San Rafael y Guaymallén</h2>
+  <h2>Puntos de venta en San Rafael, Guaymallén y Malargüe</h2>
   <ul>
     <li>Frutas y Verduras El Depósito — Av. Balloffet y Los Filtros, San Rafael</li>
     <li>Adelcar s.a.s — Montecaseros 1381, San Rafael</li>
-    <li>Miss Verduras — Montecaseros 499, San Rafael</li>
+    <li>Adelcar s.a.s — Av. 9 de Julio 1330, San Rafael</li>
+    <li>Guill-Mir — Av. Deán Funes 2120, San Rafael</li>
+    <li>De mi Tierra — Av. Balloffet 358, San Rafael</li>
+    <li>Miss Verduras — Montecaseros 499 esq. 25 de Mayo, San Rafael</li>
+    <li>Miss Verduras — Av. Balloffet y Montecaseros, San Rafael</li>
+    <li>Miss Verduras — Av. Sarmiento 899 esq. Feliú, San Rafael</li>
     <li>Dietética Ambay — Almafuerte 287, San Rafael</li>
-    <li>Mercado Frutihortícola San Rafael — Cmte. Torres 745</li>
+    <li>Mercado Frutihortícola San Rafael — Cmte. Torres 745, San Rafael</li>
     <li>ECO Supermercado — Av. Juan B. Alberdi 1405, San Rafael</li>
-    <li>Mercado Cooperativo de Guaymallén</li>
+    <li>Comerco El Turquito — Puestos 60, 61 y 67, San Rafael</li>
+    <li>El Mercado de la Zapata — Av. José Vicente Zapata 801, San Rafael</li>
+    <li>Verdulería OKI — Barcala y Las Heras, San Rafael</li>
+    <li>Dietética 25 de Mayo — 25 de Mayo 35, San Rafael</li>
+    <li>Verduleria Emmanuel — Av. Moreno 508 esq. Av. Rivadavia, San Rafael</li>
+    <li>Verduleria Emmanuel — Av. Rodolfo Iselin 471, San Rafael</li>
+    <li>Verdulería Iselín II — Avenida Julio A. Roca 1859, San Rafael</li>
+    <li>Verdulería Iselín I — Av. Rodolfo Iselin 581, San Rafael</li>
+    <li>Mercado Cooperativo de Guaymallén — Sarmiento 1155, Guaymallén</li>
+    <li>El Mercado de Malargüe — Av. Rufino Ortega 630, Malargüe</li>
   </ul>
 </div>
 
@@ -550,7 +564,7 @@
   <div class="section-header">
     <span class="section-tag">Mendoza</span>
     <h2 class="section-title">Encontranos cerca tuyo</h2>
-    <p class="section-subtitle">Puntos de venta en San Rafael y Guaymallén — hacé click en cualquier pin para ver la dirección y cómo llegar.</p>
+    <p class="section-subtitle">Puntos de venta en San Rafael, Guaymallén y Malargüe — hacé click en cualquier pin para ver la dirección y cómo llegar.</p>
   </div>
   <div class="mapa-layout">
     <div id="map"></div>
@@ -875,33 +889,29 @@ window.closeModal = function(e) {
 };
 
 // ---- MAPA ----
-const PUNTOS = [
-  {name:'Frutas y Verduras El Depósito',addr:'Av. Balloffet y Los Filtros',tel:'260 461-0223',lat:-34.638854,lng:-68.370905,ciudad:'San Rafael'},
-  {name:'Adelcar s.a.s',addr:'Montecaseros 1381',tel:'260 469-5800',lat:-34.627496,lng:-68.342928,ciudad:'San Rafael'},
-  {name:'Adelcar s.a.s',addr:'Av. 9 de Julio 1330',tel:'260 469-5800',lat:-34.615440,lng:-68.347692,ciudad:'San Rafael'},
-  {name:'Verduleria Guill-Mir',addr:'Av. Sarmiento 1115',tel:'260 468-8919',lat:-34.620019,lng:-68.371717,ciudad:'San Rafael'},
-  {name:'El Mercado De La Sarmiento',addr:'Av. Sarmiento 1077',tel:'',lat:-34.619500,lng:-68.370000,ciudad:'San Rafael'},
-  {name:'El Mercado de la Balloffet',addr:'Av. Balloffet 358',tel:'260 439-4155',lat:-34.622343,lng:-68.345772,ciudad:'San Rafael'},
-  {name:'Miss Verduras',addr:'Montecaseros 499 esq. 25 de Mayo',tel:'260 436-6293',lat:-34.620091,lng:-68.337386,ciudad:'San Rafael'},
-  {name:'Miss Verduras',addr:'Av. Balloffet y Montecaseros',tel:'260 436-6293',lat:-34.617665,lng:-68.344622,ciudad:'San Rafael'},
-  {name:'Miss Verduras',addr:'Av. Sarmiento 899 esq. Feliú',tel:'260 436-6293',lat:-34.618369,lng:-68.327402,ciudad:'San Rafael'},
-  {name:'Dietética Ambay',addr:'Almafuerte 287',tel:'260 448-2438',lat:-34.618490,lng:-68.334957,ciudad:'San Rafael'},
-  {name:'Mercado Frutihortícola San Rafael',addr:'Cmte. Torres 745 — Puesto Emilia 59,58,57 y 56',tel:'260 423-2338',lat:-34.626558,lng:-68.327731,ciudad:'San Rafael'},
-  {name:'ECO Supermercado',addr:'Av. Juan B. Alberdi 1405',tel:'260 468-5436',lat:-34.632690,lng:-68.314467,ciudad:'San Rafael'},
-  {name:'Frutas y Verduras Valentín',addr:'Av. Mitre y Formosa',tel:'260 454-8748',lat:-34.625557,lng:-68.302721,ciudad:'San Rafael'},
-  {name:'Comerco',addr:'El Turquito — Puestos 60,61 y 67',tel:'260 457-8341',lat:-34.600198,lng:-68.310893,ciudad:'San Rafael'},
-  {name:'El Mercado de la Zapata',addr:'Av. José Vicente Zapata 801-849',tel:'',lat:-34.613000,lng:-68.330000,ciudad:'San Rafael'},
-  {name:'Verdulería OKI',addr:'Barcala y Las Heras',tel:'260 468-5571',lat:-34.618369,lng:-68.327402,ciudad:'San Rafael'},
-  {name:'Dietética Integral',addr:'Barcala 108',tel:'260 443-6117',lat:-34.616000,lng:-68.334000,ciudad:'San Rafael'},
-  {name:'Dietética 25 de Mayo',addr:'25 de Mayo 35',tel:'260 443-5245',lat:-34.615133,lng:-68.334980,ciudad:'San Rafael'},
-  {name:'Jubiar Fiambrería Verdulería',addr:'Av. 9 de Julio 52',tel:'260 450-6708',lat:-34.614724,lng:-68.336399,ciudad:'San Rafael'},
-  {name:'Verduleria Emmanuel',addr:'Av. Moreno 508 esq. Av. Rivadavia',tel:'260 443-1067',lat:-34.608853,lng:-68.333250,ciudad:'San Rafael'},
-  {name:'Verduleria Emmanuel',addr:'Av. Rivadavia esq. Iselín',tel:'',lat:-34.607167,lng:-68.340041,ciudad:'San Rafael'},
-  {name:'Mercado Cooperativo de Guaymallén',addr:'Puestos 340 y 370',tel:'',lat:-32.890958,lng:-68.798986,ciudad:'Guaymallén'},
-  {name:'Cooperativa Acceso Este Ltda',addr:'Puestos 215,226 y 340',tel:'',lat:-32.922471,lng:-68.767235,ciudad:'Guaymallén'},
-];
+async function loadMapa() {
+  try {
+    const res = await fetch('data/clientes.json');
+    const clientes = await res.json();
+    const activos = clientes.filter(c => (c.activo||'').toLowerCase() === 'si' && c.latitud && c.longitud);
+    initMapa(activos);
+  } catch(e) {
+    console.error('Error cargando clientes:', e);
+    document.getElementById('mapaCount').textContent = 'Error cargando puntos';
+  }
+}
 
-function initMapa() {
+function initMapa(PUNTOS) {
+  // Normalizar campos del JSON al formato interno
+  PUNTOS = PUNTOS.map(c => ({
+    name: c.nombre || c.name || '',
+    addr: c.direccion || c.addr || '',
+    tel:  c.telefono || c.tel || '',
+    lat:  parseFloat(c.latitud || c.lat),
+    lng:  parseFloat(c.longitud || c.lng),
+    ciudad: c.ciudad || 'San Rafael',
+    maps_link: c.maps_link || ''
+  })).filter(c => !isNaN(c.lat) && !isNaN(c.lng));
   const map=L.map('map').setView([-34.617,-68.335],13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
   const goldIcon=L.divIcon({
@@ -910,7 +920,7 @@ function initMapa() {
     iconSize:[30,30],iconAnchor:[15,30],popupAnchor:[0,-32]
   });
   const markers=PUNTOS.map((p,i)=>{
-    const navUrl=`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
+    const navUrl = p.maps_link || `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
     const telBtn=p.tel?`<a href="tel:${p.tel.replace(/\s/g,'')}" class="popup-btn popup-btn-tel">📞 ${p.tel}</a>`:'';
     const m=L.marker([p.lat,p.lng],{icon:goldIcon}).addTo(map);
     m.bindPopup(`<div><div class="popup-header"><h4>${p.name}</h4></div><div class="popup-body"><div class="popup-addr">📍 ${p.addr}</div><div class="popup-btns"><a href="${navUrl}" target="_blank" class="popup-btn popup-btn-nav">🗺️ Cómo llegar</a>${telBtn}</div></div></div>`);
@@ -922,13 +932,13 @@ function initMapa() {
     const pts=PUNTOS.map((p,i)=>({...p,i})).filter(p=>p.ciudad===ciudad);
     return `<div class="mapa-city"><div class="mapa-city-title">📍 ${ciudad}</div>${pts.map(p=>`<div class="mapa-item" onclick="focusPoint(${p.i})"><div class="mapa-pin"><span>🥚</span></div><div class="mapa-item-info"><div class="mapa-item-name">${p.name}</div><div class="mapa-item-addr">${p.addr}</div></div></div>`).join('')}</div>`;
   }).join('');
-  window._map=map; window._markers=markers;
+  window._map=map; window._markers=markers; window._puntos=PUNTOS;
   const group=L.featureGroup(markers);
   map.fitBounds(group.getBounds().pad(0.1));
   setTimeout(()=>map.invalidateSize(),300);
 }
 
-window.focusPoint=function(i){window._map.setView([PUNTOS[i].lat,PUNTOS[i].lng],16,{animate:true});window._markers[i].openPopup();};
+window.focusPoint=function(i){window._map.setView([window._puntos[i].lat,window._puntos[i].lng],16,{animate:true});window._markers[i].openPopup();};
 
 window.toggleFaq=function(btn){
   const item=btn.closest('.faq-item');
@@ -944,7 +954,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   loadRecetas();
   const script=document.createElement('script');
   script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-  script.onload=()=>initMapa();
+  script.onload=()=>loadMapa();
   document.body.appendChild(script);
 });
 
