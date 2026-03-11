@@ -198,5 +198,15 @@
     "latitud": "",
     "longitud": "",
     "activo": "si"
+  },
+  {
+    "nombre": "El Mercado de Malargüe",
+    "direccion": "Av. Rufino Ortega 630",
+    "ciudad": "Malargüe",
+    "telefono": "260 447-0082",
+    "maps_link": "https://maps.app.goo.gl/GMCrWPEwMd7g3acP8",
+    "latitud": "",
+    "longitud": "",
+    "activo": "si"
   }
 ]
