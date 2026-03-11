@@ -125,8 +125,8 @@
     "ciudad": "San Rafael",
     "telefono": "260 435-8558",
     "maps_link": "https://maps.app.goo.gl/y9WSvQBrHbp3nWSd7",
-    "latitud": "",
-    "longitud": "",
+    "latitud": "-34.6146933",
+    "longitud": "-68.3160765",
     "activo": "si"
   },
   {
@@ -185,8 +185,8 @@
     "ciudad": "San Rafael",
     "telefono": "",
     "maps_link": "https://maps.app.goo.gl/h2Db5TavZKfV6yut6",
-    "latitud": "",
-    "longitud": "",
+    "latitud": "-34.6059829",
+    "longitud": "-68.3394995",
     "activo": "si"
   },
   {
@@ -195,8 +195,8 @@
     "ciudad": "Guaymallen",
     "telefono": "",
     "maps_link": "https://maps.app.goo.gl/U8hFr5866wB9Seug8",
-    "latitud": "",
-    "longitud": "",
+    "latitud": "-32.8909582",
+    "longitud": "-68.7989864",
     "activo": "si"
   },
   {
@@ -205,8 +205,8 @@
     "ciudad": "Malargüe",
     "telefono": "260 447-0082",
     "maps_link": "https://maps.app.goo.gl/GMCrWPEwMd7g3acP8",
-    "latitud": "",
-    "longitud": "",
+    "latitud": "-35.4758",
+    "longitud": "-69.5836",
     "activo": "si"
   }
 ]
