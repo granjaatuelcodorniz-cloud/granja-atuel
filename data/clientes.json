@@ -208,5 +208,15 @@
     "latitud": "-35.4758",
     "longitud": "-69.5836",
     "activo": "si"
+  },
+  {
+    "nombre": "Sebastian Ibañez, Distribución en San Juan",
+    "direccion": "San Juan",
+    "ciudad": "Caucete",
+    "telefono": "264 405-9618",
+    "maps_link": "https://maps.app.goo.gl/wN4VW8UPJUWNfEdQ8",
+    "latitud": "",
+    "longitud": "",
+    "activo": "si"
   }
 ]
