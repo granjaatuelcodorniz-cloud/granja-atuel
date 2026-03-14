@@ -215,8 +215,18 @@
     "ciudad": "Caucete",
     "telefono": "264 405-9618",
     "maps_link": "https://maps.app.goo.gl/wN4VW8UPJUWNfEdQ8",
-    "latitud": "",
-    "longitud": "",
+    "latitud": "-31.639707",
+    "longitud": "-68.289588",
+    "activo": "si"
+  },
+  {
+    "nombre": "Rico y Sano",
+    "direccion": "Cabrera 642",
+    "ciudad": "Río Cuarto",
+    "telefono": "358 422-0173",
+    "maps_link": "https://maps.app.goo.gl/YxJaAwZ1tfrpXeXGA",
+    "latitud": "-33.122192",
+    "longitud": "-64.351359",
     "activo": "si"
   }
 ]
