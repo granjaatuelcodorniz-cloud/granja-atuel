@@ -228,5 +228,15 @@
     "latitud": "-33.122192",
     "longitud": "-64.351359",
     "activo": "si"
+  },
+  {
+    "nombre": "Tu Frutería",
+    "direccion": "Santa Fé y República de Siria",
+    "ciudad": "San Rafael",
+    "telefono": "260 467-4506",
+    "maps_link": "https://goo.gl/maps/sycyqF2wTSPGsuom6",
+    "latitud": "-34.613694",
+    "longitud": "-68.34751",
+    "activo": "si"
   }
 ]
