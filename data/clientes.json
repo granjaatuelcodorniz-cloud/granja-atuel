@@ -230,13 +230,23 @@
     "activo": "si"
   },
   {
-    "nombre": "Tu Frutería",
+    "nombre": "Tu Fruta",
     "direccion": "Santa Fé y República de Siria",
     "ciudad": "San Rafael",
     "telefono": "260 467-4506",
     "maps_link": "https://goo.gl/maps/sycyqF2wTSPGsuom6",
     "latitud": "-34.613694",
     "longitud": "-68.34751",
+    "activo": "si"
+  },
+  {
+    "nombre": "Didier",
+    "direccion": "Corrientes 629",
+    "ciudad": "San Rafael",
+    "telefono": "260 442-8762",
+    "maps_link": "https://maps.app.goo.gl/K26dttrY3UAUX6qA6",
+    "latitud": "-34.615902",
+    "longitud": "-68.33891",
     "activo": "si"
   }
 ]
