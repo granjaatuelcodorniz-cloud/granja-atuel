@@ -248,5 +248,15 @@
     "latitud": "-34.615902",
     "longitud": "-68.33891",
     "activo": "si"
+  },
+  {
+    "nombre": "Mercado del Este - Puestos: 215 - 226 - 340",
+    "direccion": "25 de Mayo 5523",
+    "ciudad": "Guaymallén",
+    "telefono": "",
+    "maps_link": "https://maps.app.goo.gl/Vq9AkEF3oefVDfS19",
+    "latitud": "-32.920594",
+    "longitud": "-68.765532",
+    "activo": "si"
   }
 ]
