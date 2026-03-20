@@ -579,11 +579,11 @@ function genImg(l){
   stats.push({lab:'ECLOSIÓN',val:`${pN}%`,sub:`${l.nac.n} pollitos de ${base} fértiles`});
   stats.push({lab:'RESULTADO TOTAL',val:`${pT}%`,sub:`${l.nac.n} nacidos de ${l.cant}`});
 
-  const n=stats.length, gap=24;
-  const bW=Math.min(300,(W-120-gap*(n-1))/n);
+  const n=stats.length, gap=20;
+  const bW=Math.min(310,(W-120-gap*(n-1))/n);
   const totalW=bW*n+gap*(n-1);
   const sx=(W-totalW)/2;
-  const bH=185, by=350;
+  const bH=210, by=345;
 
   stats.forEach((s,i)=>{
     const bx=sx+i*(bW+gap);
@@ -591,43 +591,43 @@ function genImg(l){
     rRect(ctx,bx,by,bW,bH,16,true,false);
     ctx.strokeStyle='rgba(201,162,39,0.22)'; ctx.lineWidth=1;
     rRect(ctx,bx,by,bW,bH,16,false,true);
-    ctx.fillStyle='#C9A227'; ctx.font=`bold ${n===3?18:20}px sans-serif`; ctx.textAlign='center';
-    ctx.fillText(s.lab,bx+bW/2,by+36);
-    ctx.fillStyle='#FFFFFF'; ctx.font=`bold ${n===3?64:68}px serif`;
-    ctx.fillText(s.val,bx+bW/2,by+118);
-    ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font=`${n===3?17:19}px sans-serif`;
-    ctx.fillText(s.sub,bx+bW/2,by+152);
+    ctx.fillStyle='#C9A227'; ctx.font=`bold ${n===3?26:28}px sans-serif`; ctx.textAlign='center';
+    ctx.fillText(s.lab,bx+bW/2,by+44);
+    ctx.fillStyle='#FFFFFF'; ctx.font=`bold ${n===3?68:72}px serif`;
+    ctx.fillText(s.val,bx+bW/2,by+128);
+    ctx.fillStyle='rgba(255,255,255,0.75)'; ctx.font=`bold ${n===3?26:28}px sans-serif`;
+    ctx.fillText(s.sub,bx+bW/2,by+172);
   });
 
   // Mención
   ctx.fillStyle='rgba(255,255,255,0.07)';
-  rRect(ctx,120,580,W-240,88,20,true,false);
+  rRect(ctx,120,600,W-240,90,20,true,false);
   ctx.strokeStyle='rgba(201,162,39,0.18)'; ctx.lineWidth=1;
-  rRect(ctx,120,580,W-240,88,20,false,true);
-  ctx.fillStyle='#E8C96A'; ctx.font='bold 36px sans-serif'; ctx.textAlign='center';
-  ctx.fillText(men.t,W/2,636);
+  rRect(ctx,120,600,W-240,90,20,false,true);
+  ctx.fillStyle='#E8C96A'; ctx.font='bold 38px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(men.t,W/2,657);
 
   // Fechas
-  ctx.fillStyle='rgba(255,255,255,0.32)'; ctx.font='25px sans-serif';
-  ctx.fillText(`Entrada: ${fmtF(l.fEnt)}  ·  Nacimiento: ${fmtF(l.fNac)}`,W/2,710);
+  ctx.fillStyle='rgba(255,255,255,0.32)'; ctx.font='26px sans-serif';
+  ctx.fillText(`Entrada: ${fmtF(l.fEnt)}  ·  Nacimiento: ${fmtF(l.fNac)}`,W/2,730);
 
   // Notas
   if(l.nac.nota){
-    ctx.fillStyle='rgba(255,255,255,0.38)'; ctx.font='italic 24px serif';
-    ctx.fillText(`"${l.nac.nota}"`,W/2,752);
+    ctx.fillStyle='rgba(255,255,255,0.38)'; ctx.font='italic 25px serif';
+    ctx.fillText(`"${l.nac.nota}"`,W/2,772);
   }
 
   // Línea pie
   const g2=ctx.createLinearGradient(100,0,W-100,0);
   g2.addColorStop(0,'transparent'); g2.addColorStop(0.3,'rgba(201,162,39,0.35)'); g2.addColorStop(0.7,'rgba(201,162,39,0.35)'); g2.addColorStop(1,'transparent');
   ctx.strokeStyle=g2; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(100,800); ctx.lineTo(W-100,800); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(100,820); ctx.lineTo(W-100,820); ctx.stroke();
 
   // Marca de agua
-  ctx.fillStyle='rgba(255,255,255,0.18)'; ctx.font='21px sans-serif';
-  ctx.fillText('Registrado con App de Control de Incubaciones — Granja Atuel 🐣',W/2,852);
-  ctx.fillStyle='rgba(201,162,39,0.38)'; ctx.font='20px sans-serif';
-  ctx.fillText('granjaatuel.com.ar',W/2,890);
+  ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.font='22px sans-serif';
+  ctx.fillText('Registrado con App de Control de Incubaciones — Granja Atuel 🐣',W/2,868);
+  ctx.fillStyle='rgba(201,162,39,0.4)'; ctx.font='21px sans-serif';
+  ctx.fillText('granjaatuel.com.ar',W/2,908);
 }
 
 window.shareWsp=function(){
