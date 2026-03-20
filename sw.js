@@ -1,4 +1,4 @@
-const CACHE = 'ga-incubacion-v1';
+const CACHE = 'ga-incubacion-v2';
 const ASSETS = [
   '/incubacion',
   '/incubacion.html',
