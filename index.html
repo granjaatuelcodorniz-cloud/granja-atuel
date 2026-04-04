@@ -161,14 +161,14 @@
     .producto-btns { display:flex; flex-direction:column; gap:0.6rem; }
     .btn-comprar { display:flex; align-items:center; justify-content:center; gap:0.8rem; background:white; color:#00B1EA; border:2px solid #00B1EA; padding:0.8rem; border-radius:10px; text-decoration:none; font-weight:700; font-size:0.95rem; transition:transform 0.15s,box-shadow 0.15s; box-shadow:0 3px 12px rgba(0,177,234,0.2); }
     .btn-comprar:hover { transform:translateY(-1px); background:#F0FBFF; box-shadow:0 6px 18px rgba(0,177,234,0.35); }
-    .btn-comprar img { height:36px; width:auto; }
+    .btn-comprar img { height:32px; width:auto; max-width:140px; }
     .btn-wsp { display:flex; align-items:center; justify-content:center; gap:0.5rem; background:#25D366; color:white; padding:0.8rem; border-radius:10px; text-decoration:none; font-weight:700; font-size:0.88rem; transition:background 0.15s; }
     .btn-wsp:hover { background:#1eba57; }
     .ml-banner { margin-top:2.5rem; text-align:center; padding:1.5rem; background:linear-gradient(135deg,#FFF9E6,#FFF3C4); border-radius:16px; border:1px solid rgba(201,162,39,0.3); }
     .ml-banner p { color:var(--text-light); font-size:0.9rem; margin-bottom:0.8rem; }
     .btn-ml { display:inline-flex; align-items:center; gap:0.7rem; background:#FFE600; color:#333; padding:0.8rem 2rem; border-radius:10px; text-decoration:none; font-weight:700; font-size:0.88rem; transition:background 0.15s; }
     .btn-ml:hover { background:#f0d800; }
-    .btn-ml img { height:40px; width:auto; }
+    .btn-ml img { height:auto; width:150px; }
 
     /* FERTILES */
     #fertiles { background:var(--cream); }
@@ -516,8 +516,8 @@
         <li><span class="check">✓</span>Acceso a nuestra app de control de incubaciones</li>
       </ul>
       <div style="display:flex;gap:0.8rem;flex-wrap:wrap;margin-top:1.5rem;">
-        <a href="https://mpago.la/2qbsnRt" target="_blank" class="btn-comprar">Comprar x5 doc — $50.000 <img src="logo-mercadopago.svg" alt="Mercado Pago" /></a>
-        <a href="https://mpago.la/27Cp2BJ" target="_blank" class="btn-comprar">Comprar x10 doc — $90.000 <img src="logo-mercadopago.svg" alt="Mercado Pago" /></a>
+        <a href="https://mpago.la/2qbsnRt" target="_blank" class="btn-comprar">Comprá x5 doc — $50.000 <img src="logo-mercadopago.svg" alt="Mercado Pago" /></a>
+        <a href="https://mpago.la/27Cp2BJ" target="_blank" class="btn-comprar">Comprá x10 doc — $90.000 <img src="logo-mercadopago.svg" alt="Mercado Pago" /></a>
         <a href="https://wa.me/5492604351288?text=Hola%2C+quiero+consultar+sobre+huevos+f%C3%A9rtiles" target="_blank" class="btn-wsp">💬 Consultar por WhatsApp</a>
       </div>
       <a href="/incubacion" style="display:inline-flex;align-items:center;gap:0.5rem;margin-top:1rem;padding:0.7rem 1.2rem;border-radius:10px;background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.3);color:var(--brown);text-decoration:none;font-size:0.85rem;font-weight:700;transition:background 0.15s;" onmouseover="this.style.background='rgba(201,162,39,0.18)'" onmouseout="this.style.background='rgba(201,162,39,0.1)'">🐣 Probá nuestra app de control de incubaciones — gratis</a>
@@ -784,7 +784,7 @@ async function loadProductos() {
       const imgHtml=img?`<img src="${img}" alt="${p.nombre}" class="producto-img" loading="lazy"/>`:`<div class="producto-emoji-header">${p.emoji||'🥚'}</div>`;
       const wspMsg=encodeURIComponent(`Hola, quiero consultar sobre ${p.nombre}`);
       const precio = (p.precio||'').replace(/\.00$/,'').replace(/,00$/,'');
-      return `<div class="producto-card">${imgHtml}<div class="producto-body"><span class="producto-badge">${p.emoji||'🥚'} Granja Atuel</span><div class="producto-name">${p.nombre}</div><div class="producto-desc">${p.descripcion||''}</div><div class="producto-precio">${precio}</div><div class="envio-gratis">🚚 Envío incluido a todo el país</div><div class="producto-btns"><a href="${p.link_pago}" target="_blank" class="btn-comprar">Comprar con <img src="logo-mercadopago.svg" alt="Mercado Pago" /></a><a href="https://wa.me/${WSP}?text=${wspMsg}" target="_blank" class="btn-wsp">💬 Consultar por WhatsApp</a></div></div></div>`;
+      return `<div class="producto-card">${imgHtml}<div class="producto-body"><span class="producto-badge">${p.emoji||'🥚'} Granja Atuel</span><div class="producto-name">${p.nombre}</div><div class="producto-desc">${p.descripcion||''}</div><div class="producto-precio">${precio}</div><div class="envio-gratis">🚚 Envío incluido a todo el país</div><div class="producto-btns"><a href="${p.link_pago}" target="_blank" class="btn-comprar">Comprá <img src="logo-mercadopago.svg" alt="Mercado Pago" /></a><a href="https://wa.me/${WSP}?text=${wspMsg}" target="_blank" class="btn-wsp">💬 Consultar por WhatsApp</a></div></div></div>`;
     }).join('');
   } catch(e){
     grid.innerHTML='<p style="color:var(--text-light);text-align:center;padding:2rem">No se pudieron cargar los productos.</p>';
