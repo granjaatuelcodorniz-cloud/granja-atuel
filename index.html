@@ -784,7 +784,7 @@ async function loadProductos() {
       const imgHtml=img?`<img src="${img}" alt="${p.nombre}" class="producto-img" loading="lazy"/>`:`<div class="producto-emoji-header">${p.emoji||'🥚'}</div>`;
       const wspMsg=encodeURIComponent(`Hola, quiero consultar sobre ${p.nombre}`);
       const precio = (p.precio||'').replace(/\.00$/,'').replace(/,00$/,'');
-      return `<div class="producto-card">${imgHtml}<div class="producto-body"><span class="producto-badge">${p.emoji||'🥚'} Granja Atuel</span><div class="producto-name">${p.nombre}</div><div class="producto-desc">${p.descripcion||''}</div><div class="producto-precio">${precio}</div><div class="envio-gratis">🚚 Envío incluido a todo el país</div><div class="producto-btns"><a href="${p.link_pago}" target="_blank" class="btn-comprar">Comprá <img src="logo-mercadopago.svg" alt="Mercado Pago" /></a><a href="https://wa.me/${WSP}?text=${wspMsg}" target="_blank" class="btn-wsp">💬 Consultar por WhatsApp</a></div></div></div>`;
+      return `<div class="producto-card">${imgHtml}<div class="producto-body"><div class="producto-name">${p.nombre}</div><div class="producto-desc">${p.descripcion||''}</div><div class="producto-precio">${precio}</div><div class="envio-gratis">🚚 Envío incluido a todo el país</div><div class="producto-btns"><a href="${p.link_pago}" target="_blank" class="btn-comprar">Comprá <img src="logo-mercadopago.svg" alt="Mercado Pago" /></a><a href="https://wa.me/${WSP}?text=${wspMsg}" target="_blank" class="btn-wsp">💬 Consultar por WhatsApp</a></div></div></div>`;
     }).join('');
   } catch(e){
     grid.innerHTML='<p style="color:var(--text-light);text-align:center;padding:2rem">No se pudieron cargar los productos.</p>';
