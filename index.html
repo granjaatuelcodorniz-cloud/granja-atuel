@@ -156,16 +156,19 @@
     .producto-badge { display:inline-flex; align-items:center; gap:0.3rem; background:rgba(201,162,39,0.12); color:var(--gold); font-size:0.7rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; padding:0.25rem 0.7rem; border-radius:20px; border:1px solid rgba(201,162,39,0.3); margin-bottom:0.8rem; }
     .producto-name { font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--brown-dark); margin-bottom:0.4rem; }
     .producto-desc { font-size:0.85rem; color:var(--text-light); margin-bottom:1rem; font-weight:300; }
-    .producto-precio { font-size:1.8rem; font-weight:700; color:var(--brown-dark); margin-bottom:1.2rem; font-family:'Playfair Display',serif; }
+    .producto-precio { font-size:1.8rem; font-weight:700; color:var(--brown-dark); margin-bottom:0.4rem; font-family:'Playfair Display',serif; }
+    .envio-gratis { display:inline-flex; align-items:center; gap:0.3rem; background:#E8F5E9; color:#2E7D32; font-size:0.72rem; font-weight:700; padding:0.25rem 0.7rem; border-radius:20px; border:1px solid rgba(46,125,50,0.2); margin-bottom:1rem; }
     .producto-btns { display:flex; flex-direction:column; gap:0.6rem; }
-    .btn-comprar { display:flex; align-items:center; justify-content:center; gap:0.5rem; background:linear-gradient(135deg,var(--gold),#A07A10); color:white; padding:0.8rem; border-radius:10px; text-decoration:none; font-weight:700; font-size:0.88rem; transition:transform 0.15s,box-shadow 0.15s; box-shadow:0 3px 12px rgba(201,162,39,0.35); }
-    .btn-comprar:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(201,162,39,0.45); }
+    .btn-comprar { display:flex; align-items:center; justify-content:center; gap:0.6rem; background:linear-gradient(135deg,#009EE3,#0070BC); color:white; padding:0.8rem; border-radius:10px; text-decoration:none; font-weight:700; font-size:0.88rem; transition:transform 0.15s,box-shadow 0.15s; box-shadow:0 3px 12px rgba(0,112,188,0.3); }
+    .btn-comprar:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,112,188,0.4); }
+    .btn-comprar img { height:18px; width:auto; filter:brightness(0) invert(1); }
     .btn-wsp { display:flex; align-items:center; justify-content:center; gap:0.5rem; background:#25D366; color:white; padding:0.8rem; border-radius:10px; text-decoration:none; font-weight:700; font-size:0.88rem; transition:background 0.15s; }
     .btn-wsp:hover { background:#1eba57; }
     .ml-banner { margin-top:2.5rem; text-align:center; padding:1.5rem; background:linear-gradient(135deg,#FFF9E6,#FFF3C4); border-radius:16px; border:1px solid rgba(201,162,39,0.3); }
     .ml-banner p { color:var(--text-light); font-size:0.9rem; margin-bottom:0.8rem; }
-    .btn-ml { display:inline-flex; align-items:center; gap:0.5rem; background:#3483FA; color:white; padding:0.8rem 2rem; border-radius:10px; text-decoration:none; font-weight:700; font-size:0.88rem; transition:background 0.15s; }
-    .btn-ml:hover { background:#2968c8; }
+    .btn-ml { display:inline-flex; align-items:center; gap:0.7rem; background:#FFE600; color:#333; padding:0.8rem 2rem; border-radius:10px; text-decoration:none; font-weight:700; font-size:0.88rem; transition:background 0.15s; }
+    .btn-ml:hover { background:#f0d800; }
+    .btn-ml img { height:22px; width:auto; }
 
     /* FERTILES */
     #fertiles { background:var(--cream); }
@@ -362,9 +365,12 @@
       .producto-badge { font-size:0.6rem; padding:0.2rem 0.5rem; margin-bottom:0.4rem; }
       .producto-name { font-size:0.88rem; margin-bottom:0.3rem; }
       .producto-desc { font-size:0.72rem; margin-bottom:0.5rem; display:none; }
-      .producto-precio { font-size:1rem; margin-bottom:0.6rem; }
+      .producto-precio { font-size:1rem; margin-bottom:0.3rem; }
+      .envio-gratis { font-size:0.65rem; margin-bottom:0.6rem; }
       .producto-btns { flex-direction:column; gap:0.4rem; }
       .btn-comprar, .btn-wsp { font-size:0.72rem; padding:0.55rem 0.5rem; border-radius:8px; text-align:center; justify-content:center; }
+      .btn-comprar img { height:14px; }
+      .btn-ml img { height:18px; }
 
       /* Grilla 2 columnas recetas */
       .recetas-grid { grid-template-columns:repeat(2,1fr); gap:0.8rem; }
@@ -471,12 +477,14 @@
   <div class="section-header">
     <span class="section-tag">Tienda</span>
     <h2 class="section-title">Nuestros Productos</h2>
-    <p class="section-subtitle">Compra directa con Mercado Pago — sin intermediarios, mejor precio. Envío incluido a todo el país.</p>
+    <p class="section-subtitle">Productos frescos directo de nuestra granja — <strong style="color:var(--green)">envío incluido a todo el país</strong>.</p>
   </div>
   <div class="productos-grid" id="productosGrid"><div class="loading">Cargando productos</div></div>
   <div class="ml-banner">
-    <p>¿Preferís comprar con la seguridad de Mercado Libre?</p>
-    <a href="https://www.mercadolibre.com.ar/tienda/granja-atuel" target="_blank" class="btn-ml">🏪 Visitá nuestra tienda oficial en Mercado Libre</a>
+    <p>¿Preferís comprar con la seguridad y protección de comprador de Mercado Libre?</p>
+    <a href="https://www.mercadolibre.com.ar/tienda/granja-atuel" target="_blank" class="btn-ml">
+      Visitá nuestra tienda en <img src="logo-mercadolibre.svg" alt="Mercado Libre" />
+    </a>
   </div>
 </section>
 
@@ -508,8 +516,8 @@
         <li><span class="check">✓</span>Acceso a nuestra app de control de incubaciones</li>
       </ul>
       <div style="display:flex;gap:0.8rem;flex-wrap:wrap;margin-top:1.5rem;">
-        <a href="https://mpago.la/2qbsnRt" target="_blank" class="btn-comprar">💳 Comprar x5 doc — $50.000</a>
-        <a href="https://mpago.la/27Cp2BJ" target="_blank" class="btn-comprar">💳 Comprar x10 doc — $90.000</a>
+        <a href="https://mpago.la/2qbsnRt" target="_blank" class="btn-comprar">Comprar x5 doc — $50.000 <img src="logo-mercadopago.svg" alt="Mercado Pago" /></a>
+        <a href="https://mpago.la/27Cp2BJ" target="_blank" class="btn-comprar">Comprar x10 doc — $90.000 <img src="logo-mercadopago.svg" alt="Mercado Pago" /></a>
         <a href="https://wa.me/5492604351288?text=Hola%2C+quiero+consultar+sobre+huevos+f%C3%A9rtiles" target="_blank" class="btn-wsp">💬 Consultar por WhatsApp</a>
       </div>
       <a href="/incubacion" style="display:inline-flex;align-items:center;gap:0.5rem;margin-top:1rem;padding:0.7rem 1.2rem;border-radius:10px;background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.3);color:var(--brown);text-decoration:none;font-size:0.85rem;font-weight:700;transition:background 0.15s;" onmouseover="this.style.background='rgba(201,162,39,0.18)'" onmouseout="this.style.background='rgba(201,162,39,0.1)'">🐣 Probá nuestra app de control de incubaciones — gratis</a>
@@ -775,7 +783,8 @@ async function loadProductos() {
       const img=getProductoImg(p.nombre);
       const imgHtml=img?`<img src="${img}" alt="${p.nombre}" class="producto-img" loading="lazy"/>`:`<div class="producto-emoji-header">${p.emoji||'🥚'}</div>`;
       const wspMsg=encodeURIComponent(`Hola, quiero consultar sobre ${p.nombre}`);
-      return `<div class="producto-card">${imgHtml}<div class="producto-body"><span class="producto-badge">${p.emoji||'🥚'} Granja Atuel</span><div class="producto-name">${p.nombre}</div><div class="producto-desc">${p.descripcion||'Envío gratis a todo el país'}</div><div class="producto-precio">${p.precio}</div><div class="producto-btns"><a href="${p.link_pago}" target="_blank" class="btn-comprar">💳 Comprar con Mercado Pago</a><a href="https://wa.me/${WSP}?text=${wspMsg}" target="_blank" class="btn-wsp">💬 Consultar por WhatsApp</a></div></div></div>`;
+      const precio = (p.precio||'').replace(/\.00$/,'').replace(/,00$/,'');
+      return `<div class="producto-card">${imgHtml}<div class="producto-body"><span class="producto-badge">${p.emoji||'🥚'} Granja Atuel</span><div class="producto-name">${p.nombre}</div><div class="producto-desc">${p.descripcion||''}</div><div class="producto-precio">${precio}</div><div class="envio-gratis">🚚 Envío incluido a todo el país</div><div class="producto-btns"><a href="${p.link_pago}" target="_blank" class="btn-comprar">Comprar con <img src="logo-mercadopago.svg" alt="Mercado Pago" /></a><a href="https://wa.me/${WSP}?text=${wspMsg}" target="_blank" class="btn-wsp">💬 Consultar por WhatsApp</a></div></div></div>`;
     }).join('');
   } catch(e){
     grid.innerHTML='<p style="color:var(--text-light);text-align:center;padding:2rem">No se pudieron cargar los productos.</p>';
