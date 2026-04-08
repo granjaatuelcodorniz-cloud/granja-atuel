@@ -170,6 +170,15 @@
     .btn-ml:hover { background:#f0d800; }
     .btn-ml img { height:auto; width:150px; }
 
+    /* FERTILES NUEVO LAYOUT */
+    .fertiles-content { display:grid; grid-template-columns:1fr 1fr; gap:3rem; margin-top:2.5rem; align-items:start; }
+    .incluye-wrap { }
+    @media(max-width:900px){ .fertiles-content { grid-template-columns:1fr; gap:2rem; } }
+
+    /* NUTRICION NUEVO LAYOUT */
+    .nutricion-img-full { border-radius:16px; overflow:hidden; box-shadow:var(--shadow-lg); }
+    .nutricion-img-full img { width:100%; display:block; max-height:420px; object-fit:cover; }
+
     /* FERTILES */
     #fertiles { background:var(--cream); }
     .fertiles-banner { width:100%; border-radius:16px; overflow:hidden; margin-bottom:3rem; box-shadow:var(--shadow-lg); position:relative; min-height:220px; }
@@ -489,24 +498,24 @@
 </section>
 
 <section id="fertiles">
+  <div class="section-header">
+    <span class="section-tag">Para Criadores</span>
+    <h2 class="section-title">Huevos Fértiles de Codorniz Japónica</h2>
+    <p class="section-subtitle">Alta tasa de nacimiento garantizada. Selección rigurosa, sanitización con ozono y embalaje especial.</p>
+  </div>
   <div class="fertiles-banner">
     <img src="huevos-fertiles.webp" alt="Pollitos de codorniz recién nacidos — Granja Atuel huevos fértiles alta tasa de nacimiento" />
     <div class="fertiles-banner-overlay">
       <div class="fertiles-banner-text">
         <span class="hero-tag">🧬 Alta tasa de nacimiento</span>
         <h3>Más que huevos fértiles, <em>resultados</em></h3>
-        <p>Selección rigurosa, sanitización con ozono y embalaje especial. Incluye guía de incubación y acceso a nuestra app de control.</p>
+        <p>Incluye guía de incubación y acceso a nuestra app de control.</p>
       </div>
     </div>
   </div>
-  <div class="fertiles-grid">
-    <div class="fertiles-img">
-      <img src="huevos-fertiles1.webp" alt="Huevo de codorniz fértil eclosionando — crianza de codornices Granja Atuel" />
-    </div>
-    <div>
-      <span class="section-tag">Para Criadores</span>
-      <h2 class="section-title">Huevos Fértiles de Codorniz Japónica</h2>
-      <p style="color:var(--text-light);font-weight:300;line-height:1.7;margin-bottom:0.5rem;">Alta tasa de nacimiento garantizada. Cada pedido incluye:</p>
+  <div class="fertiles-content">
+    <div class="incluye-wrap">
+      <p style="color:var(--text-light);font-weight:300;line-height:1.7;margin-bottom:0.8rem;">Cada pedido incluye:</p>
       <ul class="incluye-list">
         <li><span class="check">✓</span>Huevos seleccionados uno a uno — descarte de deformes y trisados</li>
         <li><span class="check">✓</span>Ratio óptimo: 6 hembras y 2 machos para máxima fertilidad</li>
@@ -522,37 +531,35 @@
       </div>
       <a href="/incubacion" style="display:inline-flex;align-items:center;gap:0.5rem;margin-top:1rem;padding:0.7rem 1.2rem;border-radius:10px;background:rgba(201,162,39,0.1);border:1px solid rgba(201,162,39,0.3);color:var(--brown);text-decoration:none;font-size:0.85rem;font-weight:700;transition:background 0.15s;" onmouseover="this.style.background='rgba(201,162,39,0.18)'" onmouseout="this.style.background='rgba(201,162,39,0.1)'">🐣 Probá nuestra app de control de incubaciones — gratis</a>
     </div>
-  </div>
-  <div class="calidad-grid">
-    <div class="calidad-card"><div class="icon">🧬</div><h4>Ratio Óptimo</h4><p>6 hembras y 2 machos por grupo para asegurar la máxima tasa de fertilidad en cada lote.</p></div>
-    <div class="calidad-card"><div class="icon">🔍</div><h4>Selección Rigurosa</h4><p>Descarte manual de huevos deformes, redondos, puntiagudos o con cáscaras trisadas.</p></div>
-    <div class="calidad-card"><div class="icon">🛡️</div><h4>Sanitización con Ozono</h4><p>Eliminamos virus y bacterias antes del cierre para una incubación segura y limpia.</p></div>
-    <div class="calidad-card"><div class="icon">📦</div><h4>Embalaje Seguro</h4><p>Diseñado especialmente para minimizar roturas, incluso en envíos de larga distancia.</p></div>
+    <div class="calidad-grid">
+      <div class="calidad-card"><div class="icon">🧬</div><h4>Ratio Óptimo</h4><p>6 hembras y 2 machos por grupo para asegurar la máxima tasa de fertilidad en cada lote.</p></div>
+      <div class="calidad-card"><div class="icon">🔍</div><h4>Selección Rigurosa</h4><p>Descarte manual de huevos deformes, redondos, puntiagudos o con cáscaras trisadas.</p></div>
+      <div class="calidad-card"><div class="icon">🛡️</div><h4>Sanitización con Ozono</h4><p>Eliminamos virus y bacterias antes del cierre para una incubación segura y limpia.</p></div>
+      <div class="calidad-card"><div class="icon">📦</div><h4>Embalaje Seguro</h4><p>Diseñado especialmente para minimizar roturas, incluso en envíos de larga distancia.</p></div>
+    </div>
   </div>
 </section>
 
 <section id="nutricion">
-  <div class="nutricion-inner">
-    <div class="nutricion-img">
-      <img src="propiedades.webp" alt="Beneficios nutricionales del huevo de codorniz — proteínas vitaminas minerales" />
-    </div>
-    <div>
-      <span class="section-tag">Salud y Bienestar</span>
-      <h2 class="section-title">Pequeño en tamaño, grande en nutrición</h2>
-      <p class="section-subtitle">El huevo de codorniz tiene 3 a 5 veces más vitaminas y minerales que el huevo de gallina, con menos calorías y grasas. Ideal para dietas saludables, niños y adultos mayores.</p>
-      <table class="nutricion-table">
-        <thead><tr><th>Nutriente</th><th>Por 100g</th></tr></thead>
-        <tbody>
-          <tr><td>Proteínas</td><td>13 g</td></tr>
-          <tr><td>Grasa total</td><td>11 g</td></tr>
-          <tr><td>Hierro</td><td>3.7 mg</td></tr>
-          <tr><td>Vitamina B12</td><td>1.6 µg</td></tr>
-          <tr><td>Vitamina A</td><td>543 UI</td></tr>
-          <tr><td>Calcio</td><td>64 mg</td></tr>
-          <tr><td>Calorías</td><td>158 kcal</td></tr>
-        </tbody>
-      </table>
-    </div>
+  <div class="section-header">
+    <span class="section-tag">Salud y Bienestar</span>
+    <h2 class="section-title">Pequeño en tamaño, grande en nutrición</h2>
+    <p class="section-subtitle">El huevo de codorniz tiene 3 a 5 veces más vitaminas y minerales que el huevo de gallina, con menos calorías y grasas. Ideal para dietas saludables, niños y adultos mayores.</p>
+  </div>
+  <table class="nutricion-table" style="max-width:500px;margin:0 auto 2.5rem;">
+    <thead><tr><th>Nutriente</th><th>Por 100g</th></tr></thead>
+    <tbody>
+      <tr><td>Proteínas</td><td>13 g</td></tr>
+      <tr><td>Grasa total</td><td>11 g</td></tr>
+      <tr><td>Hierro</td><td>3.7 mg</td></tr>
+      <tr><td>Vitamina B12</td><td>1.6 µg</td></tr>
+      <tr><td>Vitamina A</td><td>543 UI</td></tr>
+      <tr><td>Calcio</td><td>64 mg</td></tr>
+      <tr><td>Calorías</td><td>158 kcal</td></tr>
+    </tbody>
+  </table>
+  <div class="nutricion-img-full">
+    <img src="propiedades.webp" alt="Beneficios nutricionales del huevo de codorniz — proteínas vitaminas minerales" />
   </div>
 </section>
 
@@ -686,7 +693,7 @@
       <p class="section-subtitle">Dietéticas, verdulerías, restaurantes y almacenes. Precios especiales por volumen y entrega regular.</p>
       <div class="mayoristas-btns">
         <a href="https://wa.me/5492604351288?text=Hola%2C+me+interesa+informaci%C3%B3n+sobre+precios+mayoristas" target="_blank" class="btn-wsp-lg">💬 Consultar por WhatsApp</a>
-        <a href="/cdn-cgi/l/email-protection#482f3a29262229293c3d2d24662b272c273a262132082f25292124662b2725" class="btn-email">✉️ <span class="__cf_email__" data-cfemail="a2c5d0c3ccc8c3c3d6d7c7ce8cc1cdc6cdd0cccbd8e2c5cfc3cbce8cc1cdcf">[email&#160;protected]</span></a>
+        <a href="mailto:granjaatuel.codorniz@gmail.com" target="_blank" class="btn-email">✉️ granjaatuel.codorniz@gmail.com</a>
       </div>
     </div>
     <div class="mayoristas-cards">
@@ -720,7 +727,7 @@
     <div class="footer-col footer-contact">
       <h4>Contacto</h4>
       <a href="https://wa.me/5492604351288" target="_blank">💬 WhatsApp 2604-351288</a>
-      <a href="/cdn-cgi/l/email-protection#caadb8aba4a0ababbebfafa6e4a9a5aea5b8a4a3b08aada7aba3a6e4a9a5a7">✉️ <span class="__cf_email__" data-cfemail="81e6f3e0efebe0e0f5f4e4edafe2eee5eef3efe8fbc1e6ece0e8edafe2eeec">[email&#160;protected]</span></a>
+      <a href="mailto:granjaatuel.codorniz@gmail.com">✉️ granjaatuel.codorniz@gmail.com</a>
       <a href="https://www.mercadolibre.com.ar/tienda/granja-atuel" target="_blank">🏪 Tienda Mercado Libre</a>
       <a href="/incubacion">🐣 App Control de Incubaciones</a>
     </div>
