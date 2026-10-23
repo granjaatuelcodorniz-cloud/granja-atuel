@@ -1,10 +1,10 @@
 export const protocols = {
- coturnix:{label:'Codorniz japonesa (Coturnix)',candling:10,lockdown:15,hatch:17},
+ coturnix:{label:'Codorniz japónica (Coturnix)',candling:10,lockdown:14,hatch:16},
  gallina:{label:'Gallina',candling:7,lockdown:18,hatch:21},
  personalizado:{label:'Otro protocolo',candling:10,lockdown:15,hatch:17}
 } as const;
 export type Species=keyof typeof protocols;
-export type Lot={id:string;owner_id:string;name:string;species:Species;egg_count:number;start_date:string;candling_day:number;lockdown_day:number;hatch_day:number;source:string;incubator:string;notes:string;discarded:number|null;developing:number|null;candled_on:string|null;lockdown_on:string|null;born:number|null;hatched_on:string|null;incident:string;share_results:boolean;version:number;created_at:string};
+export type Lot={id:string;owner_id:string;name:string;species:Species;egg_count:number;start_date:string;candling_day:number;lockdown_day:number;hatch_day:number;source:string;provider_name:string;incubator:string;notes:string;discarded:number|null;developing:number|null;candled_on:string|null;lockdown_on:string|null;born:number|null;hatched_on:string|null;incident:string;share_results:boolean;version:number;created_at:string};
 export function todayAR(now=new Date()){return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);}
 export function validDate(value:unknown):value is string{return typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+'T12:00:00Z'))&&new Date(value+'T12:00:00Z').toISOString().slice(0,10)===value;}
 export function addDays(date:string,days:number){return new Date(Date.parse(date+'T12:00:00Z')+days*86400000).toISOString().slice(0,10);}
@@ -18,9 +18,10 @@ export function validateNewLot(b:Record<string,unknown>,today=todayAR()){
  const species=(typeof b.species==='string'&&Object.hasOwn(protocols,b.species)?b.species:'coturnix') as Species;
  const p=protocols[species];const candling=b.candling_day??p.candling,lockdown=b.lockdown_day??p.lockdown,hatch=b.hatch_day??p.hatch;
  if(!integer(candling,1,59)||!integer(lockdown,2,60)||!integer(hatch,3,65)||candling>=lockdown||lockdown>=hatch)throw new Error('Las etapas deben seguir este orden: ovoscopía, fin del volteo y nacimiento.');
- const name=text(b.name??'',80),source=text(b.source??'sin_indicar',30),incubator=text(b.incubator??'',100),notes=text(b.notes??'',1500);
+ const name=text(b.name??'',80),source=text(b.source??'sin_indicar',30),providerName=source==='otro'?text(b.provider_name??'',100):'',incubator=text(b.incubator??'',100),notes=text(b.notes??'',1500);
  if(name===null||incubator===null||notes===null||!['granja_atuel','otro','propio','sin_indicar'].includes(source??''))throw new Error('Revisá los datos opcionales.');
- return {egg_count:b.egg_count,start_date:b.start_date,species,candling_day:candling,lockdown_day:lockdown,hatch_day:hatch,name:name||`Incubación ${formatDate(b.start_date)}`,source:source!,incubator,notes};
+ if(source==='otro'&&!providerName)throw new Error('Ingresá el nombre del otro proveedor (hasta 100 caracteres).');
+ return {egg_count:b.egg_count,start_date:b.start_date,species,candling_day:candling,lockdown_day:lockdown,hatch_day:hatch,name:name||`Incubación ${formatDate(b.start_date)}`,source:source!,provider_name:providerName!,incubator,notes};
 }
 export function validateEvent(b:Record<string,unknown>,lot:Lot,today=todayAR()){
  const date=b.date;

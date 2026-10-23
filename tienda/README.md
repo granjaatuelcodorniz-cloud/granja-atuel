@@ -18,8 +18,8 @@ el historial localStorage de la versión anterior. `/incubacion.html` redirige a
 la nueva app únicamente en este proyecto de pruebas.
 
 Alta mínima: cantidad y fecha de inicio. Nombre, origen, incubadora, notas y
-protocolo son opcionales. El protocolo inicial es Coturnix (ovoscopía día 10,
-fin del volteo día 15, nacimiento estimado día 17). El día de carga es día 0.
+protocolo son opcionales. Al elegir otro proveedor se solicita y guarda su nombre. El protocolo inicial es Coturnix (ovoscopía día 10,
+fin del volteo día 14, nacimiento estimado día 16, según el protocolo de Granja Atuel). El día de carga es día 0.
 Las fechas se calculan por calendario y el día actual en Argentina.
 
 Ovoscopía: solo se ingresan descartados; `developing` se calcula en Postgres.
@@ -36,7 +36,7 @@ estadísticas ni presenta el desarrollo como fertilidad confirmada.
 ## Permisos y datos existentes
 
 SQL aplicado, no volver a ejecutar: `db/catalog-schema.sql` y
-`db/incubation-schema.sql`. Antes de sumar clientes se agregó una política RLS
+`db/incubation-schema.sql` y `db/incubation-provider-name.sql`. Antes de sumar clientes se agregó una política RLS
 restrictiva a las 15 tablas internas, con membresía explícita para las dos cuentas
 existentes de gestión. Sus políticas anteriores se conservan. Las futuras cuentas
 internas deben habilitarse deliberadamente por un administrador de la base.
