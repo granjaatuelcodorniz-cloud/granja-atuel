@@ -1,6 +1,6 @@
 import {createServerClient} from '@supabase/ssr';
 import {NextResponse,type NextRequest} from 'next/server';
-// Refresh only admin sessions. Authorization is still enforced by routes and RLS.
+// Refresh private app sessions. Authorization is still enforced by routes and RLS.
 export async function proxy(request:NextRequest){
   let response=NextResponse.next({request});
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -11,4 +11,4 @@ export async function proxy(request:NextRequest){
   response.headers.set('Cache-Control','private, no-store');
   return response;
 }
-export const config={matcher:['/admin/:path*','/api/admin/:path*']};
+export const config={matcher:['/admin/:path*','/api/admin/:path*','/incubacion/:path*','/api/incubacion/:path*']};

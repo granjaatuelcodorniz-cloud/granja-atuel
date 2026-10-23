@@ -15,7 +15,13 @@ try{
  const denied=await fetch(base+'/api/admin/products',{method:'PUT',headers:{'Content-Type':'application/json','Origin':base},body:'{}'});assert.equal(denied.status,401);
  const csrf=await fetch(base+'/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json','Origin':'https://other.example'},body:'{}'});assert.equal(csrf.status,403);
  const recipes=await fetch(base+'/recetas');assert.equal(recipes.status,200);assert.match(await recipes.text(),/Ingredientes/);
- assert.equal((await fetch(base+'/incubacion')).status,200);
+ const incubation=await fetch(base+'/incubacion');assert.equal(incubation.status,200);assert.match(await incubation.text(),/Crear cuenta/);
+ const oldIncubation=await fetch(base+'/incubacion.html',{redirect:'manual'});assert.equal(oldIncubation.status,307);assert.equal(oldIncubation.headers.get('location'),'/incubacion');
+ const fertile=await fetch(base+'/huevos-fertiles');assert.equal(fertile.status,200);assert.match(await fertile.text(),/Presentaciones disponibles/);
+ const saveDenied=await fetch(base+'/api/incubacion/lotes',{method:'POST',headers:{'Content-Type':'application/json',Origin:base},body:JSON.stringify({action:'create',egg_count:100,start_date:'2026-10-01'})});assert.equal(saveDenied.status,401);
+ const customerCSRF=await fetch(base+'/api/incubacion/cuenta',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://other.example'},body:'{}'});assert.equal(customerCSRF.status,403);
+ const invalidSignup=await fetch(base+'/api/incubacion/cuenta',{method:'POST',headers:{'Content-Type':'application/json',Origin:base},body:'null'});assert.equal(invalidSignup.status,400);
+ const reports=await fetch(base+'/admin/incubaciones',{redirect:'manual'});assert.equal(reports.status,307);
  const image=await fetch(base+'/huevos-consumo1.webp');assert.equal(image.status,200);assert.match(image.headers.get('content-type'),/image\/webp/);
  const robots=await fetch(base+'/robots.txt');assert.match(await robots.text(),/Disallow: \//);
  console.log('HTTP checks passed: catalog, noindex, admin redirect, unauthorized edit, CSRF rejection, recipes, incubation and product image.');

@@ -1,57 +1,74 @@
-# Tienda Granja Atuel — desarrollo en paralelo
+# Tienda y cuaderno de incubaciones Granja Atuel
 
-Aplicación Next.js/TypeScript dentro de `tienda/`, rama `desarrollo/tienda-next`.
-El sitio estático original y su configuración Vercel se conservan en la raíz.
-No fusionar esta rama ni modificar el proyecto Vercel de producción para probar la tienda.
+Desarrollo aislado en `tienda/`, rama `desarrollo/tienda-next`, PR #1 en borrador.
+El proyecto Vercel `granja-atuel-tienda-preview` usa esta carpeta. No fusionar ni
+promover a producción antes de la validación completa. La web estática original
+se conserva en la raíz; no se cambiaron dominios ni DNS.
 
-## Ejecutar
+## Desarrollo y validación
 
-Node 22 o 24. Desde `tienda/`: `npm ci`, configurar `.env.local` a partir de
-`.env.example`, `npm run dev`. Validación: `npm test` y `npm run build`.
+Node 22 o 24: `npm ci`, `.env.local` desde `.env.example`, `npm run dev`.
+Validar con `npm test`, `npm run build`, `node tests/smoke.mjs`.
+Solo hay claves públicas de Supabase; no se utiliza service_role.
 
-## Datos y permisos
+## Incubaciones
 
-Se aplicó `tienda_parallel_catalog` en el proyecto Supabase de granja-gestor.
-`db/catalog-schema.sql` conserva el SQL aplicado (no volver a ejecutarlo).
-Solo se crearon `tienda_productos` y `tienda_admins`. No se modificaron ventas,
-clientes, cuentas, finanzas ni usuarios existentes.
+`/incubacion` es una app nueva con registros por cuenta. No importa ni consulta
+el historial localStorage de la versión anterior. `/incubacion.html` redirige a
+la nueva app únicamente en este proyecto de pruebas.
 
-El catálogo es público cuando `active=true`. Solo el usuario existente Marcos,
-identificado por su UUID de Auth en `tienda_admins`, tiene permisos de edición.
-Un usuario autenticado distinto no puede editar ni darse permisos. No se ofrece
-registro de compradores. No se usa user_metadata ni service_role.
+Alta mínima: cantidad y fecha de inicio. Nombre, origen, incubadora, notas y
+protocolo son opcionales. El protocolo inicial es Coturnix (ovoscopía día 10,
+fin del volteo día 15, nacimiento estimado día 17). El día de carga es día 0.
+Las fechas se calculan por calendario y el día actual en Argentina.
 
-Admin: `/admin`, usuario `marcos` y su contraseña actual de gestión.
-La sesión se verifica en servidor, se renueva mediante proxy y usa cookies HTTP-only.
-Los precios iniciales provienen de `data/productos.json` al iniciar el desarrollo.
-No se inventaron pesos ni medidas; quedan nulos hasta medir el embalaje real.
-La disponibilidad es manual, sin inventario ni reservas automáticas todavía.
+Ovoscopía: solo se ingresan descartados; `developing` se calcula en Postgres.
+No hay dudosos ni rotos de recepción. Nacimientos: total, fecha, observaciones y
+consentimiento opcional. Se validan límites y las escrituras usan versión para
+rechazar cambios simultáneos. Compartir el texto de un resultado es una acción
+del cliente, separada del permiso de lectura para la granja.
 
-## Publicar la vista previa en Vercel
+`/huevos-fertiles` amplía la información y consulta precios actuales del catálogo.
+`/admin/incubaciones` muestra solo resultados autorizados, filtrados por especie
+con sumas ponderadas, origen, tamaño de muestra y observaciones. No publica
+estadísticas ni presenta el desarrollo como fertilidad confirmada.
 
-Crear proyecto separado `granja-atuel-tienda-preview`, equipo Granja Atuel,
-repositorio `granjaatuelcodorniz-cloud/granja-atuel`, directorio raíz `tienda`.
-Desplegar la rama `desarrollo/tienda-next` como preview y mantener la protección
-de despliegue. Configurar únicamente las dos variables públicas de `.env.example`.
-No asignar los dominios actuales, no modificar DNS ni el proyecto `granja-atuel`.
-El conector Vercel rechazó el acceso al equipo con 403 durante esta sesión.
+## Permisos y datos existentes
 
-La vista previa lleva banner, robots disallow y cabecera X-Robots-Tag noindex.
-Estos controles evitan indexación, pero no sustituyen la protección de Vercel.
-No hay endpoints de pago, pedidos reales ni creación de envíos.
+SQL aplicado, no volver a ejecutar: `db/catalog-schema.sql` y
+`db/incubation-schema.sql`. Antes de sumar clientes se agregó una política RLS
+restrictiva a las 15 tablas internas, con membresía explícita para las dos cuentas
+existentes de gestión. Sus políticas anteriores se conservan. Las futuras cuentas
+internas deben habilitarse deliberadamente por un administrador de la base.
+No se modificaron los registros existentes de ventas, finanzas o clientes.
 
-## Pendientes antes del lanzamiento
+Cada cliente puede leer, crear, actualizar y eliminar únicamente sus lotes.
+El administrador de tienda tiene lectura de lotes con consentimiento, sin permiso
+de edición de los resultados ajenos. El cliente puede retirar esa autorización.
+No se conceden escrituras de membresía a anon/authenticated ni se confía en
+user_metadata. Se probó aislamiento, acceso interno y consentimiento con usuarios
+temporales dentro de una transacción revertida. No se conservaron datos de prueba.
 
-- Pruebas visuales e interacción en escritorio y móvil sobre la URL desplegada.
-- Probar inicio de sesión y cambio de precio desde navegador con el propietario.
-- CRUD de nuevas presentaciones e imágenes; el primer admin edita las cinco iniciales.
-- Definir inventario, reservas y vencimientos sin afectar los registros del criadero.
-- Checkout y Mercado Pago de pruebas: precios verificados en servidor, webhook,
-  firma, conciliación e idempotencia. Todavía no implementados.
-- Correo Argentino/Andreani: accesos, contratos, embalaje, tarifas y cupones.
-- Migrar el resto del contenido y anclas SEO; validar `/incubacion` y datos de recetas.
-- Revisión de protección de acceso heredada de granja-gestor antes de sumar compradores.
-- Solo al aprobar el flujo completo, preparar el cambio de producción y dominio.
+La sesión usa cookies HTTP-only y validación de usuario en servidor/proxy.
+Registro e ingreso: Supabase Auth con correo y contraseña. El registro conserva
+la configuración de confirmación y envío de correo del proyecto existente.
+Actualmente el proyecto tiene autoconfirmación de correo habilitada y permite
+registro directo; no se cambió esa configuración. Falta validar con el propietario
+su primer registro/ingreso desde la preview. Antes del lanzamiento, configurar y
+validar correo transaccional, recuperación de contraseña y URL de confirmación
+para la nueva web sin alterar las aplicaciones de gestión.
 
-El motor de recetas con IA (`api/receta.js`) no se copia ni conecta a claves
-de producción. Las recetas existentes sí están disponibles.
+Admin catálogo: `/admin`, usuario `marcos` y su contraseña actual de gestión.
+Los precios se consultan en Supabase. Pesos y medidas siguen pendientes de medir.
+
+## Pendientes antes de vender
+
+- Prueba de cuenta real, correo y recuperación de acceso; revisión de privacidad.
+- Prueba de edición de catálogo desde la cuenta del propietario.
+- Inventario, reservas, checkout y Mercado Pago de pruebas, webhook firmado e idempotente.
+- Correo Argentino y Andreani: credenciales, embalajes, condiciones, tarifas y cupones.
+- Validar información comercial definitiva de huevos fértiles con la granja.
+- Verificar URLs/SEO, pedidos completos y recién entonces planificar producción.
+
+La preview conserva protección Vercel, banner y noindex. No cobra ni genera envíos.
+No se reutilizan credenciales de Teinvito ni se conecta el motor de recetas con IA.

@@ -1,6 +1,6 @@
 import type { NextConfig } from 'next';
 const config: NextConfig = {
-  async rewrites(){return [{source:'/incubacion',destination:'/incubacion.html'}];},
+  async redirects(){return [{source:'/incubacion.html',destination:'/incubacion',permanent:false}];},
   async headers() { return [{ source: '/:path*', headers: [
     { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
     { key: 'X-Content-Type-Options', value: 'nosniff' },
