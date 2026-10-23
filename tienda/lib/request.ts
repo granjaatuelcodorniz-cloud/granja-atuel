@@ -1,6 +1,7 @@
 export function sameOrigin(request:Request){
  const origin=request.headers.get('origin');
- return !!origin && origin===new URL(request.url).origin;
+ if(!origin)return false;
+ try {const parsed=new URL(origin);return ['http:','https:'].includes(parsed.protocol) && parsed.host===(request.headers.get('host')||new URL(request.url).host);}catch{return false;}
 }
 export async function readSmallJson(request:Request){
  if(!request.headers.get('content-type')?.includes('application/json'))throw new Error('Formato inválido.');
