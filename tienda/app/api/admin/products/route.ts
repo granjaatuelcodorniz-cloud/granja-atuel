@@ -7,7 +7,8 @@ async function save(request:Request,create:boolean){
  let body;try{body=await readSmallJson(request);body={...body,...validateAdminProduct(body)};}catch(e){return adminReply({error:e instanceof Error?e.message:'Producto inválido.'},400);}
  if(!create&&(typeof body.expected_updated_at!=='string'||!Number.isFinite(Date.parse(body.expected_updated_at))))return adminReply({error:'Actualizá el producto antes de guardarlo.'},400);
  const product=validateAdminProduct(body);const db=await supabaseServer();
- const row={...product,updated_at:new Date().toISOString()};
+ const {id,...fields}=product;
+ const row={...fields,updated_at:new Date().toISOString()};
  // Quantity is deliberately absent: only an audited stock movement may change it.
  const result=create?await db.from('tienda_productos').insert(product).select('*').single():await db.from('tienda_productos').update(row).eq('id',product.id).eq('updated_at',body.expected_updated_at).select('*').maybeSingle();
  if(result.error)return adminReply({error:result.error.code==='23505'?'Ese identificador o SKU ya existe.':'No pudimos guardar el producto.'},409);
