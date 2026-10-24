@@ -1,4 +1,5 @@
 import {NextResponse} from 'next/server';
+import {cookies} from 'next/headers';
 import {databaseConfigured,supabaseServer} from '@/lib/supabase';
 const previewOrigin='https://granja-atuel-tien-git-d38687-granjaatuelcodorniz-4243s-projects.vercel.app';
 export async function GET(request:Request){
@@ -10,6 +11,7 @@ export async function GET(request:Request){
  const failure=()=>NextResponse.redirect(new URL('/incubacion?acceso=error',origin),{status:303,headers:{'Cache-Control':'no-store'}});
  if(!databaseConfigured())return failure();
  try{
+ (await cookies()).delete('ga_recovery_requested');
  const db=await supabaseServer();
  const {data,error}=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo:origin+'/auth/callback',skipBrowserRedirect:true}});
  if(error||!data.url)return failure();

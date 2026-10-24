@@ -1,22 +1,24 @@
-import Link from 'next/link';
 import {redirect} from 'next/navigation';
 import {getAdmin,supabaseServer} from '@/lib/supabase';
 import {adminService} from '@/lib/admin-server';
-import {percent,formatDate,protocols,type Lot} from '@/lib/incubation';
+import type {Lot} from '@/lib/incubation';
+import type {Delivery} from '@/lib/incubation-report';
+import IncubationReport from '@/components/admin/IncubationReport';
 export const dynamic='force-dynamic';
-export default async function IncubationReports({searchParams}:{searchParams:Promise<{species?:string}>}){
- const params=await searchParams;const species=params.species&&Object.hasOwn(protocols,params.species)?params.species:'coturnix';
+export default async function IncubationReports(){
  if(!await getAdmin())redirect('/admin/login');
- const db=await supabaseServer();const {data,error}=await db.from('incubacion_lotes').select('*').order('created_at',{ascending:false});const lots=((data??[]) as Lot[]).filter(l=>l.species===species);
- // Resolve only owners of visible lots, after authorization. Never send Auth records or keys to the client.
- const owners=new Map<string,string>();
- if(process.env.SUPABASE_SECRET_KEY&&!error){
-  const service=adminService();const ids=[...new Set(lots.map(l=>l.owner_id))];
-  for(let offset=0;offset<ids.length;offset+=10){
-   await Promise.all(ids.slice(offset,offset+10).map(async id=>{
-    try{const {data}=await service.auth.admin.getUserById(id);if(data.user?.email)owners.set(id,data.user.email);}catch{/* Keep the stable account identifier if Auth is unavailable. */}
-   }));
+ const db=await supabaseServer();let lots:Lot[]=[],deliveries:Delivery[]=[];
+ // Explicit pagination avoids silently truncating histories at the API row limit.
+ for(const table of ['incubacion_lotes','incubacion_entregas'] as const){
+  for(let offset=0;;offset+=1000){
+   const {data,error}=await db.from(table).select('*').order('created_at',{ascending:false}).order('id').range(offset,offset+999);
+   if(error)return <main className="admin-shell"><h1>No pudimos cargar el historial completo.</h1><p>Actualizá antes de consultar resultados o registrar entregas.</p></main>;
+   if(table==='incubacion_lotes')lots.push(...data as Lot[]);else deliveries.push(...data as Delivery[]);
+   if(data.length<1000)break;
   }
  }
- return <main className="admin-shell"><Link className="text-link" href="/admin">← Volver al dashboard</Link><div className="admin-intro" style={{marginTop:30}}><div><p className="eyebrow">SEGUIMIENTO DE INCUBACIONES</p><h1>Seguimiento de incubaciones</h1><p>Consulta interna de los lotes y resultados registrados por tus clientes. Esta información no se publica ni es visible para otros clientes.</p></div></div>{error?<p className="form-error" role="alert">No pudimos consultar los resultados. Volvé a intentar.</p>:<><p className="admin-status">Registros declarados por los usuarios, sin verificación independiente. Los resultados no prueban por sí solos la fertilidad o calidad del huevo. Cada porcentaje se calcula sumando los huevos de los lotes incluidos; no se promedian porcentajes individuales.</p><nav className="inc-tabs">{Object.entries(protocols).map(([id,p])=><Link className="text-link" style={{padding:10}} key={id} href={`/admin/incubaciones?species=${id}`} aria-current={species===id?'page':undefined}>{p.label}</Link>)}</nav><div className="inc-overview"><div><strong>{lots.filter(l=>l.born===null).length}</strong><span>Lotes en curso</span></div><div><strong>{lots.filter(l=>l.born!==null).length}</strong><span>Lotes finalizados</span></div><div><strong>{lots.filter(l=>l.born===null).reduce((sum,l)=>sum+(l.developing??l.egg_count),0)}</strong><span>Huevos en incubación</span></div></div><p className="admin-status">Especie seleccionada: {protocols[species as keyof typeof protocols].label}</p><div className="admin-grid">{(['granja_atuel','otro','propio','sin_indicar'] as const).map(source=>{const group=lots.filter(l=>l.source===source&&l.born!==null);const eggs=group.reduce((s,l)=>s+l.egg_count,0),born=group.reduce((s,l)=>s+l.born!,0);const candled=group.filter(l=>l.developing!==null),developing=candled.reduce((s,l)=>s+l.developing!,0),bornCandled=candled.reduce((s,l)=>s+l.born!,0);return <section className="admin-card" key={source}><h2>{({granja_atuel:'Granja Atuel',otro:'Otro proveedor',propio:'Producción propia',sin_indicar:'Origen sin indicar'})[source]}</h2><p>{group.length} lotes finalizados · {eggs} huevos iniciales · {born} nacidos</p><p>{percent(born,eggs)} nacimientos sobre iniciales</p><p>{percent(bornCandled,developing)} sobre huevos con desarrollo ({candled.length} lotes con ovoscopía)</p></section>;})}</div><div className="inc-lots" style={{marginTop:30}}>{lots.map(l=><article className="inc-panel" key={l.id}><p className="eyebrow">{l.born===null?'EN CURSO':'FINALIZADA'}</p><h2 style={{fontSize:28,margin:'12px 0'}}>{l.name}</h2><p className="inc-account-id">Cuenta: {owners.get(l.owner_id)??l.owner_id}</p><p>{protocols[l.species].label} · Inicio {formatDate(l.start_date)}</p><p>{l.egg_count} iniciales · {l.discarded??'—'} descartados · {l.born??'—'} nacidos</p>{l.source==='otro'&&<p>Proveedor: {l.provider_name||'Sin indicar'}</p>}<p>Incubadora: {l.incubator||'Sin indicar'}</p>{l.notes&&<p className="inc-note">Notas: {l.notes}</p>}{l.incident&&<p className="inc-note">Observaciones: {l.incident}</p>}</article>)}</div>{!lots.length&&<p className="inc-empty">Todavía no hay incubaciones registradas de esta especie.</p>}</>}</main>;
+ const accounts=new Map<string,string>();for(const id of new Set([...lots.map(l=>l.owner_id),...deliveries.map(d=>d.owner_id)]))accounts.set(id,id);
+ if(process.env.SUPABASE_SECRET_KEY){const service=adminService();const ids=[...accounts.keys()];for(let i=0;i<ids.length;i+=10)await Promise.all(ids.slice(i,i+10).map(async id=>{try{const {data}=await service.auth.admin.getUserById(id);if(data.user?.email)accounts.set(id,data.user.email);}catch{/* Retain stable identifier. */}}));}
+ const deliveriesById=new Map(deliveries.map(d=>[d.id,d]));
+ return <IncubationReport lots={lots.map(l=>({...l,account:accounts.get(l.owner_id)!,delivery:l.delivery_id?deliveriesById.get(l.delivery_id):undefined}))} deliveries={deliveries} accounts={[...accounts].map(([id,label])=>({id,label})).sort((a,b)=>a.label.localeCompare(b.label))}/>;
 }

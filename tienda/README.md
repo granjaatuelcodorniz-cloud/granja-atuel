@@ -169,5 +169,48 @@ Migración aditiva: db/dashboard-schema.sql, aplicada a granja-gestor bajo el no
 tienda_admin_dashboard_catalog_inventory_media. No modifica tablas de finanzas ni
 la web estática. Validación: pruebas unitarias, build, pruebas HTTP de accesos y
 CSRF, y transacciones SQL con rollback para CRUD de administrador, bloqueo de
-escritura de stock, idempotencia y saldo no negativo. La prueba de carga de
-imágenes y el recorrido visual requieren la sesión del administrador en /admin.
+escritura de stock, idempotencia y saldo no negativo. La prueba visual con la sesión del administrador verificó alta/edición de un
+producto borrador, movimiento de stock, carga real de imagen y archivo reversible.
+
+
+## Seguimiento de clientes y entregas de partidas
+
+`/admin/incubaciones` consulta el historial con paginación explícita, identifica
+cuentas y filtra cliente, especie, origen, estado, fecha de inicio y partida.
+Las estadísticas usan solo lotes finalizados, suman cantidades y separan la
+base con ovoscopía. La evolución mensual agrupa por fecha de nacimiento.
+
+El administrador registra una entrega (partida, producción, entrega, huevos y
+referencia de compra) para un cliente que tenga al menos una incubación.
+El cliente puede vincularla al crear un lote de origen Granja Atuel o desde
+Referencias de compra y partida. Las referencias libres se distinguen del
+vínculo confirmado. No se buscan ni vinculan pedidos automáticamente por correo.
+Las asignaciones pueden archivarse y restaurarse, conservando el historial.
+El trigger valida titular, origen, fechas, cantidad y asignación total bajo un
+bloqueo por entrega: los mismos huevos no pueden asignarse a dos incubaciones.
+
+Migraciones aplicadas en orden: db/incubation-traceability.sql,
+db/incubation-delivery-archive.sql, db/incubation-delivery-allocation.sql y
+db/incubation-traceability-indexes.sql.
+`tests/incubation-traceability.sql` verifica permisos y restricciones en rollback
+sin crear usuarios ni modificar lotes reales. Noelia conserva su registro sin
+asignación inventada de partida.
+
+Mis incubaciones incluye próximas tareas y descarga autenticada de un calendario
+ICS con fechas orientativas y alarma; el calendario del usuario gestiona avisos.
+No se envían recordatorios por correo o WhatsApp.
+
+Recuperación: /incubacion/recuperar y /api/incubacion/recuperar usan PKCE, mismo
+callback canónico de Google y una marca HTTP-only temporal para identificar
+la recuperación. El cambio exige sesión verificada, marca ligada al usuario,
+mismo origen y mínimo de contraseña; luego cierra sesión. No se hicieron
+solicitudes de correo ni cambios de contraseña de clientes durante las pruebas.
+Falta validar recepción y enlace con el titular y el correo transaccional.
+
+Pedidos agrega revisión optimista para no pisar cambios de preparación
+(db/orders-fulfillment-version.sql), exige pago aprobado para preparar/entregar
+y transportista+seguimiento para despachar. No cambia el estado financiero
+ni habilita despachos reales. /admin/estado muestra configuración y pendientes
+sin revelar secretos. Reservas para ventas reales, acceso externo al webhook,
+secreto de firma y credenciales/logística continúan pendientes de la etapa
+comercial; las compras actuales no reservan ni descuentan stock real.

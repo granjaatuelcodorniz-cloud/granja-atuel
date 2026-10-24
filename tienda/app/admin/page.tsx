@@ -13,7 +13,7 @@ export default async function Admin({searchParams}:{searchParams:Promise<{sectio
  db.from('tienda_productos').select('*').order('sort_order').order('name'),
  db.from('tienda_imagenes').select('*').order('created_at',{ascending:false}),
  db.from('tienda_stock_movimientos').select('id,product_id,delta,previous_quantity,new_quantity,reason,created_at').order('created_at',{ascending:false}).limit(100),
- db.from('tienda_pedidos').select('id,customer_name,customer_email,total_cents,status,created_at,items,fulfillment_status,admin_notes,shipping_carrier,tracking_code').order('created_at',{ascending:false}).limit(200),
+ db.from('tienda_pedidos').select('id,customer_name,customer_email,total_cents,status,created_at,items,fulfillment_status,fulfillment_version,admin_notes,shipping_carrier,tracking_code').order('created_at',{ascending:false}).limit(200),
  db.from('tienda_configuracion').select('data').eq('id','main').single()
  ]);
  const error=[products,media,movements,orders,settings].some(r=>r.error)?'No pudimos cargar una sección. Actualizá los datos antes de hacer cambios.':undefined;
