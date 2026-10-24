@@ -1,6 +1,6 @@
 import {NextResponse} from 'next/server';
 import {sameOrigin,readSmallJson} from '@/lib/request';
-import {orderDb,visitor,mp,reconcilePayment,checkoutReady,PaymentProviderError} from '@/lib/order-server';
+import {orderDb,visitor,mp,reconcilePayment,checkoutReady,PaymentProviderError,PaymentVerificationError} from '@/lib/order-server';
 export async function POST(request:Request){
  const reply=(b:unknown,s=200)=>NextResponse.json(b,{status:s,headers:{'Cache-Control':'private, no-store'}});
  if(!sameOrigin(request))return reply({error:'Origen no permitido.'},403);
@@ -15,5 +15,5 @@ export async function POST(request:Request){
  const result=await mp('/v1/payments/search?external_reference='+encodeURIComponent(order.id)+'&sort=date_created&criteria=desc&limit=30');
  for(const p of result.results??[])await reconcilePayment(String(p.id),order.id);
  return reply({ok:true});
- }catch(e){return reply({error:e instanceof PaymentProviderError?`No pudimos consultar Mercado Pago (HTTP ${e.status} · ${e.code}). Volvé a intentar.`:'No pudimos verificar el pago en este momento. Volvé a intentar.'},503);}
+ }catch(e){return reply({error:e instanceof PaymentVerificationError?`No pudimos verificar el pago (${e.code}). Volvé a intentar.`:e instanceof PaymentProviderError?`No pudimos consultar Mercado Pago (HTTP ${e.status} · ${e.code}). Volvé a intentar.`:'No pudimos verificar el pago en este momento. Volvé a intentar.'},503);}
 }
