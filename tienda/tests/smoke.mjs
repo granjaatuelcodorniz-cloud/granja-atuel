@@ -17,7 +17,8 @@ try{
  const detail=await fetch(base+'/producto/consumo-5');assert.equal(detail.status,200);assert.match(await detail.text(),/Sobre este producto/);
  const csrf=await fetch(base+'/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json','Origin':'https://other.example'},body:'{}'});assert.equal(csrf.status,403);
  const recipes=await fetch(base+'/recetas');assert.equal(recipes.status,200);assert.match(await recipes.text(),/Ingredientes/);
- const incubation=await fetch(base+'/incubacion');assert.equal(incubation.status,200);assert.match(await incubation.text(),/Crear cuenta/);
+ const incubation=await fetch(base+'/incubacion');assert.equal(incubation.status,200);const incubationHtml=await incubation.text();assert.match(incubationHtml,/Crear cuenta/);assert.match(incubationHtml,/Ver Privacidad/);assert.doesNotMatch(incubationHtml,/Compartir resultados con Granja Atuel es opcional/);
+ const practices=await fetch(base+'/buenas-practicas');assert.equal(practices.status,200);const privacyHtml=await practices.text();assert.match(privacyHtml,/Registros de incubación y seguimiento/);assert.match(privacyHtml,/id="privacidad"/);assert.match(privacyHtml,/no se mostrarán públicamente/);
  const oldIncubation=await fetch(base+'/incubacion.html',{redirect:'manual'});assert.equal(oldIncubation.status,307);assert.equal(oldIncubation.headers.get('location'),'/incubacion');
  const fertile=await fetch(base+'/huevos-fertiles');assert.equal(fertile.status,200);assert.match(await fertile.text(),/Presentaciones disponibles/);
  const saveDenied=await fetch(base+'/api/incubacion/lotes',{method:'POST',headers:{'Content-Type':'application/json',Origin:base},body:JSON.stringify({action:'create',egg_count:100,start_date:'2026-10-01'})});assert.equal(saveDenied.status,401);

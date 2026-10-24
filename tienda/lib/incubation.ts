@@ -38,9 +38,8 @@ export function validateEvent(b:Record<string,unknown>,lot:Lot,today=todayAR()){
  if(b.action==='hatch'){
   if(date<(lot.candled_on??lot.start_date)||date<(lot.lockdown_on??lot.start_date))throw new Error('El nacimiento no puede ser anterior a las etapas registradas.');
   if(!integer(b.born,0,lot.developing??lot.egg_count))throw new Error('Los nacidos no pueden superar los huevos que continúan incubándose.');
-  const incident=text(b.incident??'',1500);if(incident===null||typeof b.share_results!=='boolean')throw new Error('Revisá las observaciones y la autorización.');
-  return {born:b.born,hatched_on:date,incident,share_results:b.share_results};
+  const incident=text(b.incident??'',1500);if(incident===null)throw new Error('Revisá las observaciones.');
+  return {born:b.born,hatched_on:date,incident};
  }
- if(b.action==='consent'&&typeof b.share_results==='boolean')return {share_results:b.share_results};
  throw new Error('Acción no válida.');
 }

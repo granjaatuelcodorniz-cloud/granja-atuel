@@ -16,10 +16,10 @@ test('ovoscopy accepts discarded only, including zero and all, rejects impossibl
 });
 test('birth totals use the remaining eggs, missing ovoscopy is not zero or fertility',()=>{
  const candled={...lot,discarded:12,developing:88,candled_on:'2026-10-11'};
- assert.equal(validateEvent({action:'hatch',date,born:88,share_results:false},candled,date).born,88);
- assert.throws(()=>validateEvent({action:'hatch',date,born:89,share_results:false},candled,date));
- assert.equal(validateEvent({action:'hatch',date,born:100,share_results:false},lot,date).born,100);
- assert.throws(()=>validateEvent({action:'hatch',date:'2026-10-10',born:80,share_results:false},candled,date));
+ assert.equal(validateEvent({action:'hatch',date,born:88},candled,date).born,88);
+ assert.throws(()=>validateEvent({action:'hatch',date,born:89},candled,date));
+ assert.equal(validateEvent({action:'hatch',date,born:100},lot,date).born,100);
+ assert.throws(()=>validateEvent({action:'hatch',date:'2026-10-10',born:80},candled,date));
  assert.equal(percent(0,100),'0%');assert.equal(percent(0,0),'—');
  assert.throws(()=>validateEvent({action:'candling',date,discarded:4},{...candled,born:80},date));
 });
@@ -28,4 +28,11 @@ test('other supplier name is saved trimmed and cannot be omitted; hidden stale n
  assert.equal(validateNewLot({...basic,source:'otro',provider_name:'  Criadero Los Álamos  '},date).provider_name,'Criadero Los Álamos');
  for(const provider_name of ['', '   ', 'x'.repeat(101)])assert.throws(()=>validateNewLot({...basic,source:'otro',provider_name},date));
  assert.equal(validateNewLot({...basic,source:'granja_atuel',provider_name:'Nombre anterior'},date).provider_name,'');
+});
+
+// The legacy flag must not become a publication permission or alter internal access.
+test('birth recording does not require or change sharing authorization',()=>{
+ const recorded=validateEvent({action:'hatch',date,born:80,share_results:true},lot,date);
+ assert.deepEqual(recorded,{born:80,hatched_on:date,incident:''});
+ assert.throws(()=>validateEvent({action:'consent',date,share_results:true},lot,date));
 });

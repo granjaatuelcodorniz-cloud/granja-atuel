@@ -23,31 +23,35 @@ fin del volteo día 14, nacimiento estimado día 16, según el protocolo de Gran
 Las fechas se calculan por calendario y el día actual en Argentina.
 
 Ovoscopía: solo se ingresan descartados; `developing` se calcula en Postgres.
-No hay dudosos ni rotos de recepción. Nacimientos: total, fecha, observaciones y
-consentimiento opcional. Se validan límites y las escrituras usan versión para
+No hay dudosos ni rotos de recepción. Nacimientos: total, fecha y observaciones. Se validan límites y las escrituras usan versión para
 rechazar cambios simultáneos. Compartir el texto de un resultado es una acción
-del cliente, separada del permiso de lectura para la granja.
+del cliente, separada de la consulta interna de la granja.
 
 `/huevos-fertiles` amplía la información y consulta precios actuales del catálogo.
-`/admin/incubaciones` muestra solo resultados autorizados, filtrados por especie
+`/admin/incubaciones` muestra los registros para seguimiento interno, filtrados por especie
 con sumas ponderadas, origen, tamaño de muestra y observaciones. No publica
 estadísticas ni presenta el desarrollo como fertilidad confirmada.
 
 ## Permisos y datos existentes
 
 SQL aplicado, no volver a ejecutar: `db/catalog-schema.sql` y
-`db/incubation-schema.sql` y `db/incubation-provider-name.sql`. Antes de sumar clientes se agregó una política RLS
+`db/incubation-schema.sql`, `db/incubation-provider-name.sql` y
+`db/incubation-internal-access.sql`. Antes de sumar clientes se agregó una política RLS
 restrictiva a las 15 tablas internas, con membresía explícita para las dos cuentas
 existentes de gestión. Sus políticas anteriores se conservan. Las futuras cuentas
 internas deben habilitarse deliberadamente por un administrador de la base.
 No se modificaron los registros existentes de ventas, finanzas o clientes.
 
 Cada cliente puede leer, crear, actualizar y eliminar únicamente sus lotes.
-El administrador de tienda tiene lectura de lotes con consentimiento, sin permiso
-de edición de los resultados ajenos. El cliente puede retirar esa autorización.
+El administrador de tienda tiene lectura interna de todos los lotes, sin permiso
+de edición de resultados ajenos. El aviso está visible antes del ingreso y en
+Mis incubaciones; `/buenas-practicas#privacidad` explica el uso para seguimiento.
+El campo histórico `share_results` se conserva sin modificar y no habilita
+publicación ni condiciona el acceso interno. No hay registros públicos.
 No se conceden escrituras de membresía a anon/authenticated ni se confía en
-user_metadata. Se probó aislamiento, acceso interno y consentimiento con usuarios
-temporales dentro de una transacción revertida. No se conservaron datos de prueba.
+user_metadata. `tests/incubation-access.sql` comprueba lectura de administrador,
+aislación entre clientes, denegación anónima y políticas de escritura por titular
+en una transacción de solo lectura, sin crear datos de prueba.
 
 La sesión usa cookies HTTP-only y validación de usuario en servidor/proxy.
 Registro e ingreso: Supabase Auth con correo y contraseña. El registro conserva

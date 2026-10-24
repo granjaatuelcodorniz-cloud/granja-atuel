@@ -23,15 +23,15 @@ try{
  writeFileSync('/tmp/atuel-incubation-test-identity.json',JSON.stringify({email,user_id:lot.owner_id}),{mode:0o600});assert.equal(lot.developing,null);
  const ovo=await post('/api/incubacion/lotes',{action:'candling',id:lot.id,version:lot.version,date:date(-10),discarded:12});assert.equal(ovo.status,200);lot=ovo.data.lot;assert.equal(lot.developing,88);
  const stale=await post('/api/incubacion/lotes',{action:'candling',id:lot.id,version:1,date:date(-10),discarded:0});assert.equal(stale.status,409);
- const badBirth=await post('/api/incubacion/lotes',{action:'hatch',id:lot.id,version:lot.version,date:date(-2),born:89,share_results:false});assert.equal(badBirth.status,400);
+ const badBirth=await post('/api/incubacion/lotes',{action:'hatch',id:lot.id,version:lot.version,date:date(-2),born:89});assert.equal(badBirth.status,400);
  const lockdown=await post('/api/incubacion/lotes',{action:'lockdown',id:lot.id,version:lot.version,date:date(-5)});assert.equal(lockdown.status,200);lot=lockdown.data.lot;
- const birth=await post('/api/incubacion/lotes',{action:'hatch',id:lot.id,version:lot.version,date:date(-2),born:80,incident:'Test only',share_results:true});assert.equal(birth.status,200);lot=birth.data.lot;assert.equal(lot.born,80);
+ const birth=await post('/api/incubacion/lotes',{action:'hatch',id:lot.id,version:lot.version,date:date(-2),born:80,incident:'Test only'});assert.equal(birth.status,200);lot=birth.data.lot;assert.equal(lot.born,80);
  const dashboard=await fetch(base+'/incubacion',{headers:{Cookie:[...cookies].map(([k,v])=>`${k}=${v}`).join('; ')}}).then(r=>r.text());assert.match(dashboard,/Mis incubaciones/);assert.match(dashboard,/Historial/);
- const consent=await post('/api/incubacion/lotes',{action:'consent',id:lot.id,version:lot.version,date:date(-1),share_results:false});assert.equal(consent.status,200);lot=consent.data.lot;assert.equal(lot.share_results,false);
+ const consent=await post('/api/incubacion/lotes',{action:'consent',id:lot.id,version:lot.version,date:date(-1),share_results:true});assert.equal(consent.status,400);
  assert.equal((await post('/api/incubacion/lotes',{action:'delete',id:lot.id,version:lot.version})).status,200);
  assert.equal((await post('/api/incubacion/salir',{})).status,200);
  assert.equal((await post('/api/incubacion/cuenta',{action:'login',email,password})).status,200);
  assert.equal((await post('/api/incubacion/salir',{})).status,200);
- console.log('PASS: signup, cookie session, create, ovoscopy 100−12=88, version conflict, invalid birth, lockdown, 80 births, consent withdrawal, delete, logout and login.');
+ console.log('PASS: signup, cookie session, create, ovoscopy 100−12=88, version conflict, invalid birth, lockdown, 80 births, obsolete consent action rejected, delete, logout and login.');
  console.log('Disposable Auth identity requires cleanup:',email);
 }catch(e){console.error(e);process.exitCode=1;}finally{server.kill('SIGTERM');}
