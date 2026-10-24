@@ -1,0 +1,3 @@
+import Link from 'next/link';
+import recipes from '@/lib/recetas.json';
+export default function Recipes(){return <main className="section recipes-page"><Link href="/" className="text-link">← Volver a Granja Atuel</Link><p className="eyebrow">COCINA CON HUEVOS DE CODORNIZ</p><h1>Ideas para tu mesa.</h1><p>Las recetas que ya conocés, en nuestra nueva tienda.</p><div className="all-recipes">{recipes.map((r,i)=><article key={i} id={`receta-${i}`}><img src={`/Recetas/${r.Imagen}`} alt={r['Título']} loading="lazy"/><div><p className="eyebrow">{r.Tiempo} · {r.Porciones} porciones · {r['Dif.']}</p><h2>{r['Título']}</h2><h3>Ingredientes</h3><p>{r.Ingredientes}</p><h3>Preparación</h3><p>{r['Preparación']}</p></div></article>)}</div></main>;}

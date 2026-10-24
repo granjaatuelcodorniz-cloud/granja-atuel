@@ -1,0 +1,20 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {priceOrder,validateCheckout,validPayment,validPreference} from '../lib/checkout.ts';
+import {seedProducts} from '../lib/catalog.ts';
+const body={name:'Persona de prueba',email:'test@example.invalid',cart:[{id:'consumo-5',quantity:2}],request_key:'a0000000-0000-4000-8000-000000000001',expected_total_cents:5000000};
+test('checkout rejects invalid/duplicate lines and never accepts client prices',()=>{const input=validateCheckout({...body,cart:[{id:'consumo-5',quantity:2,price:1}]});assert.equal(priceOrder(input.lines,seedProducts).total_cents,5000000);for(const quantity of [0,-1,21,1.2,'2'])assert.throws(()=>validateCheckout({...body,cart:[{id:'consumo-5',quantity}]}));assert.throws(()=>validateCheckout({...body,cart:[...body.cart,...body.cart]}));assert.throws(()=>priceOrder([{id:'missing',quantity:1}],seedProducts));assert.throws(()=>priceOrder(input.lines,seedProducts.map(p=>({...p,available:false}))));});
+test('only exact test payments with the expected seller, order, currency and amount can be registered',()=>{const order={id:'abc',total_cents:5000000};const payment={live_mode:false,external_reference:'abc',collector_id:123,currency_id:'ARS',transaction_amount:50000,status:'approved',date_last_updated:'2026-10-24T00:00:00Z'};assert.equal(validPayment(payment,order,'123'),true);for(const mismatch of [{live_mode:true},{collector_id:999},{currency_id:'USD'},{external_reference:'other'},{transaction_amount:1},{status:'invented'},{date_last_updated:'bad'}])assert.equal(validPayment({...payment,...mismatch},order,'123'),false);});
+
+test('checkout only opens preferences for the configured test seller and saved order',()=>{assert.equal(validPreference({collector_id:123,external_reference:'own'},'own','123'),true);assert.equal(validPreference({collector_id:999,external_reference:'own'},'own','123'),false);assert.equal(validPreference({collector_id:123,external_reference:'other'},'own','123'),false);});
+
+
+test('the dashboard-verified sandbox collector may report live_mode true; other collectors and incomplete modes remain rejected',()=>{
+ const order={id:'own',total_cents:2500000};
+ const payment={live_mode:true,collector_id:3450457878,external_reference:'own',currency_id:'ARS',transaction_amount:25000,status:'approved',date_last_updated:'2026-10-24T13:40:00Z'};
+ assert.equal(validPayment(payment,order,'3450457878'),true);
+ assert.equal(validPayment({...payment,collector_id:987},order,'987'),false);
+ assert.equal(validPayment(payment,order,'987'),false);
+ assert.equal(validPayment({...payment,live_mode:undefined},order,'3450457878'),false);
+ for(const mismatch of [{external_reference:'other'},{transaction_amount:1},{currency_id:'USD'}])assert.equal(validPayment({...payment,...mismatch},order,'3450457878'),false);
+});
