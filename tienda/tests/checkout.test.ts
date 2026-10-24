@@ -7,3 +7,14 @@ test('checkout rejects invalid/duplicate lines and never accepts client prices',
 test('only exact test payments with the expected seller, order, currency and amount can be registered',()=>{const order={id:'abc',total_cents:5000000};const payment={live_mode:false,external_reference:'abc',collector_id:123,currency_id:'ARS',transaction_amount:50000,status:'approved',date_last_updated:'2026-10-24T00:00:00Z'};assert.equal(validPayment(payment,order,'123'),true);for(const mismatch of [{live_mode:true},{collector_id:999},{currency_id:'USD'},{external_reference:'other'},{transaction_amount:1},{status:'invented'},{date_last_updated:'bad'}])assert.equal(validPayment({...payment,...mismatch},order,'123'),false);});
 
 test('checkout only opens preferences for the configured test seller and saved order',()=>{assert.equal(validPreference({collector_id:123,external_reference:'own'},'own','123'),true);assert.equal(validPreference({collector_id:999,external_reference:'own'},'own','123'),false);assert.equal(validPreference({collector_id:123,external_reference:'other'},'own','123'),false);});
+
+
+test('the dashboard-verified sandbox collector may report live_mode true; other collectors and incomplete modes remain rejected',()=>{
+ const order={id:'own',total_cents:2500000};
+ const payment={live_mode:true,collector_id:3450457878,external_reference:'own',currency_id:'ARS',transaction_amount:25000,status:'approved',date_last_updated:'2026-10-24T13:40:00Z'};
+ assert.equal(validPayment(payment,order,'3450457878'),true);
+ assert.equal(validPayment({...payment,collector_id:987},order,'987'),false);
+ assert.equal(validPayment(payment,order,'987'),false);
+ assert.equal(validPayment({...payment,live_mode:undefined},order,'3450457878'),false);
+ for(const mismatch of [{external_reference:'other'},{transaction_amount:1},{currency_id:'USD'}])assert.equal(validPayment({...payment,...mismatch},order,'3450457878'),false);
+});

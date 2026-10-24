@@ -10,8 +10,13 @@ export function validateCheckout(b:Record<string,unknown>){
  return {name:b.name.trim(),email:b.email.trim().toLowerCase(),request_key:b.request_key,expected_total_cents:Number(b.expected_total_cents),lines};
 }
 export function priceOrder(lines:CartLine[],products:Product[]){const items:OrderItem[]=lines.map(l=>{const p=products.find(p=>p.id===l.id&&p.active&&p.available);if(!p||!Number.isSafeInteger(p.price)||p.price<1)throw new Error('Un producto cambió de disponibilidad. Volvé al catálogo.');return {id:p.id,title:p.name+' · '+p.description,quantity:l.quantity,unit_price:p.price};});const total_cents=items.reduce((s,i)=>s+i.unit_price*i.quantity*100,0);if(!Number.isSafeInteger(total_cents)||total_cents<100||total_cents>10000000000)throw new Error('El importe del pedido no es válido.');return {items,total_cents};}
+// Verified in Mercado Pago Developers > Granja Atuel > test credentials.
+// Test-user payments can use the production API flag; this exact sandbox
+// collector is isolated from the real merchant and uses fictitious funds.
+const verifiedTestCollector='3450457878';
+export function validTestPaymentMode(p:Record<string,unknown>,sellerId:string){return p.live_mode===false||(p.live_mode===true&&sellerId===verifiedTestCollector&&String(p.collector_id)===verifiedTestCollector);}
 export function validPayment(p:Record<string,unknown>,order:{id:string;total_cents:number},sellerId:string){
- return p.live_mode===false&&p.external_reference===order.id&&String(p.collector_id)===sellerId&&p.currency_id==='ARS'&&typeof p.transaction_amount==='number'&&Math.round(p.transaction_amount*100)===Number(order.total_cents)&&typeof p.status==='string'&&['pending','in_process','authorized','approved','rejected','cancelled','refunded','charged_back'].includes(p.status)&&typeof p.date_last_updated==='string'&&Number.isFinite(Date.parse(p.date_last_updated));
+ return validTestPaymentMode(p,sellerId)&&p.external_reference===order.id&&String(p.collector_id)===sellerId&&p.currency_id==='ARS'&&typeof p.transaction_amount==='number'&&Math.round(p.transaction_amount*100)===Number(order.total_cents)&&typeof p.status==='string'&&['pending','in_process','authorized','approved','rejected','cancelled','refunded','charged_back'].includes(p.status)&&typeof p.date_last_updated==='string'&&Number.isFinite(Date.parse(p.date_last_updated));
 }
 
 export function validPreference(p:Record<string,unknown>,orderId:string,sellerId:string){return String(p.collector_id)===sellerId&&p.external_reference===orderId;}

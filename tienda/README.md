@@ -106,8 +106,8 @@ pagos; el administrador autorizado tiene lectura. No se imprime ni envía esta
 clave al navegador. El comprador accede a su pedido por una cookie aleatoria
 HTTP-only, cuyo hash se guarda en la base. No se usan UUIDs como autorización.
 La página de retorno nunca confía en los estados recibidos por query string;
-consulta a Mercado Pago. Valida vendedor, moneda, importe, referencia y live_mode
-false. Los pagos se registran con bloqueo por pedido y por fecha del proveedor:
+consulta a Mercado Pago. Valida vendedor, moneda, importe, referencia y entorno
+de prueba, incluida la excepción del collector de prueba verificado que se detalla abajo. Los pagos se registran con bloqueo por pedido y por fecha del proveedor:
 no duplican por reintentos ni degradan un aprobado por otro intento rechazado.
 
 `/api/mercadopago/webhook` valida firma con el SDK oficial fijado a 3.6.1 y vuelve
@@ -127,3 +127,10 @@ Antes de producción: correo de pedidos, historial ligado a cuenta, inventario y
 reservas, políticas de entrega, rate limiting, monitoreo, privacidad, conciliación
 completa de pagos divididos y prueba extremo a extremo. Ningún parámetro permite
 activar cobros productivos en esta versión.
+
+Los pagos de usuarios de prueba pueden devolver live_mode=true. Para ese caso
+solo se acepta el collector 3450457878, verificado en el panel de credenciales
+de prueba de Granja Atuel, y debe coincidir también con la configuración del
+servidor. Un collector real u otro ID no obtiene esa excepción. Se conservan
+las validaciones de pedido, moneda, importe, estado y fecha. Al regresar se
+consulta el payment_id directamente; el status de la URL nunca autoriza el pago.
