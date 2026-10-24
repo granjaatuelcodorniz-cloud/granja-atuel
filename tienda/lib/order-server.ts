@@ -1,0 +1,16 @@
+import 'server-only';
+import {createClient} from '@supabase/supabase-js';
+import {createHash,randomBytes} from 'node:crypto';
+import {cookies} from 'next/headers';
+import {validPayment} from './checkout';
+export const shopOrigin='https://granja-atuel-tien-git-d38687-granjaatuelcodorniz-4243s-projects.vercel.app';
+export function checkoutOrigin(request:Request){const host=request.headers.get('host');const allowed=[new URL(shopOrigin).host,process.env.VERCEL_URL,process.env.VERCEL_BRANCH_URL].filter(Boolean);if(!host||!allowed.includes(host))throw new Error('Dirección de tienda no permitida.');return 'https://'+host;}
+export const checkoutReady=()=>process.env.VERCEL_ENV==='preview'&&process.env.MERCADOPAGO_MODE==='test'&&!!process.env.MERCADOPAGO_ACCESS_TOKEN&&!!process.env.SUPABASE_SECRET_KEY&&!!process.env.NEXT_PUBLIC_SUPABASE_URL;
+export function orderDb(){if(!checkoutReady())throw new Error('El pago de prueba está pendiente de configuración.');return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.SUPABASE_SECRET_KEY!,{auth:{persistSession:false,autoRefreshToken:false}});}
+export const digest=(s:string)=>createHash('sha256').update(s).digest('hex');
+export async function visitor(create=false){const jar=await cookies();let token=jar.get('ga_order_visitor')?.value;if(!token&&create){token=randomBytes(32).toString('hex');jar.set('ga_order_visitor',token,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax',path:'/',maxAge:2592000});}return token&&/^[a-f0-9]{64}$/.test(token)?digest(token):null;}
+export async function mp(path:string,options:RequestInit={}){const r=await fetch('https://api.mercadopago.com'+path,{...options,headers:{Authorization:'Bearer '+process.env.MERCADOPAGO_ACCESS_TOKEN,'Content-Type':'application/json',...options.headers},cache:'no-store',signal:AbortSignal.timeout(12000)});if(!r.ok)throw new Error('Mercado Pago no respondió como esperábamos. Intentá de nuevo.');return r.json();}
+export async function testSeller(){const seller=await mp('/users/me');if(!Array.isArray(seller.tags)||!seller.tags.includes('test_user'))throw new Error('La credencial no corresponde a un vendedor de prueba. No se inició ningún cobro.');return String(seller.id);}
+export async function reconcilePayment(paymentId:string,expectedOrderId?:string){if(!/^\d{1,30}$/.test(paymentId))throw new Error('Pago inválido.');const sellerId=await testSeller();const payment=await mp('/v1/payments/'+paymentId);const db=orderDb();const reference=payment.external_reference;if(expectedOrderId&&reference!==expectedOrderId)throw new Error('El pago pertenece a otro pedido.');if(typeof reference!=='string'||!/^[a-f0-9-]{36}$/i.test(reference))return;
+ const {data:order,error}=await db.from('tienda_pedidos').select('id,total_cents').eq('id',reference).maybeSingle();if(error)throw new Error('No pudimos consultar el pedido.');if(!order)return;if(!validPayment(payment,order,sellerId))throw new Error('El pago no coincide con el pedido de prueba.');
+ const result=await db.rpc('tienda_register_payment',{p_order_id:order.id,p_payment_id:String(payment.id),p_status:payment.status,p_updated_at:payment.date_last_updated,p_amount_cents:order.total_cents});if(result.error)throw new Error('No pudimos registrar el estado del pago.');}

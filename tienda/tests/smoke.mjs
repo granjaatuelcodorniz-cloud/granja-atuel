@@ -24,6 +24,11 @@ try{
  const reports=await fetch(base+'/admin/incubaciones',{redirect:'manual'});assert.equal(reports.status,307);
  const oauth=await fetch(base+'/api/incubacion/google',{redirect:'manual'});assert.equal(oauth.status,307);assert.match(oauth.headers.get('location'),/^https:\/\/granja-atuel-tien-git-d38687-granjaatuelcodorniz-4243s-projects\.vercel\.app\/api\/incubacion\/google$/);
  const callback=await fetch(base+'/auth/callback?next=https://example.invalid',{redirect:'manual'});assert.equal(callback.status,303);assert.match(callback.headers.get('location'),/\/incubacion\?acceso=error$/);assert.equal(callback.headers.get('referrer-policy'),'no-referrer');
+ const checkout=await fetch(base+'/checkout');assert.equal(checkout.status,200);assert.match(await checkout.text(),/PRUEBA DE COMPRA/);
+ const noCheckout=await fetch(base+'/api/checkout',{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:'{}'});assert.equal(noCheckout.status,503);
+ const badOrigin=await fetch(base+'/api/checkout',{method:'POST',headers:{Origin:'https://other.invalid','Content-Type':'application/json'},body:'{}'});assert.equal(badOrigin.status,403);
+ const forgedWebhook=await fetch(base+'/api/mercadopago/webhook?type=payment&data.id=1',{method:'POST'});assert.equal(forgedWebhook.status,503);
+ const missingOrder=await fetch(base+'/pedido/a0000000-0000-4000-8000-000000000001');assert.match(await missingOrder.text(),/Pedido no disponible/);
  const image=await fetch(base+'/huevos-consumo1.webp');assert.equal(image.status,200);assert.match(image.headers.get('content-type'),/image\/webp/);
  const robots=await fetch(base+'/robots.txt');assert.match(await robots.text(),/Disallow: \//);
  console.log('HTTP checks passed: catalog, noindex, admin redirect, unauthorized edit, CSRF rejection, recipes, incubation and product image.');

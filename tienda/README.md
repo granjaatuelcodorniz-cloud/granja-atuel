@@ -84,3 +84,42 @@ actualizar el origen canónico en ambas rutas y las listas permitidas del provee
 Se conserva la configuración Auth existente; no se concede ningún permiso de
 administración por ingresar con Google. La prueba final requiere que el propietario
 complete el selector de cuenta de Google desde el alias estable.
+
+## Pedidos y Checkout Pro: solo pruebas
+
+`/checkout` calcula desde el catálogo, crea un pedido privado y genera una
+preferencia de Checkout Pro. La ruta solo opera con VERCEL_ENV=preview,
+MERCADOPAGO_MODE=test y una credencial cuyo `/users/me` devuelve `test_user`.
+Nunca determina el entorno mirando solo el prefijo APP_USR de la clave.
+El cliente debe aceptar el mismo total que se muestra: si cambió, se rechaza el
+intento antes de generar el pago. La clave de intento y el hash de la solicitud
+impiden crear otro pedido por doble envío o alterar uno existente. No hay
+reservas, descuento de stock, despachos ni escritura en las ventas de gestión.
+
+SQL aplicado: `db/orders-schema.sql`. Las tablas tienen RLS, sin acceso cliente
+de escritura. Solo el backend con `SUPABASE_SECRET_KEY` crea pedidos y registra
+pagos; el administrador autorizado tiene lectura. No se imprime ni envía esta
+clave al navegador. El comprador accede a su pedido por una cookie aleatoria
+HTTP-only, cuyo hash se guarda en la base. No se usan UUIDs como autorización.
+La página de retorno nunca confía en los estados recibidos por query string;
+consulta a Mercado Pago. Valida vendedor, moneda, importe, referencia y live_mode
+false. Los pagos se registran con bloqueo por pedido y por fecha del proveedor:
+no duplican por reintentos ni degradan un aprobado por otro intento rechazado.
+
+`/api/mercadopago/webhook` valida firma con el SDK oficial fijado a 3.6.1 y vuelve
+a consultar el recurso a Mercado Pago. Requiere MERCADOPAGO_WEBHOOK_SECRET.
+La protección de Vercel puede impedir recibir notificaciones externas: antes de
+usar webhooks se debe resolver el acceso a esa ruta y probar entrega real. No se
+retiró la protección. Mientras tanto, la página de pedido tiene conciliación
+manual/automática al abrir por POST desde la sesión autorizada.
+
+Configuración pendiente: SUPABASE_SECRET_KEY (clave secreta del proyecto, solo
+Preview y Secret) y firma de webhook. La Public Key queda preparada para SDK de
+interfaz, aunque la redirección a init_point no la necesita. El código está
+preparado para probar, pero NO se verificó aún un pago real de sandbox. Las
+credenciales sensibles de Vercel no se pueden leer desde el conector.
+
+Antes de producción: correo de pedidos, historial ligado a cuenta, inventario y
+reservas, políticas de entrega, rate limiting, monitoreo, privacidad, conciliación
+completa de pagos divididos y prueba extremo a extremo. Ningún parámetro permite
+activar cobros productivos en esta versión.
