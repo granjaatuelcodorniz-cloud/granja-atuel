@@ -89,7 +89,11 @@ complete el selector de cuenta de Google desde el alias estable.
 
 `/checkout` calcula desde el catálogo, crea un pedido privado y genera una
 preferencia de Checkout Pro. La ruta solo opera con VERCEL_ENV=preview,
-MERCADOPAGO_MODE=test y una credencial cuyo `/users/me` devuelve `test_user`.
+MERCADOPAGO_MODE=test y el ID de vendedor de pruebas configurado en MERCADOPAGO_TEST_SELLER_ID.
+Antes de abrir el enlace se valida que el collector_id devuelto por la preferencia
+coincida con ese ID obtenido del panel de credenciales de prueba, y que la
+referencia coincida con el pedido. El proveedor rechazó /users/me con 403; no se
+usa esa consulta. No se identifica el entorno por el formato de las claves.
 Nunca determina el entorno mirando solo el prefijo APP_USR de la clave.
 El cliente debe aceptar el mismo total que se muestra: si cambió, se rechaza el
 intento antes de generar el pago. La clave de intento y el hash de la solicitud

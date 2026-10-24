@@ -1,6 +1,6 @@
 import {NextResponse} from 'next/server';
 import {sameOrigin,readSmallJson} from '@/lib/request';
-import {validateCheckout,priceOrder} from '@/lib/checkout';
+import {validateCheckout,priceOrder,validPreference} from '@/lib/checkout';
 import {checkoutOrigin,checkoutReady,orderDb,visitor,digest,mp,testSeller,shopOrigin} from '@/lib/order-server';
 export async function POST(request:Request){
  const reply=(b:unknown,status=200)=>NextResponse.json(b,{status,headers:{'Cache-Control':'private, no-store'}});
@@ -24,9 +24,9 @@ export async function POST(request:Request){
  if(order.checkout_url)return reply({redirect:order.checkout_url});
  const claim=await db.from('tienda_pedidos').update({preference_id:'creating:'+order.id}).eq('id',order.id).is('preference_id',null).select('id');if(claim.error)throw new Error('No pudimos preparar el pago.');if(!claim.data?.length)return reply({error:'El pago se está preparando. Volvé a intentar en unos segundos.'},409);
  try{
- await testSeller();
+ const sellerId=await testSeller();
  const preference=await mp('/checkout/preferences',{method:'POST',headers:{'X-Idempotency-Key':order.id},body:JSON.stringify({items:order.items.map((i:{id:string;title:string;quantity:number;unit_price:number})=>({...i,currency_id:'ARS'})),external_reference:order.id,back_urls:{success:returnOrigin+'/pedido/'+order.id,pending:returnOrigin+'/pedido/'+order.id,failure:returnOrigin+'/pedido/'+order.id},auto_return:'approved',expires:true,expiration_date_to:order.expires_at, ...(process.env.MERCADOPAGO_WEBHOOK_SECRET?{notification_url:shopOrigin+'/api/mercadopago/webhook'}:{})})});
- const url=new URL(preference.init_point);if(url.protocol!=='https:'||!['www.mercadopago.com.ar','mercadopago.com.ar','sandbox.mercadopago.com.ar'].includes(url.hostname))throw new Error('La dirección de pago no es válida.');
+ if(!validPreference(preference,order.id,sellerId))throw new Error('El vendedor de Mercado Pago no coincide con la cuenta de prueba configurada. No se abrió el pago.');const url=new URL(preference.init_point);if(url.protocol!=='https:'||!['www.mercadopago.com.ar','mercadopago.com.ar','sandbox.mercadopago.com.ar'].includes(url.hostname))throw new Error('La dirección de pago no es válida.');
  const saved=await db.from('tienda_pedidos').update({preference_id:String(preference.id),checkout_url:url.href}).eq('id',order.id);if(saved.error)throw new Error('No pudimos guardar el enlace de pago.');
  return reply({redirect:url.href});
  }catch(e){await db.from('tienda_pedidos').update({preference_id:null}).eq('id',order.id).eq('preference_id','creating:'+order.id);throw e;}

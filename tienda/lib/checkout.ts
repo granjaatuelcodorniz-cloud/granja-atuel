@@ -13,3 +13,5 @@ export function priceOrder(lines:CartLine[],products:Product[]){const items:Orde
 export function validPayment(p:Record<string,unknown>,order:{id:string;total_cents:number},sellerId:string){
  return p.live_mode===false&&p.external_reference===order.id&&String(p.collector_id)===sellerId&&p.currency_id==='ARS'&&typeof p.transaction_amount==='number'&&Math.round(p.transaction_amount*100)===Number(order.total_cents)&&typeof p.status==='string'&&['pending','in_process','authorized','approved','rejected','cancelled','refunded','charged_back'].includes(p.status)&&typeof p.date_last_updated==='string'&&Number.isFinite(Date.parse(p.date_last_updated));
 }
+
+export function validPreference(p:Record<string,unknown>,orderId:string,sellerId:string){return String(p.collector_id)===sellerId&&p.external_reference===orderId;}
