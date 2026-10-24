@@ -22,6 +22,8 @@ try{
  const customerCSRF=await fetch(base+'/api/incubacion/cuenta',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://other.example'},body:'{}'});assert.equal(customerCSRF.status,403);
  const invalidSignup=await fetch(base+'/api/incubacion/cuenta',{method:'POST',headers:{'Content-Type':'application/json',Origin:base},body:'null'});assert.equal(invalidSignup.status,400);
  const reports=await fetch(base+'/admin/incubaciones',{redirect:'manual'});assert.equal(reports.status,307);
+ const oauth=await fetch(base+'/api/incubacion/google',{redirect:'manual'});assert.equal(oauth.status,307);assert.match(oauth.headers.get('location'),/^https:\/\/granja-atuel-tien-git-d38687-granjaatuelcodorniz-4243s-projects\.vercel\.app\/api\/incubacion\/google$/);
+ const callback=await fetch(base+'/auth/callback?next=https://example.invalid',{redirect:'manual'});assert.equal(callback.status,303);assert.match(callback.headers.get('location'),/\/incubacion\?acceso=error$/);assert.equal(callback.headers.get('referrer-policy'),'no-referrer');
  const image=await fetch(base+'/huevos-consumo1.webp');assert.equal(image.status,200);assert.match(image.headers.get('content-type'),/image\/webp/);
  const robots=await fetch(base+'/robots.txt');assert.match(await robots.text(),/Disallow: \//);
  console.log('HTTP checks passed: catalog, noindex, admin redirect, unauthorized edit, CSRF rejection, recipes, incubation and product image.');

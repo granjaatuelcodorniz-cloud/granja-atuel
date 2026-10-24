@@ -72,3 +72,15 @@ Los precios se consultan en Supabase. Pesos y medidas siguen pendientes de medir
 
 La preview conserva protección Vercel, banner y noindex. No cobra ni genera envíos.
 No se reutilizan credenciales de Teinvito ni se conecta el motor de recetas con IA.
+
+## Acceso con Google en preview
+
+El proveedor Google se configura en Supabase con las credenciales del cliente OAuth
+web. Se usa PKCE con cookies HTTP-only, intercambio de código en `/auth/callback`
+y retorno fijo a `/incubacion`. Los errores se muestran sin datos del proveedor.
+La entrada desde URLs inmutables redirige primero al alias estable de pruebas para
+que el verificador y el callback compartan host. No habilitar en producción sin
+actualizar el origen canónico en ambas rutas y las listas permitidas del proveedor.
+Se conserva la configuración Auth existente; no se concede ningún permiso de
+administración por ingresar con Google. La prueba final requiere que el propietario
+complete el selector de cuenta de Google desde el alias estable.
