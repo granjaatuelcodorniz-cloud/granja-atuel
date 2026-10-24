@@ -13,6 +13,8 @@ try{
  assert.match(home.headers.get('x-robots-tag'),/noindex/);
  const admin=await fetch(base+'/admin',{redirect:'manual'});assert.equal(admin.status,307);assert.match(admin.headers.get('location'),/\/admin\/login/);
  const denied=await fetch(base+'/api/admin/products',{method:'PUT',headers:{'Content-Type':'application/json','Origin':base},body:'{}'});assert.equal(denied.status,401);
+ for(const [path,method] of [['products','POST'],['inventory','POST'],['media','POST'],['settings','PUT'],['orders','PUT']]){const denied=await fetch(base+'/api/admin/'+path,{method,headers:{Origin:base,'Content-Type':'application/json'},body:'{}'});assert.equal(denied.status,401,path+' requires admin');const csrf=await fetch(base+'/api/admin/'+path,{method,headers:{Origin:'https://other.invalid','Content-Type':'application/json'},body:'{}'});assert.equal(csrf.status,403,path+' rejects cross-origin');}
+ const detail=await fetch(base+'/producto/consumo-5');assert.equal(detail.status,200);assert.match(await detail.text(),/Sobre este producto/);
  const csrf=await fetch(base+'/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json','Origin':'https://other.example'},body:'{}'});assert.equal(csrf.status,403);
  const recipes=await fetch(base+'/recetas');assert.equal(recipes.status,200);assert.match(await recipes.text(),/Ingredientes/);
  const incubation=await fetch(base+'/incubacion');assert.equal(incubation.status,200);assert.match(await incubation.text(),/Crear cuenta/);

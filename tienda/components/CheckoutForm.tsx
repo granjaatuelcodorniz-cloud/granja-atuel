@@ -1,11 +1,11 @@
 'use client';
 import Link from 'next/link';
 import {useEffect,useRef,useState} from 'react';
-import {money,normalizeCart,summarizeCart,type Product,type CartLine} from '@/lib/catalog';
+import {money,normalizeCart,summarizeCart,stockLimit,type Product,type CartLine} from '@/lib/catalog';
 export default function CheckoutForm({products,enabled}:{products:Product[];enabled:boolean}){
  const [cart,setCart]=useState<CartLine[]>([]),[loaded,setLoaded]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');const attempt=useRef({body:'',key:''});
  useEffect(()=>{try{setCart(normalizeCart(JSON.parse(localStorage.getItem('ga-preview-cart-v1')||'[]')));}catch{}setLoaded(true);},[]);
- const {items,total}=summarizeCart(cart,products);const changed=items.length!==cart.length;
+ const {items,total}=summarizeCart(cart,products);const changed=items.length!==cart.length||items.some(i=>i.quantity>stockLimit(i.product));
  async function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setError('');setBusy(true);const f=new FormData(e.currentTarget);const body={name:f.get('name'),email:f.get('email'),cart,expected_total_cents:total*100};const signature=JSON.stringify(body);if(signature!==attempt.current.body)attempt.current={body:signature,key:crypto.randomUUID()};try{const r=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,request_key:attempt.current.key})});const d=await r.json();if(!r.ok)throw new Error(d.error);window.location.assign(d.redirect);}catch(e){setError(e instanceof Error?e.message:'No pudimos conectar. Intentá de nuevo.');setBusy(false);}}
  if(!loaded)return <p role="status">Cargando tu carrito…</p>;
  if(!items.length)return <section className="inc-empty"><h2>Tu carrito está vacío.</h2><Link className="button" href="/#tienda">Elegir productos</Link></section>;

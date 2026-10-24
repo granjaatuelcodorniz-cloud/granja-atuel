@@ -2,6 +2,7 @@ export type Product = {
   id: string; name: string; description: string; category: 'consumo' | 'fertiles' | 'insumos';
   price: number; image: string; active: boolean; available: boolean;
   weight_grams: number | null; height_cm: number | null; width_cm: number | null; length_cm: number | null;
+  stock_tracking?:boolean;stock_quantity?:number;stock_minimum?:number;sku?:string;details?:string;gallery?:{url:string;alt:string}[];sort_order?:number;updated_at?:string;
 };
 export const seedProducts: Product[] = [
   { id:'consumo-5', name:'Huevos de consumo', description:'5 docenas · 60 huevos', category:'consumo', price:25000, image:'/huevos-consumo1.webp', active:true, available:true },
@@ -10,6 +11,9 @@ export const seedProducts: Product[] = [
   { id:'fertiles-10', name:'Huevos fértiles', description:'10 docenas · 120 huevos para incubar', category:'fertiles', price:98000, image:'/huevos-fertiles1.webp', active:true, available:true },
   { id:'blister-200', name:'Blíster para codorniz', description:'200 unidades · Capacidad de una docena', category:'insumos', price:82000, image:'/maples-x-200-unidades.webp', active:true, available:true },
 ].map(p=>({...p, weight_grams:null, height_cm:null, width_cm:null, length_cm:null})) as Product[];
+export function validImageUrl(value:string){if(value==='/producto-sin-imagen.svg')return true;if(/^\/[a-zA-Z0-9_][a-zA-Z0-9_./-]*\.(webp|png|jpg|jpeg)$/.test(value)&&!value.includes('..'))return true;return /^https:\/\/rxqbcpbympgkjiwwroui\.supabase\.co\/storage\/v1\/object\/public\/tienda-productos\/products\/[a-f0-9-]+\.(webp|png|jpg|jpeg)$/.test(value);}
+export function stockLimit(p:Product){return p.stock_tracking?Math.min(20,Math.max(0,p.stock_quantity??0)):20;}
+export function canBuy(p:Product){return p.active&&p.available&&stockLimit(p)>0;}
 export const money = (amount:number) => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(amount);
 export type CartLine = {id:string; quantity:number};
 export function normalizeCart(value:unknown):CartLine[] {
@@ -22,7 +26,7 @@ export function normalizeCart(value:unknown):CartLine[] {
   return [...result].map(([id,quantity])=>({id,quantity}));
 }
 export function summarizeCart(lines:CartLine[], products:Product[]) {
-  const items = normalizeCart(lines).map(line=>({ ...line, product:products.find(p=>p.id===line.id && p.active && p.available) })).filter((item):item is CartLine & {product:Product}=>!!item.product);
+  const items = normalizeCart(lines).map(line=>({ ...line, product:products.find(p=>p.id===line.id && canBuy(p)) })).filter((item):item is CartLine & {product:Product}=>!!item.product);
   return {items, total:items.reduce((sum,item)=>sum+item.product.price*item.quantity,0), count:items.reduce((sum,item)=>sum+item.quantity,0)};
 }
 export function validateProduct(input:unknown): Product {
@@ -33,7 +37,7 @@ export function validateProduct(input:unknown): Product {
   if(typeof p.description!=='string'||p.description.length>500) throw new Error('Descripción demasiado larga.');
   if(!['consumo','fertiles','insumos'].includes(String(p.category))) throw new Error('Categoría inválida.');
   if(typeof p.price!=='number'||!Number.isSafeInteger(p.price)||p.price<1||p.price>100000000) throw new Error('Ingresá un precio entero mayor a cero.');
-  if(typeof p.image!=='string'||!/^\/[a-zA-Z0-9_][a-zA-Z0-9_./-]*\.(webp|png|jpg|jpeg)$/.test(p.image)||p.image.includes('..')) throw new Error('Imagen inválida.');
+  if(typeof p.image!=='string'||!validImageUrl(p.image)) throw new Error('Imagen inválida.');
   if(typeof p.active!=='boolean'||typeof p.available!=='boolean') throw new Error('Estado inválido.');
   const dimensions = ['weight_grams','height_cm','width_cm','length_cm'] as const;
   for(const field of dimensions) if(p[field]!==null && (typeof p[field]!=='number'||!Number.isInteger(p[field])||Number(p[field])<1||Number(p[field])>100000)) throw new Error('Peso y medidas deben ser enteros positivos o quedar vacíos.');

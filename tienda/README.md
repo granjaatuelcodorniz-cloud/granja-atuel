@@ -134,3 +134,36 @@ de prueba de Granja Atuel, y debe coincidir también con la configuración del
 servidor. Un collector real u otro ID no obtiene esa excepción. Se conservan
 las validaciones de pedido, moneda, importe, estado y fecha. Al regresar se
 consulta el payment_id directamente; el status de la URL nunca autoriza el pago.
+
+
+## Dashboard personalizado
+
+/admin incluye resumen con datos reales del entorno de prueba, catálogo con alta,
+edición, duplicación y archivo por despublicación, editor de fichas con descripción
+completa, SKU, orden, peso y medidas. Cada producto tiene una ficha pública en
+/producto/[id] y galería de hasta 8 imágenes, con portada, orden y textos alternativos.
+
+La biblioteca admite JPG/PNG/WebP y convierte en el navegador a WebP (máximo
+1800 px, hasta 2 MB). El servidor verifica tamaño, MIME y firma del archivo.
+El bucket tienda-productos sirve imágenes públicas; solo administradores pueden
+subir y consultar la biblioteca. Archivar oculta el selector sin romper las fichas.
+
+El inventario usa presentaciones completas. El control se activa por producto:
+cero impide agregar al carrito y el servidor rechaza cantidades superiores al
+stock. Los ingresos, salidas y recuentos usan un RPC transaccional exclusivo de
+service_role, accesible desde la API autenticada de administración. Cada movimiento
+tiene motivo, autor e identificador de intento; usa bloqueo y comprobación del
+stock esperado. El cliente no puede escribir stock_quantity directamente.
+Las compras simuladas no reservan ni descuentan stock real.
+
+Pedidos: últimos 200, búsqueda, filtros de pago, detalle, notas internas,
+preparación y seguimiento manual. El estado financiero sigue siendo autoritativo
+de Mercado Pago. Los cambios no disparan mensajes ni despachos. Configuración
+edita portada, WhatsApp, contacto, Instagram y ubicación de la nueva tienda.
+
+Migración aditiva: db/dashboard-schema.sql, aplicada a granja-gestor bajo el nombre
+tienda_admin_dashboard_catalog_inventory_media. No modifica tablas de finanzas ni
+la web estática. Validación: pruebas unitarias, build, pruebas HTTP de accesos y
+CSRF, y transacciones SQL con rollback para CRUD de administrador, bloqueo de
+escritura de stock, idempotencia y saldo no negativo. La prueba de carga de
+imágenes y el recorrido visual requieren la sesión del administrador en /admin.

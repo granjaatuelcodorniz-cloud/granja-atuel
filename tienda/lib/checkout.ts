@@ -1,4 +1,4 @@
-import type {Product,CartLine} from './catalog';
+import {canBuy,stockLimit,type Product,type CartLine} from './catalog.ts';
 export type OrderItem={id:string;title:string;quantity:number;unit_price:number};
 export const statusLabels:Record<string,string>={awaiting_payment:'Esperando pago',pending:'Pago pendiente',approved:'Pago de prueba aprobado',rejected:'Pago rechazado',cancelled:'Pago cancelado',refunded:'Pago devuelto',charged_back:'Pago contracargado'};
 export function validateCheckout(b:Record<string,unknown>){
@@ -9,7 +9,7 @@ export function validateCheckout(b:Record<string,unknown>){
  const seen=new Set<string>();const lines:CartLine[]=b.cart.map((l:unknown)=>{if(!l||typeof l!=='object')throw new Error('Carrito inválido.');const r=l as Record<string,unknown>;if(typeof r.id!=='string'||!/^[a-z0-9-]{1,64}$/.test(r.id)||!Number.isInteger(r.quantity)||Number(r.quantity)<1||Number(r.quantity)>20||seen.has(r.id))throw new Error('Revisá las cantidades del carrito.');seen.add(r.id);return {id:r.id,quantity:Number(r.quantity)};});
  return {name:b.name.trim(),email:b.email.trim().toLowerCase(),request_key:b.request_key,expected_total_cents:Number(b.expected_total_cents),lines};
 }
-export function priceOrder(lines:CartLine[],products:Product[]){const items:OrderItem[]=lines.map(l=>{const p=products.find(p=>p.id===l.id&&p.active&&p.available);if(!p||!Number.isSafeInteger(p.price)||p.price<1)throw new Error('Un producto cambió de disponibilidad. Volvé al catálogo.');return {id:p.id,title:p.name+' · '+p.description,quantity:l.quantity,unit_price:p.price};});const total_cents=items.reduce((s,i)=>s+i.unit_price*i.quantity*100,0);if(!Number.isSafeInteger(total_cents)||total_cents<100||total_cents>10000000000)throw new Error('El importe del pedido no es válido.');return {items,total_cents};}
+export function priceOrder(lines:CartLine[],products:Product[]){const items:OrderItem[]=lines.map(l=>{const p=products.find(p=>p.id===l.id&&canBuy(p)&&l.quantity<=stockLimit(p));if(!p||!Number.isSafeInteger(p.price)||p.price<1)throw new Error('Un producto cambió de disponibilidad. Volvé al catálogo.');return {id:p.id,title:p.name+' · '+p.description,quantity:l.quantity,unit_price:p.price};});const total_cents=items.reduce((s,i)=>s+i.unit_price*i.quantity*100,0);if(!Number.isSafeInteger(total_cents)||total_cents<100||total_cents>10000000000)throw new Error('El importe del pedido no es válido.');return {items,total_cents};}
 // Verified in Mercado Pago Developers > Granja Atuel > test credentials.
 // Test-user payments can use the production API flag; this exact sandbox
 // collector is isolated from the real merchant and uses fictitious funds.
