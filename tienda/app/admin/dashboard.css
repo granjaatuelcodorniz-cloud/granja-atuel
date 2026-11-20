@@ -55,8 +55,15 @@
 @media(max-width:660px){
  .action-centre .dash-content{padding-inline:15px}
  .act-heading{align-items:flex-start;flex-wrap:wrap;gap:12px}
+ .action-centre .act-heading>.dash-primary{font-size:12px!important;padding-inline:13px;min-height:42px}
  .act-work .dash-panel-heading{flex-wrap:wrap;gap:12px}
  .act-toolbar input{width:100%}
  .act-toolbar select{max-width:100%}
  .act-content-tabs button{font-size:12px}
+ .act-publications{display:block;min-width:0}
+ .act-publications thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ .act-publications tbody{display:grid}
+ .act-publications tbody tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);padding:9px 0;border-bottom:1px solid #e3e7dd}
+ .act-publications td{display:block;min-width:0!important;border:0;padding:5px 0}
+ .act-publications td:first-child,.act-publications td:last-child{grid-column:1/-1}
 }
