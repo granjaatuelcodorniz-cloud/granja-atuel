@@ -9,12 +9,12 @@ export async function POST(request:Request){
  let input;try{input=validateCheckout(await readSmallJson(request));}catch(e){return reply({error:e instanceof Error?e.message:'Revisá el pedido.'},400);}
  try{
  const returnOrigin=checkoutOrigin(request);const db=orderDb(),hash=await visitor(true);if(!hash)return reply({error:'No pudimos identificar esta sesión.'},400);
- const requestHash=digest(JSON.stringify({name:input.name,email:input.email,lines:input.lines,expected_total_cents:input.expected_total_cents}));
+ const requestHash=digest(JSON.stringify({name:input.name,email:input.email,lines:input.lines,expected_total_cents:input.expected_total_cents,delivery_address:input.delivery_address}));
  const {data:previous,error:readError}=await db.from('tienda_pedidos').select('*').eq('visitor_hash',hash).eq('request_key',input.request_key).maybeSingle();if(readError)throw new Error('No pudimos consultar el pedido.');let order=previous;
  if(!order){
  const {data:products,error}=await db.from('tienda_productos').select('*').in('id',input.lines.map(l=>l.id));if(error)throw new Error('No pudimos verificar el catálogo.');
  const values=priceOrder(input.lines,products??[]);if(values.total_cents!==input.expected_total_cents)return reply({error:'El precio cambió. Recargá para revisar el total antes de pagar.'},409);
- const created=await db.from('tienda_pedidos').insert({visitor_hash:hash,request_key:input.request_key,request_hash:requestHash,customer_name:input.name,customer_email:input.email,...values}).select().single();
+ const created=await db.from('tienda_pedidos').insert({visitor_hash:hash,request_key:input.request_key,request_hash:requestHash,customer_name:input.name,customer_email:input.email,delivery:'simulated_shipping',delivery_address:input.delivery_address,...values}).select().single();
  if(created.error?.code==='23505')return reply({error:'El pedido ya se está procesando. Volvé a intentar en unos segundos.'},409);
  if(created.error)throw new Error('No pudimos guardar el pedido.');order=created.data;
  }

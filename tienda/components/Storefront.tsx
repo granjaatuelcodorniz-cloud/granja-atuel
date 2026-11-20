@@ -1,47 +1,161 @@
 'use client';
+
 import {useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
-import {ArrowUpRight,ArrowRight,ShoppingBag,X,Plus,Minus,Leaf,MapPin,Package,Check,Menu} from 'lucide-react';
-import {money,normalizeCart,summarizeCart,canBuy,stockLimit,type CartLine,type Product} from '@/lib/catalog';
-import {defaultSettings,type ShopSettings} from '@/lib/admin';
-import recipes from '@/lib/recetas.json';
-import locations from '@/lib/clientes.json';
-const categories=[['todos','Todos los productos'],['consumo','Para tu mesa'],['fertiles','Para incubar'],['insumos','Insumos']] as const;
-export default function Storefront({products,source,settings=defaultSettings}:{products:Product[];source:string;settings?:ShopSettings}){
-  const [category,setCategory]=useState('todos');
-  const [cart,setCart]=useState<CartLine[]>([]);
-  const [ready,setReady]=useState(false);
-  const [open,setOpen]=useState(false);
-  const [menu,setMenu]=useState(false);
-  const [notice,setNotice]=useState('');
-  const dialog=useRef<HTMLDialogElement>(null);
-  const {items,total,count}=summarizeCart(cart,products);
-  useEffect(()=>{try{setCart(normalizeCart(JSON.parse(localStorage.getItem('ga-preview-cart-v1')||'[]')));}catch{}setReady(true);},[]);
-  useEffect(()=>{if(ready)try{localStorage.setItem('ga-preview-cart-v1',JSON.stringify(cart));}catch{}},[cart,ready]);
-  useEffect(()=>{if(open)dialog.current?.showModal();else dialog.current?.close();},[open]);
-  function add(p:Product){if(!canBuy(p))return;setCart(lines=>{const current=lines.find(l=>l.id===p.id)?.quantity||0;if(current>=stockLimit(p))return lines;return normalizeCart([...lines,{id:p.id,quantity:1}]);});setNotice(`${p.name}, ${p.description}: agregado al carrito.`);}
-  function change(id:string,delta:number){setCart(lines=>lines.map(l=>l.id===id?{...l,quantity:Math.min(stockLimit(products.find(p=>p.id===id)!),l.quantity+delta)}:l).filter(l=>l.quantity>0));}
-  const shown=products.filter(p=>p.active&&(category==='todos'||p.category===category));
-  return <>
-    <div className="preview-bar"><span>VISTA PREVIA</span> Estamos preparando nuestra nueva tienda. Las compras todavía no están habilitadas.</div>
-    <header className="header"><Link href="/" aria-label="Granja Atuel, inicio"><img className="logo" src="/logo-granja-atuel-web.webp" alt="Granja Atuel"/></Link>
-      <nav className={menu?'nav expanded':'nav'} aria-label="Principal"><a href="#tienda" onClick={()=>setMenu(false)}>La tienda</a><a href="#origen" onClick={()=>setMenu(false)}>Nuestro origen</a><Link href="/huevos-fertiles">Huevos fértiles</Link><a href="#recetas" onClick={()=>setMenu(false)}>Recetas</a><a href="#puntos" onClick={()=>setMenu(false)}>Dónde encontrarnos</a></nav>
-      <div className="header-actions"><button className="cart-button" onClick={()=>setOpen(true)} aria-label={`Abrir carrito, ${count} productos`}><ShoppingBag size={19}/><span className="cart-text">Tu carrito</span><b>{count}</b></button><button className="menu-button" aria-label="Abrir menú" aria-expanded={menu} onClick={()=>setMenu(!menu)}><Menu size={23}/></button></div>
-    </header>
-    <main>
-      <section className="hero" id="inicio"><div className="hero-copy"><p className="eyebrow"><span/> {settings.location.toUpperCase()}</p><h1>{settings.hero_title===defaultSettings.hero_title?<>Lo bueno empieza<br/>en el <em>origen.</em></>:settings.hero_title}</h1><p className="hero-description">{settings.hero_description}</p><a className="button" href="#tienda">Descubrí nuestros productos <ArrowUpRight size={19}/></a><div className="hero-footnote"><Leaf size={17}/> Producción propia · Atención directa</div></div><div className="hero-picture"><img src={settings.hero_image} alt="Codornices y huevos de Granja Atuel en un paisaje de San Rafael" fetchPriority="high"/><div className="origin-stamp"><span>HECHO CON</span><strong>cuidado</strong><span>EN MENDOZA</span></div><span className="photo-caption">Nuestro lugar en el mundo.</span></div></section>
-      <div className="values-strip"><span><Leaf size={19}/> De nuestra propia granja</span><span><Package size={19}/> Embalaje pensado para cuidarlos</span><span><MapPin size={19}/> Desde San Rafael, Mendoza</span></div>
-      <section className="section shop-section" id="tienda"><div className="section-heading"><div><p className="eyebrow">EL ELEGIDO PARA CADA MOMENTO</p><h2>De la granja, para vos.</h2></div><p>Para cocinar algo rico, empezar a criar<br/>o acompañar tu producción.</p></div><div className="category-tabs" role="group" aria-label="Filtrar productos">{categories.map(([id,label])=><button key={id} aria-pressed={category===id} className={category===id?'selected':''} onClick={()=>setCategory(id)}>{label}</button>)}</div>
-        {source==='unavailable'?<div className="empty-state">No pudimos cargar el catálogo. Volvé a intentar en unos minutos.</div>:<div className="product-grid">{shown.map((p,index)=><article className="product-card" key={p.id}><div className="product-image"><img src={p.image} alt={`${p.name}: ${p.description}`} loading="lazy"/>{p.category==='fertiles'&&<span className="product-tag">PARA INCUBAR</span>}{p.category==='consumo'&&index===0&&<span className="product-tag">DE NUESTRA GRANJA</span>}<button className="quick-add" disabled={!canBuy(p)} onClick={()=>add(p)} aria-label={`Agregar ${p.name}, ${p.description}`}><Plus size={21}/></button></div><div className="product-details"><p className="product-category">{p.category==='consumo'?'FRESCOS Y VERSÁTILES':p.category==='fertiles'?'JAPÓNICAS SELECCIONADAS':'PARA TU PRODUCCIÓN'}</p><h3><Link href={"/producto/"+p.id}>{p.name}</Link></h3><p className="product-description">{p.description}</p><div className="product-bottom"><strong>{money(p.price)}</strong><span>{canBuy(p)?'Disponible':'Sin disponibilidad'}</span></div><button className="add-button" disabled={!canBuy(p)} onClick={()=>add(p)}>{canBuy(p)?'Agregar al carrito':'Consultar disponibilidad'}<Plus size={16}/></button></div></article>)}</div>}
-        <p className="shipping-note">Los precios iniciales provienen del catálogo actual. El costo y las condiciones de entrega se confirmarán antes de habilitar las compras.</p>
-      </section>
-      <section className="origin-section" id="origen"><div className="origin-photo"><img src="/el-corazon-esta-en-cada-detalle.webp" alt="El cuidado de la producción en Granja Atuel" loading="lazy"/></div><div className="origin-copy"><p className="eyebrow">DETRÁS DE CADA DOCENA</p><h2>Una granja.<br/>Mucho cuidado.</h2><p>Somos Granja Atuel, en San Rafael, Mendoza. Producimos huevos de codorniz y acompañamos a quienes los eligen para su cocina o para comenzar a criar.</p><p>Nos gusta saber a dónde llega lo que hacemos. Por eso te atendemos de forma directa, desde la primera consulta.</p><a href={"https://wa.me/"+settings.whatsapp} target="_blank" rel="noreferrer" className="text-link">Conversemos por WhatsApp <ArrowUpRight size={18}/></a></div></section>
-      <section className="section" id="recetas"><div className="section-heading"><div><p className="eyebrow">IDEAS PARA DISFRUTARLOS</p><h2>Pequeños protagonistas.</h2></div><Link href="/recetas" className="text-link">Todas las recetas <ArrowRight size={18}/></Link></div><div className="recipe-grid">{recipes.slice(0,3).map((r,i)=><Link href={`/recetas#receta-${i}`} className="recipe-card" key={r['Título']}><img src={`/Recetas/${r.Imagen}`} alt={r['Título']} loading="lazy"/><div><p className="eyebrow">{r.Tiempo} · {r['Dif.']}</p><h3>{r['Título']}</h3><span>Ver receta <ArrowUpRight size={17}/></span></div></Link>)}</div></section>
-      <section className="section points-section" id="puntos"><div className="section-heading"><div><p className="eyebrow">MÁS CERCA TUYO</p><h2>También en tu barrio.</h2></div><p>Encontrá nuestros productos<br/>en los comercios que nos acompañan.</p></div><div className="points-grid">{locations.filter(p=>p.activo==='si').slice(0,6).map((p,i)=><a href={p.maps_link} className="point-card" key={i} target="_blank" rel="noreferrer"><MapPin size={20}/><div><h3>{p.nombre}</h3><p>{p.direccion}</p><span>{p.ciudad}</span></div><ArrowUpRight size={18}/></a>)}</div></section>
-      <section className="grow-banner"><div><p className="eyebrow">PARA LOS QUE QUIEREN EMPEZAR</p><h2>Tu próxima historia<br/>puede empezar con un huevo.</h2></div><a className="button light-button" href="/incubacion">Mis incubaciones <ArrowUpRight size={19}/></a></section>
-    </main>
-    <footer><div className="footer-top"><img className="logo" src="/logo-granja-atuel-web.webp" alt="Granja Atuel"/><p>De San Rafael, con el cuidado de siempre.</p><a href={"https://wa.me/"+settings.whatsapp}>WhatsApp · {settings.whatsapp} <ArrowUpRight size={16}/></a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} {settings.business_name} · {settings.location}</span><span className="inc-nav">{settings.contact_email&&<a href={"mailto:"+settings.contact_email}>{settings.contact_email}</a>}{settings.instagram&&<a href={settings.instagram} target="_blank" rel="noreferrer">Instagram</a>}<Link href="/buenas-practicas">Buenas Prácticas</Link><Link href="/admin">Administración</Link></span></div></footer>
-    <div className="sr-only" role="status" aria-live="polite">{notice}</div>
-    <dialog ref={dialog} className="cart-dialog" onCancel={()=>setOpen(false)} onClose={()=>setOpen(false)} aria-labelledby="cart-title"><div className="cart-heading"><div><p className="eyebrow">DE LA GRANJA A TU MESA</p><h2 id="cart-title">Tu carrito <small>({count})</small></h2></div><button className="icon-button" aria-label="Cerrar carrito" onClick={()=>setOpen(false)}><X/></button></div>{items.length===0?<div className="cart-empty"><ShoppingBag size={46}/><h3>Todavía no agregaste productos.</h3><p>Elegí lo que más te guste de nuestra granja.</p><button className="button" onClick={()=>setOpen(false)}>Explorar la tienda <ArrowRight size={17}/></button></div>:<><div className="cart-items">{items.map(({product:p,quantity})=><div className="cart-item" key={p.id}><img src={p.image} alt={p.name}/><div><h3><Link href={"/producto/"+p.id}>{p.name}</Link></h3><p>{p.description}</p><div className="quantity"><button aria-label={`Quitar una unidad de ${p.description}`} onClick={()=>change(p.id,-1)}><Minus size={14}/></button><span>{quantity}</span><button disabled={quantity>=stockLimit(p)} aria-label={`Sumar una unidad de ${p.description}`} onClick={()=>change(p.id,1)}><Plus size={14}/></button></div></div><strong>{money(p.price*quantity)}</strong></div>)}</div><div className="cart-summary"><div><span>Subtotal de productos</span><strong>{money(total)}</strong></div><p>Entrega a confirmar. El pago funciona en modo de prueba; la entrega se simula sin despacho real.</p><Link className="button" href="/checkout">Probar compra con Mercado Pago <Check size={18}/></Link><button className="continue-link" onClick={()=>setOpen(false)}>Seguir mirando</button></div></>}</dialog>
-  </>;
+import {ArrowRight,ArrowUpRight,Check,ChefHat,ChevronDown,Egg,Leaf,MapPin,Menu,Minus,Package,Plus,ShoppingBag,Store,Truck,X} from 'lucide-react';
+import {canBuy,money,normalizeCart,stockLimit,summarizeCart,type CartLine,type Product} from '@/lib/catalog';
+import type {ShopSettings} from '@/lib/admin';
+import type {SiteContent} from '@/lib/site-content';
+
+const categories=[['todos','Todas'],['consumo','Para tu mesa'],['fertiles','Para incubar'],['insumos','Insumos']] as const;
+type Category=typeof categories[number][0];
+const directions=(p:{map_url:string;name:string;address:string;city:string})=>p.map_url||'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent([p.name,p.address,p.city].join(', '));
+const storeUrl='https://www.mercadolibre.com.ar/tienda/granja-atuel';
+const cartKey='ga-preview-cart-v1';
+
+export default function Storefront({products,source,settings,content}:{products:Product[];source:string;settings:ShopSettings;content:SiteContent[]}){
+ const [category,setCategory]=useState<Category>('todos');
+ const [cart,setCart]=useState<CartLine[]>([]);
+ const [ready,setReady]=useState(false);
+ const [open,setOpen]=useState(false);
+ const [menu,setMenu]=useState(false);
+ const [notice,setNotice]=useState('');
+ const [city,setCity]=useState('');
+ const [showAllPoints,setShowAllPoints]=useState(false);
+ const dialog=useRef<HTMLDialogElement>(null);
+ const {items,total,count}=summarizeCart(cart,products);
+ const shown=products.filter(p=>p.active&&(category==='todos'||p.category===category));
+ const faqs=content.filter(c=>c.kind==='faq');
+ const recipes=content.filter(c=>c.kind==='recipe');
+ const picks=recipes.filter(r=>r.data.featured).slice(0,3);
+ const points=content.filter(c=>c.kind==='location');
+ const cities=Array.from(new Set(points.map(p=>p.data.city))).sort((a,b)=>a.localeCompare(b,'es-AR'));
+ const cityPoints=city?points.filter(p=>p.data.city===city):points;
+ const visiblePoints=showAllPoints?cityPoints:cityPoints.slice(0,6);
+ const wa='https://wa.me/'+settings.whatsapp;
+ const logo=<img src="/logo-granja-atuel-web.webp" width={140} height={70} alt={settings.business_name}/>;
+
+ useEffect(()=>{try{setCart(normalizeCart(JSON.parse(localStorage.getItem(cartKey)||'[]')));}catch{}setReady(true);},[]);
+ useEffect(()=>{if(ready)try{localStorage.setItem(cartKey,JSON.stringify(cart));}catch{}},[cart,ready]);
+ useEffect(()=>{if(open&&!dialog.current?.open)dialog.current?.showModal();else if(!open&&dialog.current?.open)dialog.current.close();},[open]);
+
+ function add(p:Product){
+  if(!canBuy(p))return;
+  setCart(old=>normalizeCart([...old.filter(l=>l.id!==p.id),{id:p.id,quantity:Math.min(stockLimit(p),(old.find(l=>l.id===p.id)?.quantity||0)+1)}]));
+  setNotice(p.name+' · '+p.description+' agregado a tu carrito.');
+  setOpen(true);
+ }
+ function change(p:Product,delta:number){
+  setCart(lines=>lines.map(l=>l.id===p.id?{...l,quantity:Math.min(stockLimit(p),l.quantity+delta)}:l).filter(l=>l.quantity>0));
+ }
+ function closeMenu(){setMenu(false);}
+ return <div className="sf">
+  <a className="sf-skip" href="#contenido">Saltar al contenido</a>
+  <div className="sf-utility"><Truck size={16}/><span><b>Envío incluido</b> en todas las opciones de compra</span><small>VISTA DE PRUEBAS</small></div>
+  <header className="sf-header"><div className="sf-wrap sf-header-inner">
+   <Link href="/" className="sf-brand" aria-label={settings.business_name+', inicio'}>{logo}</Link>
+   <nav id="menu-granja" className={'sf-nav'+(menu?' is-open':'')} aria-label="Navegación principal">
+    <a href="#productos" onClick={closeMenu}>Productos</a><a href="#recetas" onClick={closeMenu}>Recetas</a><a href="#puntos" onClick={closeMenu}>Dónde comprar</a><a href="#mayoristas" onClick={closeMenu}>Mayoristas</a>
+   </nav>
+   <div className="sf-header-actions">
+    <button className="sf-cart-trigger" type="button" onClick={()=>setOpen(true)} aria-label={'Abrir carrito, '+count+' productos'}><ShoppingBag size={20}/><span>Carrito</span><b>{count}</b></button>
+    <button className="sf-menu-trigger" type="button" aria-label={menu?'Cerrar menú':'Abrir menú'} aria-controls="menu-granja" aria-expanded={menu} onClick={()=>setMenu(!menu)}>{menu?<X size={24}/>:<Menu size={24}/>}</button>
+   </div>
+  </div></header>
+  {settings.notice&&<div className="sf-announcement"><div className="sf-wrap">{settings.notice}</div></div>}
+  <main id="contenido">
+   <section className="sf-hero" id="inicio">
+    <div className="sf-wrap sf-hero-grid">
+     <div className="sf-hero-content">
+      <p className="sf-kicker"><MapPin size={15}/>{settings.location}</p>
+      <h1>{settings.hero_title}{settings.hero_accent&&<><br/><em>{settings.hero_accent}</em></>}</h1>
+      <p className="sf-lead">{settings.hero_description}</p>
+      <div className="sf-actions"><a className="sf-button" href="#productos">Ver opciones de compra <ArrowRight size={19}/></a><a className="sf-link" href="#origen">Conocé la granja <ArrowUpRight size={17}/></a></div>
+     </div>
+     <div className={'sf-hero-visual'+(settings.hero_image==='/el-corazon-esta-en-cada-detalle.webp'?' sf-hero-editorial':'')}>
+      <img className="sf-hero-photo" src={settings.hero_image} alt={settings.hero_alt} fetchPriority="high" width={800} height={800}/>
+      <span className="sf-hero-caption"><Leaf size={17}/><span><small>GRANJA ATUEL</small><b>Producción propia</b></span></span>
+     </div>
+    </div>
+   </section>
+   <section className="sf-wrap sf-intents" aria-label="Qué estás buscando">
+    <a href="#productos" onClick={()=>setCategory('consumo')}><i><ChefHat size={24}/></i><span><b>Para tu mesa</b><small>Huevos frescos para cocinar</small></span><ArrowUpRight size={19}/></a>
+    <Link href="/huevos-fertiles" id="fertiles"><i><Egg size={24}/></i><span><b>Para incubar</b><small>Huevos fértiles y cuaderno de incubación</small></span><ArrowUpRight size={19}/></Link>
+    <a href="#mayoristas"><i><Store size={24}/></i><span><b>Para tu negocio</b><small>Consultas y pedidos por volumen</small></span><ArrowUpRight size={19}/></a>
+   </section>
+   <section className="sf-wrap sf-section sf-catalog" id="tienda">
+    <div id="productos" className="sf-heading">
+     <div><p className="sf-kicker">COMPRÁ DIRECTO A LA GRANJA</p><h2>Elegí tu presentación.</h2></div>
+     <span className="sf-delivery"><Truck size={20}/> Precio final con envío incluido</span>
+    </div>
+    <div className="sf-tabs" role="group" aria-label="Filtrar productos">{categories.map(([id,label])=><button key={id} type="button" aria-pressed={category===id} onClick={()=>setCategory(id)}>{label}</button>)}</div>
+    {source==='unavailable'?<div className="sf-empty">El catálogo no está disponible por el momento. <a href={wa}>Consultanos por WhatsApp</a>.</div>:shown.length===0?<div className="sf-empty">No hay publicaciones en esta categoría por el momento.</div>:
+     <div className="sf-products">{shown.map(p=><article className="sf-product" key={p.id}>
+      <Link href={'/producto/'+p.id} className="sf-product-photo" aria-label={'Ver '+p.name+' · '+p.description}>
+       <img src={p.image} alt={p.gallery?.[0]?.alt||p.name} width={600} height={400} loading="lazy"/>
+       <span>{p.category==='consumo'?'CONSUMO':p.category==='fertiles'?'INCUBACIÓN':'INSUMOS'}</span>
+      </Link>
+      <div className="sf-product-main">
+       <h3><Link href={'/producto/'+p.id}>{p.name}</Link></h3><p>{p.description}</p>
+       <div className="sf-product-price"><strong>{money(p.price)}</strong><span><Truck size={14}/> Envío incluido</span></div>
+       {canBuy(p)?<button className="sf-buy" type="button" onClick={()=>add(p)} aria-label={'Agregar '+p.name+' · '+p.description}>Agregar al carrito <Plus size={18}/></button>:<a href={wa+'?text='+encodeURIComponent('Hola, quería consultar disponibilidad de '+p.name+' · '+p.description+'.')} className="sf-buy is-unavailable">Consultar disponibilidad <ArrowUpRight size={17}/></a>}
+      </div>
+     </article>)}</div>}
+   </section>
+
+   <section className="sf-origin" id="origen"><div className="sf-wrap sf-origin-grid">
+    <div className="sf-origin-photo"><img src={settings.about_image} alt={settings.about_alt} width={700} height={460} loading="lazy"/></div>
+    <div className="sf-origin-content"><p className="sf-kicker">NUESTRO ORIGEN</p><h2>{settings.about_title}</h2><p>{settings.about_description}</p>
+     <ul><li><Leaf size={18}/> Producción propia</li><li><Package size={18}/> Embalaje preparado en la granja</li><li><MapPin size={18}/> {settings.location}</li></ul>
+     <Link className="sf-link" href="/buenas-practicas">Conocé nuestras buenas prácticas <ArrowUpRight size={17}/></Link>
+    </div>
+   </div></section>
+
+   <section className="sf-wrap sf-section" id="recetas">
+    <div className="sf-heading" id="nutricion"><div><p className="sf-kicker">DE LA GRANJA A LA COCINA</p><h2>Ideas para tu mesa.</h2></div><Link href="/recetas" className="sf-link">Todas las recetas <ArrowRight size={18}/></Link></div>
+    {picks.length>0?<div className="sf-recipes">{picks.map(r=><Link href={'/recetas#'+r.id} className="sf-recipe" key={r.id}>
+     <img alt="" src={r.data.image} width={400} height={260} loading="lazy"/><div><p className="sf-kicker">{[r.data.time,r.data.difficulty].filter(Boolean).join(' · ')}</p><h3>{r.data.title}</h3><ArrowUpRight size={20}/></div>
+    </Link>)}</div>:<p className="sf-section-note">{recipes.length?'Encontrá ideas para cocinar en nuestra colección de recetas.':'Estamos preparando nuevas recetas.'}</p>}
+   </section>
+
+   <section className="sf-locations" id="puntos"><div className="sf-wrap sf-section">
+    <div className="sf-heading"><div><p className="sf-kicker">PUNTOS DE VENTA</p><h2>Encontranos cerca.</h2></div>
+     {points.length>0&&<div className="sf-location-choice"><label htmlFor="sf-location">Localidad</label><select id="sf-location" value={city} onChange={e=>{setCity(e.target.value);setShowAllPoints(false);}}><option value="">Todas las localidades</option>{cities.map(c=><option key={c}>{c}</option>)}</select></div>}
+    </div>
+    <p className="sf-section-note">Consultá la disponibilidad con cada comercio antes de acercarte.</p>
+    {points.length>0?<><div className="sf-points">{visiblePoints.map(p=><a className="sf-point" key={p.id} href={directions(p.data)} target="_blank" rel="noreferrer">
+     <MapPin size={19}/><div><strong>{p.data.name}</strong><span>{p.data.address}</span><small>{p.data.city}</small></div><ArrowUpRight size={17}/>
+    </a>)}</div>{cityPoints.length>6&&<button className="sf-point-toggle sf-link" type="button" onClick={()=>setShowAllPoints(!showAllPoints)}>{showAllPoints?'Mostrar menos':'Ver los '+cityPoints.length+' comercios'} <ChevronDown size={18} className={showAllPoints?'is-flipped':''}/></button>}</>:<p>No hay puntos publicados en este momento.</p>}
+   </div></section>
+   <section className="sf-wrap sf-section" id="mayoristas"><div className="sf-wholesale">
+    <div><p className="sf-kicker"><Store size={17}/> VENTA MAYORISTA</p><h2>{settings.wholesale_title}</h2><p>{settings.wholesale_description}</p></div>
+    <a href={wa+'?text='+encodeURIComponent('Hola, quiero consultar por compra mayorista para mi negocio.')} target="_blank" rel="noreferrer" className="sf-button sf-button-gold">Consultar por mayor <ArrowUpRight size={19}/></a>
+   </div></section>
+
+   <section className="sf-wrap sf-faq sf-section" id="faq"><div>
+    <p className="sf-kicker">ANTES DE COMPRAR</p><h2>Preguntas frecuentes.</h2>
+    <p>Si necesitás ayuda con una presentación o un pedido, escribinos.</p>
+    <a className="sf-link" href={wa} target="_blank" rel="noreferrer">Hablar por WhatsApp <ArrowUpRight size={17}/></a>
+   </div><div className="sf-questions">{faqs.map(q=><details key={q.id}><summary>{q.data.question}<Plus size={18}/></summary><p>{q.data.answer}</p></details>)}<div id="testimonios" className="sf-ml">También estamos en <a href={storeUrl} target="_blank" rel="noreferrer">Mercado Libre <ArrowUpRight size={16}/></a>.</div></div></section>
+  </main>
+
+  <footer className="sf-footer"><div className="sf-wrap">
+   <div className="sf-footer-main">
+    <div>{logo}<p>{settings.location}</p></div>
+    <div><h2>Explorá</h2><a href="#productos">Productos</a><Link href="/recetas">Recetas</Link><a href="#puntos">Puntos de venta</a></div>
+    <div><h2>Te acompañamos</h2><Link href="/incubacion">Mis incubaciones</Link><Link href="/buenas-practicas">Buenas prácticas</Link><a href="#faq">Preguntas frecuentes</a></div>
+    <div><h2>Contacto</h2><a href={wa} target="_blank" rel="noreferrer">WhatsApp <ArrowUpRight size={14}/></a>{settings.contact_email&&<a href={'mailto:'+settings.contact_email}>Correo electrónico</a>}{settings.instagram&&<a href={settings.instagram} target="_blank" rel="noreferrer">Instagram</a>}</div>
+   </div>
+   <div className="sf-footer-bottom"><span>© {new Date().getFullYear()} {settings.business_name}</span><Link href="/admin">Administración</Link></div>
+  </div></footer>
+
+  <div className="sr-only" role="status">{notice}</div>
+  <dialog ref={dialog} className="cart-dialog sf-cart" onCancel={()=>setOpen(false)} onClose={()=>setOpen(false)} aria-labelledby="cart-title">
+   <div className="cart-heading"><div><p className="sf-kicker">TU PEDIDO · ENVÍO INCLUIDO</p><h2 id="cart-title">Tu carrito <small>({count})</small></h2></div><button className="icon-button" type="button" aria-label="Cerrar carrito" onClick={()=>setOpen(false)}><X/></button></div>
+   {!items.length?<div className="cart-empty"><ShoppingBag size={40}/><h3>Tu carrito está vacío.</h3><p>Elegí una presentación para empezar.</p><button className="sf-button" type="button" onClick={()=>setOpen(false)}>Seguir explorando <ArrowRight size={17}/></button></div>:<>
+    <div className="cart-items">{items.map(({product:p,quantity})=><div className="cart-item" key={p.id}><img src={p.image} alt=""/><div><h3><Link href={'/producto/'+p.id}>{p.name}</Link></h3><p>{p.description}</p><div className="quantity"><button type="button" aria-label={'Quitar una unidad de '+p.description} onClick={()=>change(p,-1)}><Minus size={14}/></button><span>{quantity}</span><button type="button" disabled={quantity>=stockLimit(p)} aria-label={'Sumar una unidad de '+p.description} onClick={()=>change(p,1)}><Plus size={14}/></button></div></div><strong>{money(p.price*quantity)}</strong></div>)}</div>
+    <div className="cart-summary"><div><span>Total con envío incluido</span><strong>{money(total)}</strong></div><p>Esta compra es una prueba y no genera un despacho.</p><Link className="sf-button" href="/checkout">Continuar a la compra de prueba <Check size={18}/></Link><button type="button" className="continue-link" onClick={()=>setOpen(false)}>Seguir mirando</button></div>
+   </>}
+  </dialog>
+ </div>;
 }

@@ -1,33 +1,99 @@
 'use client';
-import {useState} from 'react';
+
+import {useEffect,useState} from 'react';
 import Link from 'next/link';
-import {LayoutDashboard,Package,Boxes,Image as ImageIcon,ShoppingBag,Settings as SettingsIcon,ArrowUpRight,Plus,Search,ChevronRight,Leaf,LogOut,AlertTriangle,CheckCircle2,Copy,RefreshCw,ExternalLink,Menu,X,Egg} from 'lucide-react';
-import {managedProduct,type ManagedProduct,type Media,type StockMovement,type AdminOrder,type ShopSettings,categoryLabels,fulfillmentLabels} from '@/lib/admin';
-import {money} from '@/lib/catalog';
-import {statusLabels} from '@/lib/checkout';
+import {ArrowUpRight,Boxes,ChevronRight,Egg,ExternalLink,Image,LayoutDashboard,LogOut,Menu,Package,PanelsTopLeft,RefreshCw,Settings as SettingsIcon,ShoppingBag} from 'lucide-react';
+import {managedProduct,type ManagedProduct,type Media,type StockMovement,type AdminOrder,type ShopSettings} from '@/lib/admin';
+import type {SiteContent} from '@/lib/site-content';
 import ProductEditor from './ProductEditor';
 import Inventory from './Inventory';
 import MediaLibrary from './MediaLibrary';
 import Orders from './Orders';
 import Settings from './Settings';
-import {Empty,Message,date} from './shared';
-type Props={products:ManagedProduct[];media:Media[];movements:StockMovement[];orders:AdminOrder[];settings:ShopSettings;email:string;error?:string;initialTab?:string};
-const sections=[{id:'overview',label:'Resumen',icon:LayoutDashboard},{id:'products',label:'Productos',icon:Package},{id:'inventory',label:'Inventario',icon:Boxes},{id:'media',label:'Imágenes',icon:ImageIcon},{id:'orders',label:'Pedidos',icon:ShoppingBag},{id:'settings',label:'Configuración',icon:SettingsIcon}];
+import Overview from './Overview';
+import Publications from './Publications';
+import Content from './Content';
+import {Message} from './shared';
+
+const sections=[
+ {id:'overview',label:'Central de acción',icon:LayoutDashboard},
+ {id:'products',label:'Publicaciones',icon:Package},
+ {id:'orders',label:'Pedidos',icon:ShoppingBag},
+ {id:'inventory',label:'Inventario',icon:Boxes},
+ {id:'content',label:'Contenido web',icon:PanelsTopLeft},
+ {id:'media',label:'Imágenes',icon:Image},
+ {id:'settings',label:'Portada y contacto',icon:SettingsIcon},
+] as const;
+type Tab=typeof sections[number]['id'];
+const tabOf=(value?:string|null):Tab=>sections.find(t=>t.id===value)?.id||'overview';
+type Props={products:ManagedProduct[];media:Media[];movements:StockMovement[];orders:AdminOrder[];settings:ShopSettings;settingsVersion:string;content:SiteContent[];email:string;error?:string;initialTab?:string};
+
 export default function Dashboard(props:Props){
- const [tab,setTab]=useState(sections.some(s=>s.id===props.initialTab)?props.initialTab!:'overview'),[products,setProducts]=useState(props.products.map(managedProduct)),[media,setMedia]=useState(props.media),[movements,setMovements]=useState(props.movements),[orders,setOrders]=useState(props.orders),[settings,setSettings]=useState(props.settings),[search,setSearch]=useState(''),[category,setCategory]=useState('all'),[visibility,setVisibility]=useState('all'),[editor,setEditor]=useState<{p:ManagedProduct;isNew:boolean}|null>(null),[toast,setToast]=useState(''),[mobile,setMobile]=useState(false);
- const low=products.filter(p=>p.stock_tracking&&p.stock_quantity<=p.stock_minimum),paid=orders.filter(o=>o.status==='approved'),published=products.filter(p=>p.active);
- const shown=products.filter(p=>(p.name+' '+p.description+' '+p.sku).toLowerCase().includes(search.toLowerCase())&&(category==='all'||p.category===category)&&(visibility==='all'||(visibility==='published'?p.active:!p.active)));
- function go(id:string){setTab(id);window.history.replaceState(null,'','/admin?section='+id);setMobile(false);setToast('');}
- function newProduct(){setEditor({isNew:true,p:managedProduct({id:'producto-'+crypto.randomUUID().slice(0,8),name:'',description:'',category:'consumo',price:0,image:'/producto-sin-imagen.svg',active:false,available:true,weight_grams:null,height_cm:null,width_cm:null,length_cm:null,sort_order:products.length+1})});}
- function saved(p:ManagedProduct){setProducts(old=>old.some(x=>x.id===p.id)?old.map(x=>x.id===p.id?p:x):[...old,p]);setEditor(null);setToast('Producto guardado.');}
+ const [tab,setTab]=useState(tabOf(props.initialTab)),[products,setProducts]=useState(props.products.map(managedProduct)),[media,setMedia]=useState(props.media),[movements,setMovements]=useState(props.movements),[orders,setOrders]=useState(props.orders),[settings,setSettings]=useState(props.settings),[settingsVersion,setSettingsVersion]=useState(props.settingsVersion),[content,setContent]=useState(props.content);
+ const [editor,setEditor]=useState<{p:ManagedProduct;isNew:boolean}|null>(null),[toast,setToast]=useState(''),[mobile,setMobile]=useState(false),[orderFocus,setOrderFocus]=useState<string>();
+ const low=products.filter(p=>p.active&&p.stock_tracking&&p.stock_quantity<=p.stock_minimum);
+ const pending=orders.filter(o=>o.status==='approved'&&['new','preparing','ready'].includes(o.fulfillment_status));
+ useEffect(()=>{
+  function onHistory(){setTab(tabOf(new URLSearchParams(window.location.search).get('section')));setOrderFocus(undefined);setMobile(false);}
+  window.addEventListener('popstate',onHistory);return ()=>window.removeEventListener('popstate',onHistory);
+ },[]);
+
+ function go(id:Tab,order?:string){
+  setOrderFocus(order);setMobile(false);setToast('');
+  if(tab!==id)window.history.pushState(null,'',id==='overview'?'/admin':'/admin?section='+id);
+  setTab(id);
+  window.scrollTo({top:0,behavior:'instant'});
+ }
+ function sortNext(){return Math.min(9999,Math.max(0,...products.map(p=>p.sort_order))+10);}
+ function newProduct(){
+  setEditor({isNew:true,p:managedProduct({id:'producto-'+crypto.randomUUID().slice(0,8),name:'',description:'',category:'consumo',price:0,image:'/producto-sin-imagen.svg',active:false,available:true,weight_grams:null,height_cm:null,width_cm:null,length_cm:null,sort_order:sortNext()})});
+ }
+ function duplicate(p:ManagedProduct){
+  setEditor({isNew:true,p:{...p,id:p.id.slice(0,40)+'-'+crypto.randomUUID().slice(0,8),name:p.name.slice(0,92)+' (copia)',sku:'',active:false,publication_state:'draft',stock_quantity:0,updated_at:'',sort_order:sortNext()}});
+ }
+ function productUpdated(p:ManagedProduct){
+  setProducts(old=>(old.some(x=>x.id===p.id)?old.map(x=>x.id===p.id?managedProduct(p):x):[...old,managedProduct(p)]).sort((a,b)=>a.sort_order-b.sort_order||a.name.localeCompare(b.name,'es-AR')));
+ }
+ function productSaved(p:ManagedProduct){
+  productUpdated(p);
+  if(editor?.isNew){go('products');setToast('Borrador creado. Podés revisarlo y publicarlo desde Publicaciones.');}
+  else setToast('Publicación guardada.');
+  setEditor(null);
+ }
  function uploaded(m:Media){setMedia(old=>[m,...old]);setToast('Imagen lista en tu biblioteca.');}
- return <div className="dashboard"><aside className={'dash-sidebar '+(mobile?'mobile-open':'')}><Link href="/admin" className="dash-brand"><img src="/logo-granja-atuel-web.webp" alt="Granja Atuel"/><span>ADMINISTRACIÓN</span></Link><div className="dash-workspace"><span className="dash-workspace-icon"><Leaf size={18}/></span><div><strong>Mi tienda</strong><small>Granja Atuel</small></div><span className="dash-dot"/></div><p className="dash-nav-label">TU NEGOCIO</p><nav aria-label="Administración">{sections.map(s=><button key={s.id} className={tab===s.id?'active':''} aria-current={tab===s.id?'page':undefined} onClick={()=>go(s.id)}><s.icon size={18}/><span>{s.label}</span>{s.id==='inventory'&&low.length>0&&<b>{low.length}</b>}</button>)}<Link href="/admin/estado">Estado de integraciones</Link><Link href="/admin/incubaciones"><Egg size={18}/><span>Incubaciones</span><ArrowUpRight size={14}/></Link></nav><div className="dash-sidebar-bottom"><div className="dash-environment"><span className="dash-dot"/><strong>Espacio de pruebas</strong><p>Preparando el próximo paso de tu granja.</p></div><a href="/" target="_blank" rel="noreferrer"><ExternalLink size={16}/> Ver mi tienda <ArrowUpRight size={15}/></a><form action="/api/admin/logout" method="POST"><button><LogOut size={16}/> Cerrar sesión</button></form></div></aside>{mobile&&<button className="dash-mobile-backdrop" aria-label="Cerrar navegación" onClick={()=>setMobile(false)}/>}<div className="dash-main"><header className="dash-topbar"><div><button className="dash-icon dash-mobile-toggle" aria-label="Abrir navegación" onClick={()=>setMobile(!mobile)}><Menu size={21}/></button><span>Mi tienda <ChevronRight size={13}/> <strong>{sections.find(s=>s.id===tab)?.label}</strong></span></div><div><span className="dash-test-tag">VISTA PREVIA</span><span className="dash-avatar" title={props.email}>M</span></div></header><main className="dash-content"><Message error={props.error} success={toast}/>
- {tab==='overview'&&<><div className="dash-section-heading"><div><p className="eyebrow">CADA DETALLE CUENTA</p><h1>Tu granja, en un lugar.</h1><p>Este es el pulso de tu tienda. Hagamos que siga creciendo.</p></div><button className="dash-primary" onClick={newProduct}><Plus size={17}/> Nuevo producto</button></div><div className="dash-kpis"><Kpi icon={<Package size={20}/>} label="Productos publicados" value={String(published.length)} detail={products.length+' productos en tu catálogo'}/><Kpi icon={<ShoppingBag size={20}/>} label="Pedidos de prueba" value={String(orders.length)} detail={paid.length+' con pago aprobado'}/><Kpi icon={<CheckCircle2 size={20}/>} label="Pagos aprobados · prueba" value={money(paid.reduce((n,o)=>n+o.total_cents,0)/100)} detail="Importes simulados, sin venta real"/><Kpi icon={<Boxes size={20}/>} label="Productos con stock bajo" value={String(low.length)} detail="Según el mínimo de cada presentación" alert={low.length>0}/></div><div className="dash-overview-grid"><section className="dash-panel"><div className="dash-panel-heading"><div><p className="eyebrow">LO MÁS RECIENTE</p><h2>Últimos pedidos</h2></div><button className="dash-link" onClick={()=>go('orders')}>Ver todos <ArrowUpRight size={15}/></button></div>{orders.length?<div className="dash-table-wrap"><table className="dash-table"><thead><tr><th>Cliente / pedido</th><th>Total</th><th>Estado</th></tr></thead><tbody>{orders.slice(0,5).map(o=><tr key={o.id}><td><strong>{o.customer_name}</strong><small>#{o.id.slice(0,8)} · {date(o.created_at)}</small></td><td>{money(o.total_cents/100)}</td><td><span className={'dash-badge '+(o.status==='approved'?'green':'neutral')}>{statusLabels[o.status]}</span></td></tr>)}</tbody></table></div>:<Empty title="Tu primera compra está por llegar." description="Los pedidos aparecerán acá cuando empieces a probar la tienda."/>}</section><section className="dash-panel dash-attention"><div className="dash-panel-heading"><div><p className="eyebrow">PARA TENER EN CUENTA</p><h2>Atención al stock</h2></div><Boxes size={21}/></div>{low.length?low.slice(0,4).map(p=><button key={p.id} className="dash-low-item" onClick={()=>go('inventory')}><img src={p.image} alt=""/><span><b>{p.name}</b><small>{p.description}</small></span><strong>{p.stock_quantity}</strong></button>):<div className="dash-stock-calm"><CheckCircle2 size={38}/><h3>Todo en orden.</h3><p>No hay alertas de stock. Activá el control en cada producto y registrá sus existencias.</p></div>}<button className="dash-link" onClick={()=>go('inventory')}>Administrar inventario <ArrowUpRight size={15}/></button></section></div><section className="dash-quick-section"><p className="eyebrow">SEGUIMOS HACIENDO CRECER TU TIENDA</p><div className="dash-quick-grid"><button onClick={newProduct}><span><Plus size={23}/></span><div><h3>Un nuevo producto</h3><p>Prepará su ficha y publicalo cuando esté listo.</p></div><ArrowUpRight size={20}/></button><button onClick={()=>go('media')}><span><ImageIcon size={23}/></span><div><h3>Tu biblioteca de imágenes</h3><p>Subí fotos y elegí cómo mostrar cada producto.</p></div><ArrowUpRight size={20}/></button><a href="/admin/incubaciones"><span><Egg size={23}/></span><div><h3>Resultados de incubación</h3><p>Seguí los lotes y resultados de cada cliente.</p></div><ArrowUpRight size={20}/></a></div></section></>}
- {tab==='products'&&<><div className="dash-section-heading"><div><p className="eyebrow">EL CORAZÓN DE TU TIENDA</p><h1>Productos</h1><p>Creá, organizá y cuidá cada ficha de tu catálogo.</p></div><button className="dash-primary" onClick={newProduct}><Plus size={17}/> Nuevo producto</button></div><div className="dash-panel"><div className="dash-toolbar"><input aria-label="Buscar productos" placeholder="Buscar por nombre, presentación o SKU…" value={search} onChange={e=>setSearch(e.target.value)}/><select aria-label="Filtrar categoría" value={category} onChange={e=>setCategory(e.target.value)}><option value="all">Todas las categorías</option>{Object.entries(categoryLabels).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select><select aria-label="Filtrar publicación" value={visibility} onChange={e=>setVisibility(e.target.value)}><option value="all">Todos los estados</option><option value="published">Publicados</option><option value="draft">Borradores y archivados</option></select></div><div className="dash-table-wrap"><table className="dash-table"><thead><tr><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Publicación</th><th>Acciones</th></tr></thead><tbody>{shown.map(p=><tr key={p.id}><td><button className="dash-product-cell" onClick={()=>setEditor({p,isNew:false})}><img src={p.image} alt=""/><span><strong>{p.name}</strong><small>{p.description}</small><small>{p.sku||p.id}</small></span></button></td><td>{categoryLabels[p.category]}</td><td><strong>{money(p.price)}</strong></td><td>{p.stock_tracking?<span className={p.stock_quantity<=p.stock_minimum?'dash-red':''}>{p.stock_quantity} u.</span>:<small>Sin control</small>}</td><td><span className={'dash-badge '+(p.active?'green':'neutral')}>{p.active?'Publicado':'Borrador / archivado'}</span></td><td><div className="dash-inline"><button className="dash-secondary small" onClick={()=>setEditor({p,isNew:false})}>Editar</button><button className="dash-icon" aria-label={'Duplicar '+p.name+' '+p.description} title="Duplicar" onClick={()=>setEditor({isNew:true,p:{...p,id:p.id.slice(0,40)+'-'+crypto.randomUUID().slice(0,8),name:p.name+' (copia)',sku:'',active:false,stock_quantity:0,updated_at:''}})}><Copy size={16}/></button><Link className="dash-icon" href={'/producto/'+p.id} target="_blank" aria-label={'Ver ficha de '+p.name}><ExternalLink size={16}/></Link></div></td></tr>)}</tbody></table></div>{!shown.length&&<Empty title="No encontramos ese producto." description="Cambiá la búsqueda o creá una nueva ficha."/>}</div><p className="dash-footnote">{shown.length} de {products.length} productos · Para archivar una ficha, desactivá su publicación dentro del editor.</p></>}
- {tab==='inventory'&&<Inventory products={products} movements={movements} saved={(p,m)=>{setProducts(old=>old.map(x=>x.id===p.id?p:x));setMovements(old=>[m,...old.filter(x=>x.id!==m.id)].slice(0,100));setToast('Movimiento registrado.');}}/>}
- {tab==='media'&&<MediaLibrary media={media} uploaded={uploaded} updated={m=>setMedia(old=>old.map(x=>x.id===m.id?m:x))}/>}
- {tab==='orders'&&<Orders orders={orders} updated={o=>{setOrders(old=>old.map(x=>x.id===o.id?o:x));setToast('Seguimiento guardado.');}}/>}
- {tab==='settings'&&<Settings initial={settings} media={media} saved={setSettings}/>}
- <div className="dash-bottomline"><span><Leaf size={13}/> Hecho para Granja Atuel</span><button onClick={()=>window.location.reload()}><RefreshCw size={13}/> Actualizar datos</button></div></main></div>{editor&&<ProductEditor initial={editor.p} isNew={editor.isNew} media={media} close={()=>setEditor(null)} saved={saved} uploaded={uploaded}/>}</div>;
+
+ return <div className="dashboard action-centre">
+  <aside className={'dash-sidebar '+(mobile?'mobile-open':'')}>
+   <Link href="/admin" className="dash-brand"><img src="/logo-granja-atuel-web.webp" alt="Granja Atuel"/><span>GESTIÓN DE LA TIENDA</span></Link>
+   <nav aria-label="Administración">
+    {sections.map(s=><button key={s.id} className={tab===s.id?'active':''} aria-current={tab===s.id?'page':undefined} onClick={()=>go(s.id)}><s.icon size={18}/><span>{s.label}</span>{s.id==='inventory'&&low.length>0&&<b>{low.length}</b>}{s.id==='orders'&&pending.length>0&&<b>{pending.length}</b>}</button>)}
+    <Link href="/admin/incubaciones"><Egg size={18}/><span>Incubaciones</span><ArrowUpRight size={14}/></Link>
+    <Link href="/admin/estado"><SettingsIcon size={18}/><span>Estado de la tienda</span></Link>
+   </nav>
+   <div className="dash-sidebar-bottom">
+    <div className="dash-environment"><span className="dash-dot"/><strong>Vista de pruebas</strong><p>Compras y despachos de prueba.</p></div>
+    <a href="/" target="_blank" rel="noreferrer"><ExternalLink size={16}/> Ver mi tienda <ArrowUpRight size={15}/></a>
+    <form action="/api/admin/logout" method="POST"><button><LogOut size={16}/> Cerrar sesión</button></form>
+   </div>
+  </aside>
+  {mobile&&<button className="dash-mobile-backdrop" type="button" aria-label="Cerrar navegación" onClick={()=>setMobile(false)}/>}
+  <div className="dash-main">
+   <header className="dash-topbar">
+    <div><button className="dash-icon dash-mobile-toggle" type="button" aria-label="Abrir navegación" aria-expanded={mobile} onClick={()=>setMobile(!mobile)}><Menu size={21}/></button><span>Granja Atuel <ChevronRight size={13}/> <strong>{sections.find(s=>s.id===tab)?.label}</strong></span></div>
+    <div><span className="dash-test-tag">PRUEBAS</span><span className="dash-avatar" title={props.email}>{props.email.charAt(0).toUpperCase()||'A'}</span></div>
+   </header>
+   <main className="dash-content">
+    <Message error={props.error} success={toast}/>
+    {tab==='overview'&&<Overview products={products} pending={pending} low={low} onNew={newProduct} openOrder={o=>go('orders',o.id)} openProduct={p=>setEditor({p,isNew:false})} go={go}/>}
+    {tab==='products'&&<Publications products={products} onNew={newProduct} onEdit={p=>setEditor({p,isNew:false})} onDuplicate={duplicate} onUpdate={productUpdated}/>}
+    {tab==='orders'&&<Orders orders={orders} initialOrderId={orderFocus} updated={o=>{setOrders(old=>old.map(x=>x.id===o.id?o:x));setToast('Seguimiento guardado.');}}/>}
+    {tab==='inventory'&&<Inventory products={products} movements={movements} saved={(p,m)=>{productUpdated(p);setMovements(old=>[m,...old.filter(x=>x.id!==m.id)].slice(0,100));setToast('Movimiento registrado.');}}/>}
+    {tab==='content'&&<Content entries={content} media={media} updated={entry=>setContent(old=>[...old.filter(c=>c.id!==entry.id),entry])} uploaded={uploaded}/>}
+    {tab==='media'&&<MediaLibrary media={media} uploaded={uploaded} updated={m=>setMedia(old=>old.map(x=>x.id===m.id?m:x))}/>}
+    {tab==='settings'&&<Settings initial={settings} version={settingsVersion} media={media} uploaded={uploaded} saved={(s,revision)=>{setSettings(s);setSettingsVersion(revision);}}/>}
+    <div className="dash-bottomline"><span>Central de acción · Granja Atuel</span><button type="button" onClick={()=>window.location.reload()}><RefreshCw size={14}/> Actualizar datos</button></div>
+   </main>
+  </div>
+  {editor&&<ProductEditor initial={editor.p} isNew={editor.isNew} media={media} close={()=>setEditor(null)} saved={productSaved} uploaded={uploaded}/>}
+ </div>;
 }
-function Kpi({icon,label,value,detail,alert=false}:{icon:React.ReactNode;label:string;value:string;detail:string;alert?:boolean}){return <section className={'dash-kpi '+(alert?'alert':'')}><div><span>{label}</span>{icon}</div><strong>{value}</strong><p>{detail}</p></section>;}

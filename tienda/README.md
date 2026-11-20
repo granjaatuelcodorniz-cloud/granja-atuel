@@ -63,14 +63,14 @@ validar correo transaccional, recuperación de contraseña y URL de confirmació
 para la nueva web sin alterar las aplicaciones de gestión.
 
 Admin catálogo: `/admin`, usuario `marcos` y su contraseña actual de gestión.
-Los precios se consultan en Supabase. Pesos y medidas siguen pendientes de medir.
+Los precios se consultan en Supabase y se administran desde Publicaciones.
 
 ## Pendientes antes de vender
 
 - Prueba de cuenta real, correo y recuperación de acceso; revisión de privacidad.
 - Prueba de edición de catálogo desde la cuenta del propietario.
 - Inventario, reservas, checkout y Mercado Pago de pruebas, webhook firmado e idempotente.
-- Correo Argentino y Andreani: credenciales, embalajes, condiciones, tarifas y cupones.
+- Revisar con la granja los precios finales con envío incluido y cómo se prepara el despacho manual.
 - Validar información comercial definitiva de huevos fértiles con la granja.
 - Verificar URLs/SEO, pedidos completos y recién entonces planificar producción.
 
@@ -212,5 +212,31 @@ Pedidos agrega revisión optimista para no pisar cambios de preparación
 y transportista+seguimiento para despachar. No cambia el estado financiero
 ni habilita despachos reales. /admin/estado muestra configuración y pendientes
 sin revelar secretos. Reservas para ventas reales, acceso externo al webhook,
-secreto de firma y credenciales/logística continúan pendientes de la etapa
+y validación de la firma continúan pendientes de la etapa
 comercial; las compras actuales no reservan ni descuentan stock real.
+
+## Central de acción y tienda con envío incluido
+
+La migración tienda_central_accion en supabase/migrations agrega estados de
+publicación, contenido editable y domicilio en pedidos de prueba. Conserva la
+visibilidad de las fichas anteriores; las fichas ocultas heredadas se leen como
+borradores. El sitio anterior y sus hojas siguen independientes de este proyecto.
+
+- Publicaciones: alta como borrador, precio final, edición, duplicación, pausa
+  temporal, reactivación, archivo reversible y recuperación como borrador.
+  Pausa y archivo quitan la ficha del catálogo y bloquean nuevos pedidos.
+  Los pedidos previos guardan su importe e ítems originales.
+- Inicio del panel: pedidos aprobados por preparar/entregar, falta de stock,
+  fichas sin foto, borradores y accesos a las acciones frecuentes.
+- Contenido web: preguntas frecuentes, puntos de venta y recetas. Las recetas
+  pueden destacarse en el inicio. El orden y la visibilidad se administran por ficha.
+  La lista inicial parte de la copia de datos de la tienda, ya en Supabase.
+- Portada y contacto: título, imágenes, aviso temporal, presentación de la granja,
+  mensaje mayorista y contacto. Las fotos nuevas se suben a Imágenes desde el
+  editor. Sugeridas: plano horizontal con huevos y blíster real, fotos de las
+  presentaciones y una foto del preparado o embalaje de un pedido.
+- Checkout: el total es la suma de los precios de las presentaciones elegidas.
+  Guarda el destino para que el administrador copie los datos y registre luego
+  el transportista y el seguimiento. No se cotiza ni se generan rótulos por API.
+  El domicilio se queda en la tienda; no se añade a la preferencia de Mercado Pago.
+  Las pruebas llevan datos ficticios y no generan despachos reales.

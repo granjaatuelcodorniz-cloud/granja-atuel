@@ -1,14 +1,27 @@
-import {validateProduct,validImageUrl,type Product} from './catalog.ts';
-export type ManagedProduct=Product&{sku:string;details:string;gallery:ProductImage[];stock_tracking:boolean;stock_quantity:number;stock_minimum:number;sort_order:number;updated_at:string};
+import {validateProduct,validImageUrl,publicationOf,publicationFields,type Product,type PublicationState} from './catalog.ts';
+import type {DeliveryAddress} from './checkout.ts';
+export type ManagedProduct=Product&{publication_state:PublicationState;sku:string;details:string;gallery:ProductImage[];stock_tracking:boolean;stock_quantity:number;stock_minimum:number;sort_order:number;updated_at:string};
 export type ProductImage={url:string;alt:string};
 export type Media={id:string;url:string;path:string|null;name:string;alt:string;archived:boolean;created_at:string};
 export type StockMovement={id:string;product_id:string;delta:number;previous_quantity:number;new_quantity:number;reason:string;created_at:string};
-export type AdminOrder={id:string;customer_name:string;customer_email:string;total_cents:number;status:string;created_at:string;items:{id:string;title:string;quantity:number;unit_price:number}[];fulfillment_status:string;fulfillment_version:number;admin_notes:string;shipping_carrier:string;tracking_code:string};
+export type AdminOrder={id:string;customer_name:string;customer_email:string;total_cents:number;status:string;created_at:string;items:{id:string;title:string;quantity:number;unit_price:number}[];fulfillment_status:string;fulfillment_version:number;admin_notes:string;shipping_carrier:string;tracking_code:string;delivery_address:DeliveryAddress|null};
+export const adminOrderFields='id,customer_name,customer_email,total_cents,status,created_at,items,fulfillment_status,fulfillment_version,admin_notes,shipping_carrier,tracking_code,delivery_address' as const;
 export const fulfillmentLabels:Record<string,string>={new:'Por preparar',preparing:'En preparación',ready:'Listo para entregar',dispatched:'Despachado',delivered:'Entregado',cancelled:'Cancelado'};
 export const categoryLabels:Record<string,string>={consumo:'Huevos de consumo',fertiles:'Huevos fértiles',insumos:'Insumos'};
-export const defaultSettings={business_name:'Granja Atuel',location:'San Rafael, Mendoza',whatsapp:'5492604351288',contact_email:'',instagram:'',hero_title:'Lo bueno empieza en el origen.',hero_description:'Pequeños huevos, grandes posibilidades. De nuestra granja a tu mesa, con el cuidado de siempre.',hero_image:'/hero-web.webp'};
+export const defaultSettings={
+ business_name:'Granja Atuel',location:'San Rafael, Mendoza',whatsapp:'5492604351288',contact_email:'granjaatuel.codorniz@gmail.com',instagram:'',
+ hero_title:'Huevos de codorniz',hero_accent:'de nuestra granja.',hero_description:'Elegí tu presentación para cocinar, incubar o abastecer tu negocio. Todos los precios incluyen el envío.',
+ hero_image:'/el-corazon-esta-en-cada-detalle.webp',hero_alt:'Huevo de codorniz servido en una cuchara',
+ notice:'',about_title:'El cuidado se ve en cada docena.',
+ about_description:'Producimos huevos de codorniz en San Rafael, Mendoza. Preparamos cada pedido en la granja y lo embalamos con cuidado para que llegue a destino.',
+ about_image:'/hero-web.webp',about_alt:'Ilustración de un paisaje de Mendoza con codornices',
+ wholesale_title:'¿Comprás para tu negocio?',
+ wholesale_description:'Si tenés una dietética, verdulería, restaurante o almacén, contanos qué necesitás. Te ayudamos a elegir una presentación y coordinamos entregas por volumen.',
+};
 export type ShopSettings=typeof defaultSettings;
-export function managedProduct(p:Product):ManagedProduct{return {sku:'',details:'',gallery:[],stock_tracking:false,stock_quantity:0,stock_minimum:5,sort_order:0,updated_at:'',...p} as ManagedProduct;}
+export const publicationLabels:Record<PublicationState,string>={draft:'Borrador',published:'Publicada',paused:'Pausada',archived:'Archivada'};
+export const publicationActions:Record<PublicationState,PublicationState[]>={draft:['published','archived'],published:['paused','archived'],paused:['published','archived'],archived:['draft']};
+export function managedProduct(p:Product):ManagedProduct{return {sku:'',details:'',gallery:[],stock_tracking:false,stock_quantity:0,stock_minimum:5,sort_order:0,updated_at:'',...p,publication_state:publicationOf(p)} as ManagedProduct;}
 function text(b:Record<string,unknown>,key:string,max:number,required=false){const v=b[key];if(typeof v!=='string'||v.length>max||(required&&!v.trim()))throw new Error('Revisá el campo '+key+'.');return v.trim();}
 export function validateAdminProduct(b:Record<string,unknown>){
  const base=validateProduct(b);
@@ -20,7 +33,12 @@ export function validateAdminProduct(b:Record<string,unknown>){
  const gallery=b.gallery.map((image:unknown)=>{if(!image||typeof image!=='object')throw new Error('Imagen inválida.');const i=image as Record<string,unknown>;if(typeof i.url!=='string'||!validImageUrl(i.url)||typeof i.alt!=='string'||i.alt.length>200)throw new Error('Revisá las imágenes.');return {url:i.url,alt:i.alt.trim()};});
  if(new Set(gallery.map(i=>i.url)).size!==gallery.length)throw new Error('Hay imágenes repetidas.');
  if(gallery.length&&gallery[0].url!==base.image)throw new Error('La primera imagen debe ser la portada.');
- return {...base,sku,details,gallery,stock_tracking:b.stock_tracking,stock_minimum:Number(b.stock_minimum),sort_order:Number(b.sort_order)};
+ return {...base,...publicationFields(b.publication_state??publicationOf(base)),sku,details,gallery,stock_tracking:b.stock_tracking,stock_minimum:Number(b.stock_minimum),sort_order:Number(b.sort_order)};
+}
+export function validatePublication(b:Record<string,unknown>){
+ if(typeof b.id!=='string'||!/^[a-z0-9-]{1,64}$/.test(b.id))throw new Error('Publicación inválida.');
+ if(typeof b.expected_updated_at!=='string'||!Number.isFinite(Date.parse(b.expected_updated_at)))throw new Error('Actualizá la publicación antes de cambiar su estado.');
+ return {id:b.id,expected_updated_at:b.expected_updated_at,...publicationFields(b.publication_state)};
 }
 export function validateStock(b:Record<string,unknown>){
  if(typeof b.product_id!=='string'||!/^[a-z0-9-]{1,64}$/.test(b.product_id))throw new Error('Producto inválido.');
@@ -31,12 +49,28 @@ export function validateStock(b:Record<string,unknown>){
  return {product_id:b.product_id,delta:Number(b.delta),expected_quantity:Number(b.expected_quantity),request_key:b.request_key,reason:text(b,'reason',300,true)};
 }
 export function validateSettings(b:Record<string,unknown>):ShopSettings{
- const out=Object.fromEntries(Object.keys(defaultSettings).map(k=>[k,text(b,k,k==='hero_description'?700:200,['business_name','location','hero_title','hero_description'].includes(k))])) as ShopSettings;
+ const required=['business_name','location','hero_title','hero_description','about_title','about_description','wholesale_title','wholesale_description'];
+ const long=['hero_description','about_description','wholesale_description'];
+ const out=Object.fromEntries(Object.keys(defaultSettings).map(k=>[k,text(b,k,long.includes(k)?700:200,required.includes(k))])) as ShopSettings;
  if(!/^\d{8,15}$/.test(out.whatsapp))throw new Error('WhatsApp debe incluir país y área, solo números.');
  if(out.contact_email&&!/^\S+@\S+\.\S+$/.test(out.contact_email))throw new Error('Correo inválido.');
  if(out.instagram&&!/^https:\/\/(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/.test(out.instagram))throw new Error('Ingresá el enlace de tu perfil de Instagram.');
  if(!validImageUrl(out.hero_image))throw new Error('Imagen de portada inválida.');
+ if(!validImageUrl(out.about_image))throw new Error('Imagen de la granja inválida.');
  return out;
+}
+export function resolveSettings(raw:unknown): ShopSettings {
+ const values=raw&&typeof raw==='object'?{...raw} as Partial<ShopSettings>:{};
+ // Preserve a custom cover. Migrate only the old built-in copy/image.
+ const oldTitle='Lo bueno empieza en el origen.';
+ if(values.hero_accent===undefined){
+  if(values.hero_title===oldTitle) delete values.hero_title;
+  else if(values.hero_title) values.hero_accent='';
+  if(values.hero_description==='Pequeños huevos, grandes posibilidades. De nuestra granja a tu mesa, con el cuidado de siempre.') delete values.hero_description;
+ }
+ if(values.hero_image==='/hero-web.webp'&&values.hero_alt===undefined) delete values.hero_image;
+ if(values.hero_image&&values.hero_alt===undefined) values.hero_alt='';
+ try{return validateSettings({...defaultSettings,...values});}catch{return defaultSettings;}
 }
 export function validateOrderUpdate(b:Record<string,unknown>){
  if(typeof b.id!=='string'||!/^[a-f0-9-]{36}$/i.test(b.id)||typeof b.fulfillment_status!=='string'||!Object.hasOwn(fulfillmentLabels,b.fulfillment_status))throw new Error('Pedido o estado inválido.');

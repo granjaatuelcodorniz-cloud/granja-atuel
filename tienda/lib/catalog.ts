@@ -1,6 +1,9 @@
+export const publicationStates = ['draft', 'published', 'paused', 'archived'] as const;
+export type PublicationState = typeof publicationStates[number];
 export type Product = {
   id: string; name: string; description: string; category: 'consumo' | 'fertiles' | 'insumos';
   price: number; image: string; active: boolean; available: boolean;
+  publication_state?: PublicationState | null;
   weight_grams: number | null; height_cm: number | null; width_cm: number | null; length_cm: number | null;
   stock_tracking?:boolean;stock_quantity?:number;stock_minimum?:number;sku?:string;details?:string;gallery?:{url:string;alt:string}[];sort_order?:number;updated_at?:string;
 };
@@ -14,6 +17,13 @@ export const seedProducts: Product[] = [
 export function validImageUrl(value:string){if(value==='/producto-sin-imagen.svg')return true;if(/^\/[a-zA-Z0-9_][a-zA-Z0-9_./-]*\.(webp|png|jpg|jpeg)$/.test(value)&&!value.includes('..'))return true;return /^https:\/\/rxqbcpbympgkjiwwroui\.supabase\.co\/storage\/v1\/object\/public\/tienda-productos\/products\/[a-f0-9-]+\.(webp|png|jpg|jpeg)$/.test(value);}
 export function stockLimit(p:Product){return p.stock_tracking?Math.min(20,Math.max(0,p.stock_quantity??0)):20;}
 export function canBuy(p:Product){return p.active&&p.available&&stockLimit(p)>0;}
+export function publicationOf(p: Pick<Product, 'active' | 'publication_state'>): PublicationState {
+  return p.publication_state ?? (p.active ? 'published' : 'draft');
+}
+export function publicationFields(state: unknown) {
+  if (!publicationStates.includes(state as PublicationState)) throw new Error('Estado de publicación inválido.');
+  return {publication_state: state as PublicationState, active: state === 'published'};
+}
 export const money = (amount:number) => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(amount);
 export type CartLine = {id:string; quantity:number};
 export function normalizeCart(value:unknown):CartLine[] {
