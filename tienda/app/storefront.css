@@ -193,3 +193,11 @@
 @media(prefers-reduced-motion:reduce){
  .sf-product-photo img{transition:none}
 }
+
+.sf-food h2{margin:8px 0 12px}
+.sf-food p:not(.sf-kicker){max-width:640px;margin-bottom:12px}
+.sf-testimonials{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.sf-testimonials figure{margin:0;padding:18px;border:1px solid var(--sf-line);border-radius:8px;background:var(--sf-white)}
+.sf-testimonials blockquote{margin:0 0 10px}
+.sf-testimonials figcaption{font-size:13px;color:var(--sf-text)}
+@media(max-width:740px){.sf-testimonials{grid-template-columns:1fr}}
