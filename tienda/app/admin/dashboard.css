@@ -57,8 +57,9 @@
  .act-heading{align-items:flex-start;flex-wrap:wrap;gap:12px}
  .action-centre .act-heading>.dash-primary{font-size:12px!important;padding-inline:13px;min-height:42px}
  .act-work .dash-panel-heading{flex-wrap:wrap;gap:12px}
- .act-toolbar input{width:100%}
- .act-toolbar select{max-width:100%}
+ .act-toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .act-toolbar input{grid-column:1/-1;width:100%}
+ .act-toolbar select{min-width:0;width:100%}
  .act-content-tabs button{font-size:12px}
  .act-publications{display:block;min-width:0}
  .act-publications thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
