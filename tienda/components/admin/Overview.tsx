@@ -6,15 +6,15 @@ import {money} from '@/lib/catalog';
 type Props={
  products:ManagedProduct[];pending:AdminOrder[];low:ManagedProduct[];onNew:()=>void;
  openOrder:(o:AdminOrder)=>void;openProduct:(p:ManagedProduct)=>void;
- go:(tab:'products'|'orders'|'inventory'|'content'|'settings')=>void;
+ go:(tab:'products'|'orders'|'inventory'|'content'|'settings')=>void;testMode:boolean;
 };
-export default function Overview({products,pending,low,onNew,openOrder,openProduct,go}:Props){
+export default function Overview({products,pending,low,onNew,openOrder,openProduct,go,testMode}:Props){
  const drafts=products.filter(p=>p.publication_state==='draft');
  const missingPhotos=products.filter(p=>p.active&&p.image==='/producto-sin-imagen.svg');
  const metrics=[
   {icon:Package,value:products.filter(p=>p.active).length,label:'Publicadas',detail:drafts.length+' borradores',tab:'products'},
   {icon:Pause,value:products.filter(p=>p.publication_state==='paused').length,label:'Pausadas',detail:'Fuera de la tienda',tab:'products'},
-  {icon:ShoppingBag,value:pending.length,label:'Pedidos por resolver',detail:'Pagos aprobados de prueba',tab:'orders'},
+  {icon:ShoppingBag,value:pending.length,label:'Pedidos por resolver',detail:testMode?'Pagos aprobados de prueba':'Pagos aprobados',tab:'orders'},
   {icon:Boxes,value:low.length,label:'Alertas de stock',detail:'Presentaciones publicadas',tab:'inventory'},
  ] as const;
  return <>

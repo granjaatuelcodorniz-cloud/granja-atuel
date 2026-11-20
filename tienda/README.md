@@ -9,7 +9,7 @@ se conserva en la raíz; no se cambiaron dominios ni DNS.
 
 Node 22 o 24: `npm ci`, `.env.local` desde `.env.example`, `npm run dev`.
 Validar con `npm test`, `npm run build`, `node tests/smoke.mjs`.
-Solo hay claves públicas de Supabase; no se utiliza service_role.
+El navegador usa la clave publicable de Supabase. Checkout y conciliación requieren la clave secreta exclusiva del servidor.
 
 ## Incubaciones
 
@@ -89,7 +89,7 @@ Se conserva la configuración Auth existente; no se concede ningún permiso de
 administración por ingresar con Google. La prueba final requiere que el propietario
 complete el selector de cuenta de Google desde el alias estable.
 
-## Pedidos y Checkout Pro: solo pruebas
+## Pedidos y Checkout Pro de Granja Atuel
 
 `/checkout` calcula desde el catálogo, crea un pedido privado y genera una
 preferencia de Checkout Pro. La ruta solo opera con VERCEL_ENV=preview,
@@ -121,16 +121,15 @@ usar webhooks se debe resolver el acceso a esa ruta y probar entrega real. No se
 retiró la protección. Mientras tanto, la página de pedido tiene conciliación
 manual/automática al abrir por POST desde la sesión autorizada.
 
-Configuración pendiente: SUPABASE_SECRET_KEY (clave secreta del proyecto, solo
-Preview y Secret) y firma de webhook. La Public Key queda preparada para SDK de
-interfaz, aunque la redirección a init_point no la necesita. El código está
-preparado para probar, pero NO se verificó aún un pago real de sandbox. Las
-credenciales sensibles de Vercel no se pueden leer desde el conector.
+La vista de pruebas ya cuenta con SUPABASE_SECRET_KEY y las credenciales de prueba
+de Granja Atuel. Se verificó un pago de prueba aprobado y, después del rediseño,
+la creación y redirección de un pedido de $25.000 con envío incluido. La entrega
+de notificaciones desde Mercado Pago sigue pendiente: el panel de la aplicación
+todavía no tiene URLs configuradas. La redirección a init_point no necesita Public Key.
 
 Antes de producción: correo de pedidos, historial ligado a cuenta, inventario y
 reservas, políticas de entrega, rate limiting, monitoreo, privacidad, conciliación
-completa de pagos divididos y prueba extremo a extremo. Ningún parámetro permite
-activar cobros productivos en esta versión.
+y prueba extremo a extremo. El checkout real sigue deshabilitado en la vista de pruebas.
 
 Los pagos de usuarios de prueba pueden devolver live_mode=true. Para ese caso
 solo se acepta el collector 3450457878, verificado en el panel de credenciales
@@ -240,3 +239,36 @@ borradores. El sitio anterior y sus hojas siguen independientes de este proyecto
   el transportista y el seguimiento. No se cotiza ni se generan rótulos por API.
   El domicilio se queda en la tienda; no se añade a la preferencia de Mercado Pago.
   Las pruebas llevan datos ficticios y no generan despachos reales.
+
+
+### Activación en el dominio oficial
+
+Esta rama prepara ambos modos. La migración tienda_separar_pagos_reales conserva
+los pedidos existentes y separa los nuevos pedidos por modo. Cada preferencia
+productiva debe demostrar que el client_id pertenece a Granja Atuel
+(7544098919599369); el pedido retiene su collector_id para que solo se registre
+un pago correspondiente a esa cuenta, ese pedido y su total en pesos. El modo
+de pruebas conserva su vendedor aislado. Las claves de producción solo se
+cargan como Secret en el proyecto de la tienda oficial.
+
+1. Preparar el despliegue en el proyecto oficial, con la migración aplicada.
+   Mantener MERCADOPAGO_ENABLE_PRODUCTION=false. En la nueva tienda configurar
+   MERCADOPAGO_MODE=production (solo Production) y la clave de servidor de
+   su base de datos. La vista de pruebas no admite cobros reales.
+2. En Mercado Pago Developers, app Granja Atuel > Webhooks, configurar eventos
+   Pagos en https://www.granjaatuel.com.ar/api/mercadopago/webhook cuando esa
+   ruta sirva la nueva aplicación. Cargar la firma y el token de producción
+   de la misma app en MERCADOPAGO_PRODUCTION_WEBHOOK_SECRET y
+   MERCADOPAGO_PRODUCTION_ACCESS_TOKEN. Confirmar por simulación que la
+   notificación llega y verificar una respuesta con firma válida.
+3. Revisar precios, disponibilidad y el proceso de despacho manual. Revisar
+   SEO/URLs y autenticación de incubaciones antes de mover el sitio oficial.
+   Habilitar el checkout real con MERCADOPAGO_ENABLE_PRODUCTION=true al lanzar.
+   El interruptor solo controla nuevos cobros; las consultas y los webhooks
+   siguen funcionando con las credenciales productivas configuradas.
+
+Pedidos > Consultar estado del pago consulta Mercado Pago por la referencia del
+pedido, incluso si el comprador cerró la página. Si Mercado Pago no devuelve
+resultados por referencia, al ingresar el número de pago se verifica con el
+proveedor y se exige que pertenezca al pedido. El panel no aprueba pagos por sí
+mismo. El webhook verifica la firma antes de consultar los datos del pago.

@@ -13,7 +13,7 @@ const directions=(p:{map_url:string;name:string;address:string;city:string})=>p.
 const storeUrl='https://www.mercadolibre.com.ar/tienda/granja-atuel';
 const cartKey='ga-preview-cart-v1';
 
-export default function Storefront({products,source,settings,content}:{products:Product[];source:string;settings:ShopSettings;content:SiteContent[]}){
+export default function Storefront({products,source,settings,content,testMode}:{products:Product[];source:string;settings:ShopSettings;content:SiteContent[];testMode:boolean}){
  const [category,setCategory]=useState<Category>('todos');
  const [cart,setCart]=useState<CartLine[]>([]);
  const [ready,setReady]=useState(false);
@@ -51,7 +51,7 @@ export default function Storefront({products,source,settings,content}:{products:
  function closeMenu(){setMenu(false);}
  return <div className="sf">
   <a className="sf-skip" href="#contenido">Saltar al contenido</a>
-  <div className="sf-utility"><Truck size={16}/><span><b>Envío incluido</b> en todas las opciones de compra</span><small>VISTA DE PRUEBAS</small></div>
+  <div className="sf-utility"><Truck size={16}/><span><b>Envío incluido</b> en todas las opciones de compra</span>{testMode&&<small>VISTA DE PRUEBAS</small>}</div>
   <header className="sf-header"><div className="sf-wrap sf-header-inner">
    <Link href="/" className="sf-brand" aria-label={settings.business_name+', inicio'}>{logo}</Link>
    <nav id="menu-granja" className={'sf-nav'+(menu?' is-open':'')} aria-label="Navegación principal">
@@ -154,7 +154,7 @@ export default function Storefront({products,source,settings,content}:{products:
    <div className="cart-heading"><div><p className="sf-kicker">TU PEDIDO · ENVÍO INCLUIDO</p><h2 id="cart-title">Tu carrito <small>({count})</small></h2></div><button className="icon-button" type="button" aria-label="Cerrar carrito" onClick={()=>setOpen(false)}><X/></button></div>
    {!items.length?<div className="cart-empty"><ShoppingBag size={40}/><h3>Tu carrito está vacío.</h3><p>Elegí una presentación para empezar.</p><button className="sf-button" type="button" onClick={()=>setOpen(false)}>Seguir explorando <ArrowRight size={17}/></button></div>:<>
     <div className="cart-items">{items.map(({product:p,quantity})=><div className="cart-item" key={p.id}><img src={p.image} alt=""/><div><h3><Link href={'/producto/'+p.id}>{p.name}</Link></h3><p>{p.description}</p><div className="quantity"><button type="button" aria-label={'Quitar una unidad de '+p.description} onClick={()=>change(p,-1)}><Minus size={14}/></button><span>{quantity}</span><button type="button" disabled={quantity>=stockLimit(p)} aria-label={'Sumar una unidad de '+p.description} onClick={()=>change(p,1)}><Plus size={14}/></button></div></div><strong>{money(p.price*quantity)}</strong></div>)}</div>
-    <div className="cart-summary"><div><span>Total con envío incluido</span><strong>{money(total)}</strong></div><p>Esta compra es una prueba y no genera un despacho.</p><Link className="sf-button" href="/checkout">Continuar a la compra de prueba <Check size={18}/></Link><button type="button" className="continue-link" onClick={()=>setOpen(false)}>Seguir mirando</button></div>
+    <div className="cart-summary"><div><span>Total con envío incluido</span><strong>{money(total)}</strong></div>{testMode&&<p>Esta compra es una prueba y no genera un despacho.</p>}<Link className="sf-button" href="/checkout">{testMode?'Continuar a la compra de prueba':'Finalizar compra'} <Check size={18}/></Link><button type="button" className="continue-link" onClick={()=>setOpen(false)}>Seguir mirando</button></div>
    </>}
   </dialog>
  </div>;

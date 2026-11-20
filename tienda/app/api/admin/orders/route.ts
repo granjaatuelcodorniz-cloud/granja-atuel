@@ -3,11 +3,13 @@ import {supabaseServer} from '@/lib/supabase';
 import {readSmallJson} from '@/lib/request';
 import {adminOrderFields,validateOrderUpdate} from '@/lib/admin';
 import {validateFulfillment} from '@/lib/fulfillment';
+import {shopMode} from '@/lib/payment-config';
 export async function PUT(request:Request){
  const access=await authorizeAdmin(request);if(access.error)return access.error;
  try{
   const body=await readSmallJson(request);const {id,...data}=validateOrderUpdate(body);const db=await supabaseServer();
-  const {data:current,error}=await db.from('tienda_pedidos').select('status,fulfillment_version').eq('id',id).maybeSingle();
+  const mode=shopMode(process.env);
+  const {data:current,error}=await db.from('tienda_pedidos').select('status,fulfillment_version').eq('id',id).eq('mode',mode).maybeSingle();
   if(error)return adminReply({error:'No pudimos consultar el pedido.'},503);if(!current)return adminReply({error:'Pedido no disponible.'},404);
   if(body.fulfillment_version!==current.fulfillment_version)return adminReply({error:'El pedido cambió. Actualizá antes de guardar.'},409);
   validateFulfillment(data,current.status);

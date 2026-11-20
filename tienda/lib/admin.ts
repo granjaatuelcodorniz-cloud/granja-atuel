@@ -1,11 +1,12 @@
 import {validateProduct,validImageUrl,publicationOf,publicationFields,type Product,type PublicationState} from './catalog.ts';
 import type {DeliveryAddress} from './checkout.ts';
+import type {PaymentMode} from './payment-config.ts';
 export type ManagedProduct=Product&{publication_state:PublicationState;sku:string;details:string;gallery:ProductImage[];stock_tracking:boolean;stock_quantity:number;stock_minimum:number;sort_order:number;updated_at:string};
 export type ProductImage={url:string;alt:string};
 export type Media={id:string;url:string;path:string|null;name:string;alt:string;archived:boolean;created_at:string};
 export type StockMovement={id:string;product_id:string;delta:number;previous_quantity:number;new_quantity:number;reason:string;created_at:string};
-export type AdminOrder={id:string;customer_name:string;customer_email:string;total_cents:number;status:string;created_at:string;items:{id:string;title:string;quantity:number;unit_price:number}[];fulfillment_status:string;fulfillment_version:number;admin_notes:string;shipping_carrier:string;tracking_code:string;delivery_address:DeliveryAddress|null};
-export const adminOrderFields='id,customer_name,customer_email,total_cents,status,created_at,items,fulfillment_status,fulfillment_version,admin_notes,shipping_carrier,tracking_code,delivery_address' as const;
+export type AdminOrder={id:string;mode:PaymentMode;customer_name:string;customer_email:string;total_cents:number;status:string;created_at:string;items:{id:string;title:string;quantity:number;unit_price:number}[];fulfillment_status:string;fulfillment_version:number;admin_notes:string;shipping_carrier:string;tracking_code:string;delivery_address:DeliveryAddress|null};
+export const adminOrderFields='id,mode,customer_name,customer_email,total_cents,status,created_at,items,fulfillment_status,fulfillment_version,admin_notes,shipping_carrier,tracking_code,delivery_address' as const;
 export const fulfillmentLabels:Record<string,string>={new:'Por preparar',preparing:'En preparación',ready:'Listo para entregar',dispatched:'Despachado',delivered:'Entregado',cancelled:'Cancelado'};
 export const categoryLabels:Record<string,string>={consumo:'Huevos de consumo',fertiles:'Huevos fértiles',insumos:'Insumos'};
 export const defaultSettings={

@@ -5,7 +5,7 @@ import {Truck} from 'lucide-react';
 import {money,normalizeCart,summarizeCart,stockLimit,type Product,type CartLine} from '@/lib/catalog';
 import {provinces} from '@/lib/checkout';
 
-export default function CheckoutForm({products,enabled}:{products:Product[];enabled:boolean}){
+export default function CheckoutForm({products,enabled,testMode}:{products:Product[];enabled:boolean;testMode:boolean}){
  const [cart,setCart]=useState<CartLine[]>([]),[loaded,setLoaded]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const attempt=useRef({body:'',key:''});
  useEffect(()=>{try{setCart(normalizeCart(JSON.parse(localStorage.getItem('ga-preview-cart-v1')||'[]')));}catch{}setLoaded(true);},[]);
@@ -28,8 +28,8 @@ export default function CheckoutForm({products,enabled}:{products:Product[];enab
  if(!items.length)return <section className="inc-empty"><h2>{cart.length?'Las publicaciones de tu carrito ya no están disponibles.':'Tu carrito está vacío.'}</h2><Link className="button" href="/#tienda">Elegir productos</Link></section>;
  return <div className="checkout-grid">
   <form className="inc-panel inc-form" onSubmit={submit}>
-   <p className="eyebrow">COMPRA DE PRUEBA</p><h2>Datos de entrega</h2>
-   <p className="inc-small">Usá datos ficticios. Esta compra no genera una entrega ni reserva productos reales.</p>
+   <p className="eyebrow">{testMode?'COMPRA DE PRUEBA':'TU PEDIDO · GRANJA ATUEL'}</p><h2>Datos de entrega</h2>
+   {testMode?<p className="inc-small">Usá datos ficticios. Esta compra no genera una entrega ni reserva productos reales.</p>:<p className="inc-small">Completá el domicilio al que querés recibir el pedido.</p>}
    <label>Nombre y apellido<input name="name" required minLength={2} maxLength={100} autoComplete="name"/></label>
    <label>Correo del pedido<input name="email" required type="email" maxLength={254} autoComplete="email"/></label>
    <label>Teléfono de entrega<input name="phone" type="tel" required minLength={6} maxLength={32} autoComplete="tel"/></label>
@@ -38,10 +38,10 @@ export default function CheckoutForm({products,enabled}:{products:Product[];enab
    <label>Código postal<input name="postal_code" required maxLength={10} placeholder="5600 o M5600AAA" autoComplete="postal-code"/></label>
    <label>Calle y número<input name="address" required minLength={3} maxLength={180} autoComplete="address-line1"/></label>
    <label>Piso, departamento o indicaciones (opcional)<input name="reference" maxLength={240} autoComplete="address-line2"/></label>
-   {!enabled&&<p className="form-error">El pago de prueba todavía no está habilitado.</p>}
+   {!enabled&&<p className="form-error">Mercado Pago todavía no está disponible.</p>}
    {changed&&<p className="form-error">Cambió la disponibilidad de un producto. Volvé al carrito para revisarlo.</p>}
    {error&&<p role="alert" className="form-error">{error}</p>}
-   <button className="button" disabled={!enabled||changed||busy}>{busy?'Preparando tu pedido…':'Continuar a Mercado Pago de prueba'}</button>
+   <button className="button" disabled={!enabled||changed||busy}>{busy?'Preparando tu pedido…':testMode?'Continuar a Mercado Pago de prueba':'Pagar con Mercado Pago'}</button>
    <Link className="text-link" href="/#tienda">Volver a la tienda</Link>
   </form>
   <section className="inc-panel">

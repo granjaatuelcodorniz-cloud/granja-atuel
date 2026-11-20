@@ -26,7 +26,7 @@ const sections=[
 ] as const;
 type Tab=typeof sections[number]['id'];
 const tabOf=(value?:string|null):Tab=>sections.find(t=>t.id===value)?.id||'overview';
-type Props={products:ManagedProduct[];media:Media[];movements:StockMovement[];orders:AdminOrder[];settings:ShopSettings;settingsVersion:string;content:SiteContent[];email:string;error?:string;initialTab?:string};
+type Props={products:ManagedProduct[];media:Media[];movements:StockMovement[];orders:AdminOrder[];settings:ShopSettings;settingsVersion:string;content:SiteContent[];email:string;testMode:boolean;error?:string;initialTab?:string};
 
 export default function Dashboard(props:Props){
  const [tab,setTab]=useState(tabOf(props.initialTab)),[products,setProducts]=useState(props.products.map(managedProduct)),[media,setMedia]=useState(props.media),[movements,setMovements]=useState(props.movements),[orders,setOrders]=useState(props.orders),[settings,setSettings]=useState(props.settings),[settingsVersion,setSettingsVersion]=useState(props.settingsVersion),[content,setContent]=useState(props.content);
@@ -71,7 +71,7 @@ export default function Dashboard(props:Props){
     <Link href="/admin/estado"><SettingsIcon size={18}/><span>Estado de la tienda</span></Link>
    </nav>
    <div className="dash-sidebar-bottom">
-    <div className="dash-environment"><span className="dash-dot"/><strong>Vista de pruebas</strong><p>Compras y despachos de prueba.</p></div>
+    {props.testMode&&<div className="dash-environment"><span className="dash-dot"/><strong>Vista de pruebas</strong><p>Compras y despachos de prueba.</p></div>}
     <a href="/" target="_blank" rel="noreferrer"><ExternalLink size={16}/> Ver mi tienda <ArrowUpRight size={15}/></a>
     <form action="/api/admin/logout" method="POST"><button><LogOut size={16}/> Cerrar sesión</button></form>
    </div>
@@ -80,13 +80,13 @@ export default function Dashboard(props:Props){
   <div className="dash-main">
    <header className="dash-topbar">
     <div><button className="dash-icon dash-mobile-toggle" type="button" aria-label="Abrir navegación" aria-expanded={mobile} onClick={()=>setMobile(!mobile)}><Menu size={21}/></button><span>Granja Atuel <ChevronRight size={13}/> <strong>{sections.find(s=>s.id===tab)?.label}</strong></span></div>
-    <div><span className="dash-test-tag">PRUEBAS</span><span className="dash-avatar" title={props.email}>{props.email.charAt(0).toUpperCase()||'A'}</span></div>
+    <div>{props.testMode&&<span className="dash-test-tag">PRUEBAS</span>}<span className="dash-avatar" title={props.email}>{props.email.charAt(0).toUpperCase()||'A'}</span></div>
    </header>
    <main className="dash-content">
     <Message error={props.error} success={toast}/>
-    {tab==='overview'&&<Overview products={products} pending={pending} low={low} onNew={newProduct} openOrder={o=>go('orders',o.id)} openProduct={p=>setEditor({p,isNew:false})} go={go}/>}
+    {tab==='overview'&&<Overview products={products} pending={pending} low={low} onNew={newProduct} openOrder={o=>go('orders',o.id)} openProduct={p=>setEditor({p,isNew:false})} go={go} testMode={props.testMode}/>}
     {tab==='products'&&<Publications products={products} onNew={newProduct} onEdit={p=>setEditor({p,isNew:false})} onDuplicate={duplicate} onUpdate={productUpdated}/>}
-    {tab==='orders'&&<Orders orders={orders} initialOrderId={orderFocus} updated={o=>{setOrders(old=>old.map(x=>x.id===o.id?o:x));setToast('Seguimiento guardado.');}}/>}
+    {tab==='orders'&&<Orders orders={orders} initialOrderId={orderFocus} testMode={props.testMode} verified={o=>setOrders(old=>old.map(x=>x.id===o.id?o:x))} updated={o=>{setOrders(old=>old.map(x=>x.id===o.id?o:x));setToast('Seguimiento guardado.');}}/>}
     {tab==='inventory'&&<Inventory products={products} movements={movements} saved={(p,m)=>{productUpdated(p);setMovements(old=>[m,...old.filter(x=>x.id!==m.id)].slice(0,100));setToast('Movimiento registrado.');}}/>}
     {tab==='content'&&<Content entries={content} media={media} updated={entry=>setContent(old=>[...old.filter(c=>c.id!==entry.id),entry])} uploaded={uploaded}/>}
     {tab==='media'&&<MediaLibrary media={media} uploaded={uploaded} updated={m=>setMedia(old=>old.map(x=>x.id===m.id?m:x))}/>}
