@@ -1,0 +1,9 @@
+'use client';
+import Link from 'next/link';
+import {useState} from 'react';
+import {useRouter} from 'next/navigation';
+export default function LoginForm({configured}:{configured:boolean}){
+ const [error,setError]=useState('');const [busy,setBusy]=useState(false);const router=useRouter();
+ async function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError('');const form=new FormData(e.currentTarget);try{const response=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:form.get('username'),password:form.get('password')})});const data=await response.json();if(!response.ok)throw new Error(data.error||'No pudimos iniciar sesión.');router.replace('/admin');router.refresh();}catch(e){setError(e instanceof Error?e.message:'No pudimos iniciar sesión.');}finally{setBusy(false);}}
+ return <main className="login-page"><form className="login-card" onSubmit={submit}><img className="logo" src="/logo-granja-atuel-web.webp" alt="Granja Atuel"/><p className="eyebrow">ADMINISTRACIÓN DE LA TIENDA</p><h1>Bienvenido de nuevo.</h1><p>Ingresá con tu usuario de gestión autorizado para administrar el catálogo.</p>{!configured&&<p className="form-error">El administrador estará disponible cuando se configure la conexión a la base de datos.</p>}<label htmlFor="username">Usuario<input id="username" name="username" autoComplete="username" required maxLength={100}/></label><label htmlFor="password">Contraseña<input id="password" type="password" name="password" autoComplete="current-password" required maxLength={200}/></label>{error&&<p role="alert" className="form-error">{error}</p>}<button className="button" disabled={busy||!configured}>{busy?'Ingresando…':'Ingresar al administrador'}</button><Link href="/">← Volver a la tienda</Link></form></main>;
+}

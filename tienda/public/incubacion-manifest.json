@@ -1,0 +1,24 @@
+{
+  "name": "Control de Incubaciones — Granja Atuel",
+  "short_name": "Incubaciones",
+  "description": "Seguimiento de lotes, ovoscopía y nacimientos. Por Granja Atuel.",
+  "start_url": "/incubacion",
+  "display": "standalone",
+  "background_color": "#FBF5E6",
+  "theme_color": "#3D2210",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
