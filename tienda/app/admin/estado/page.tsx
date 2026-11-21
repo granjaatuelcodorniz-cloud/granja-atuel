@@ -2,15 +2,18 @@ import Link from 'next/link';
 import {redirect} from 'next/navigation';
 import {getAdmin} from '@/lib/supabase';
 import {currentPaymentConfig} from '@/lib/order-server';
+import {getPurchaseMode} from '@/lib/current-purchase';
+import {linkOrdersConfigured} from '@/lib/link-orders';
 import {checkoutAvailable} from '@/lib/payment-config';
 
 export const dynamic='force-dynamic';
 export default async function IntegrationStatus(){
  if(!await getAdmin())redirect('/admin/login');
  const config=currentPaymentConfig();
+ const links=getPurchaseMode()==='links'&&linkOrdersConfigured();
  const rows=[
-  ['Mercado Pago · Granja Atuel',checkoutAvailable(config,process.env)?config?.mode==='test'?'Compra de prueba habilitada':'Checkout habilitado':'Checkout deshabilitado','Desde el detalle de un pedido podés consultar a Mercado Pago y conciliar el pago.'],
-  ['Confirmación automática',config?.webhookSecret?'Firma configurada; verificá recepción en Mercado Pago':'Pendiente de configurar en Mercado Pago','El aviso firmado confirma pagos aunque el comprador no vuelva a la tienda.'],
+  ['Mercado Pago · Granja Atuel',checkoutAvailable(config,process.env)?config?.mode==='test'?'Compra de prueba habilitada':'Checkout habilitado':links?'Enlaces con datos de envío':'Checkout deshabilitado',links?'El pedido se guarda antes de abrir el enlace. Confirmá el número y el importe en Mercado Pago desde Pedidos.':'Desde el detalle de un pedido podés consultar a Mercado Pago y conciliar el pago.'],
+  ['Confirmación automática',config?.webhookSecret?'Firma configurada; verificá recepción en Mercado Pago':'Pendiente de configurar en Mercado Pago',links?'Los enlaces vigentes requieren confirmación manual del pago.':'El aviso firmado confirma pagos aunque el comprador no vuelva a la tienda.'],
   ['Envíos','Incluidos en el precio · despacho manual','El pedido guarda el domicilio. En Pedidos podés copiar los datos y cargar transportista y seguimiento.'],
   ['Inventario','Control por presentación','Consultá Inventario para actualizar las existencias. Los pedidos de prueba no las descuentan.'],
   ['Recuperación de acceso','Flujo incorporado; falta validar recepción','El cliente solicita el enlace desde Olvidé mi contraseña. Hay que comprobar el correo transaccional de Supabase con su titular.'],

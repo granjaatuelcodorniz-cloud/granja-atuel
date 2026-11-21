@@ -37,8 +37,9 @@ try{
  assert.match(home.body,/<title>Granja Atuel — Huevos de Codorniz Frescos \| San Rafael, Mendoza<\/title>/);
  for(const hash of ['productos','fertiles','nutricion','puntos','recetas','faq','mayoristas','testimonios'])
   assert.ok(home.body.includes('id="'+hash+'"'),hash);
- for(const link of ['11TRxkJ','1HPrFSq','2qbsnRt','27Cp2BJ','1yqnBnb'])
-  assert.ok(home.body.includes('href="https://mpago.la/'+link+'"'),link);
+ for(const product of ['consumo-5','consumo-10','fertiles-5','fertiles-10','blister-200'])
+  assert.ok(home.body.includes('href="/checkout?producto='+product+'"'),product);
+ assert.doesNotMatch(home.body,/mpago\.la/);
  assert.doesNotMatch(home.body,/VISTA DE PRUEBAS|Abrir carrito/);
  const oldHome=await get('/index.html?fuente=anterior');
  assert.equal(oldHome.status,308);assert.equal(oldHome.headers.location,'/?fuente=anterior');
@@ -67,6 +68,9 @@ try{
  assert.doesNotMatch((await get('/sitemap.xml',alternate)).body,/<loc>/);
  const admin=await get('/admin');assert.equal(admin.status,307);assert.match(admin.headers.location,/\/admin\/login/);
  assert.match(admin.headers['x-robots-tag'],/noindex/);
- const checkout=await get('/checkout');assert.equal(checkout.status,307);assert.equal(checkout.headers.location,'/#productos');
+ const checkout=await get('/checkout?producto=consumo-5');
+ assert.equal(checkout.status,200);assert.match(checkout.body,/Datos de envío/);
+ assert.match(checkout.body,/Total con envío incluido/);assert.match(checkout.headers['x-robots-tag'],/noindex/);
+ assert.doesNotMatch(checkout.body,/mpago\.la/);
  console.log('Production HTTP checks passed; '+urls.length+' self canonical URLs, legacy redirects, notebook, purchasing and noindex on the alternate host.');
 }catch(err){console.error(err);console.error(logs);process.exitCode=1;}finally{server.kill('SIGTERM');}

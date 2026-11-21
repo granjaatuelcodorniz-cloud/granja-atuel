@@ -3,11 +3,10 @@
 import {useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import {ArrowRight,ArrowUpRight,Check,ChefHat,ChevronDown,Egg,Leaf,MapPin,Menu,Minus,Package,Plus,ShoppingBag,Store,Truck,X} from 'lucide-react';
-import {canBuy,money,normalizeCart,stockLimit,summarizeCart,type CartLine,type Product} from '@/lib/catalog';
+import {canBuy,money,normalizeCart,productInquiry,stockLimit,summarizeCart,type CartLine,type Product} from '@/lib/catalog';
 import type {ShopSettings} from '@/lib/admin';
 import type {SiteContent} from '@/lib/site-content';
 import type {PurchaseMode} from '@/lib/site-release';
-import {legacyPurchaseLink,productInquiry} from '@/lib/legacy-purchases';
 
 const categories=[['todos','Todas'],['consumo','Para tu mesa'],['fertiles','Para incubar'],['insumos','Insumos']] as const;
 type Category=typeof categories[number][0];
@@ -15,7 +14,7 @@ const directions=(p:{map_url:string;name:string;address:string;city:string})=>p.
 const storeUrl='https://www.mercadolibre.com.ar/tienda/granja-atuel';
 const cartKey='ga-preview-cart-v1';
 
-export default function Storefront({products,source,settings,content,purchaseMode,legacyIncubation,recipePaths,recipeAliases}:{products:Product[];source:string;settings:ShopSettings;content:SiteContent[];purchaseMode:PurchaseMode;legacyIncubation:boolean;recipePaths:Record<string,string>;recipeAliases:Record<string,string>}){
+export default function Storefront({products,source,settings,content,purchaseMode,linkProductIds,legacyIncubation,recipePaths,recipeAliases}:{products:Product[];source:string;settings:ShopSettings;content:SiteContent[];purchaseMode:PurchaseMode;linkProductIds:string[];legacyIncubation:boolean;recipePaths:Record<string,string>;recipeAliases:Record<string,string>}){
  const testMode=purchaseMode==='test',cartEnabled=purchaseMode!=='links';
  const [category,setCategory]=useState<Category>('todos');
  const [cart,setCart]=useState<CartLine[]>([]);
@@ -103,7 +102,7 @@ export default function Storefront({products,source,settings,content,purchaseMod
     <div className="sf-tabs" role="group" aria-label="Filtrar productos">{categories.map(([id,label])=><button key={id} type="button" aria-pressed={category===id} onClick={()=>setCategory(id)}>{label}</button>)}</div>
     {source==='unavailable'?<div className="sf-empty">El catálogo no está disponible por el momento. <a href={wa}>Consultanos por WhatsApp</a>.</div>:shown.length===0?<div className="sf-empty">No hay publicaciones en esta categoría por el momento.</div>:
      <div className="sf-products">{shown.map(p=>{
-      const payment=cartEnabled?null:legacyPurchaseLink(p);
+      const payment=!cartEnabled&&linkProductIds.includes(p.id);
       return <article className="sf-product" key={p.id}>
       <Link href={'/producto/'+p.id} className="sf-product-photo" aria-label={'Ver '+p.name+' · '+p.description}>
        <img src={p.image} alt={p.gallery?.[0]?.alt||p.name} width={600} height={400} loading="lazy"/>
@@ -112,7 +111,7 @@ export default function Storefront({products,source,settings,content,purchaseMod
       <div className="sf-product-main">
        <h3><Link href={'/producto/'+p.id}>{p.name}</Link></h3><p>{p.description}</p>
        <div className="sf-product-price"><strong>{money(p.price)}</strong><span><Truck size={14}/> Envío incluido</span></div>
-       {payment?<a className="sf-buy" href={payment} target="_blank" rel="noreferrer">Comprar con Mercado Pago <ArrowUpRight size={17}/></a>:cartEnabled&&canBuy(p)?<button className="sf-buy" type="button" onClick={()=>add(p)} aria-label={'Agregar '+p.name+' · '+p.description}>Agregar al carrito <Plus size={18}/></button>:<a href={productInquiry(p,settings.whatsapp)} className="sf-buy is-unavailable">{canBuy(p)?'Consultar por WhatsApp':'Consultar disponibilidad'} <ArrowUpRight size={17}/></a>}
+       {payment?<Link className="sf-buy" href={'/checkout?producto='+p.id}>Comprar <ArrowRight size={17}/></Link>:cartEnabled&&canBuy(p)?<button className="sf-buy" type="button" onClick={()=>add(p)} aria-label={'Agregar '+p.name+' · '+p.description}>Agregar al carrito <Plus size={18}/></button>:<a href={productInquiry(p,settings.whatsapp)} className="sf-buy is-unavailable">{canBuy(p)?'Consultar por WhatsApp':'Consultar disponibilidad'} <ArrowUpRight size={17}/></a>}
       </div>
      </article>;})}</div>}
    </section>
@@ -156,7 +155,7 @@ export default function Storefront({products,source,settings,content,purchaseMod
     <p className="sf-kicker">ANTES DE COMPRAR</p><h2>Preguntas frecuentes.</h2>
     <p>Si necesitás ayuda con una presentación o un pedido, escribinos.</p>
     <a className="sf-link" href={wa} target="_blank" rel="noreferrer">Hablar por WhatsApp <ArrowUpRight size={17}/></a>
-   </div><div className="sf-questions">{faqs.map(q=><details key={q.id}><summary>{q.data.question}<Plus size={18}/></summary><p>{purchaseMode==='links'&&q.id==='pregunta-2'?'Preparamos y embalamos tu pedido en San Rafael, Mendoza. Escribinos por WhatsApp para coordinar el despacho y consultar el seguimiento.':q.data.answer}</p></details>)}</div></section>
+   </div><div className="sf-questions">{faqs.map(q=><details key={q.id}><summary>{q.data.question}<Plus size={18}/></summary><p>{purchaseMode==='links'&&q.id==='pregunta-2'?'Preparamos y embalamos tu pedido en San Rafael, Mendoza. Completá tus datos de envío antes de pagar. Una vez despachado, podés consultar el seguimiento desde el detalle de tu pedido.':q.data.answer}</p></details>)}</div></section>
    <section className="sf-wrap sf-section" id="testimonios">
     <div className="sf-heading"><div><p className="sf-kicker">OPINIONES DE COMPRADORES</p><h2>Lo que dicen nuestros clientes</h2></div><a className="sf-link" href={storeUrl} target="_blank" rel="noreferrer">Ver tienda en Mercado Libre <ArrowUpRight size={16}/></a></div>
     <div className="sf-testimonials">

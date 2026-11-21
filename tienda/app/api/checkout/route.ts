@@ -3,10 +3,25 @@ import {sameOrigin,readSmallJson} from '@/lib/request';
 import {validateCheckout,priceOrder,type OrderItem} from '@/lib/checkout';
 import {checkoutOrigin,currentPaymentConfig,orderDb,visitor,digest,mp} from '@/lib/order-server';
 import {checkoutAvailable,preferenceSeller} from '@/lib/payment-config';
+import {getPurchaseMode} from '@/lib/current-purchase';
+import {indexableHost} from '@/lib/site-release';
+import {LinkOrderError,linkOrdersConfigured,saveLinkOrder} from '@/lib/link-orders';
 
 export async function POST(request:Request){
  const reply=(b:unknown,status=200)=>NextResponse.json(b,{status,headers:{'Cache-Control':'private, no-store'}});
  if(!sameOrigin(request))return reply({error:'Origen no permitido.'},403);
+ if(getPurchaseMode()==='links'){
+  if(!indexableHost(request.headers.get('host')))return reply({error:'Abrí la tienda desde su dirección oficial.'},403);
+  if(!linkOrdersConfigured())return reply({error:'La compra en línea no está disponible ahora.'},503);
+  let input;
+  try{input=validateCheckout(await readSmallJson(request));}catch(e){return reply({error:e instanceof Error?e.message:'Revisá el pedido.'},400);}
+  try{
+   const hash=await visitor(true);
+   if(!hash)return reply({error:'No pudimos identificar esta sesión.'},400);
+   const id=await saveLinkOrder(input,hash);
+   return reply({redirect:'/pedido/'+id});
+  }catch(e){return e instanceof LinkOrderError?reply({error:e.message},e.status):reply({error:'No pudimos guardar tus datos. Intentá de nuevo.'},503);}
+ }
  const config=currentPaymentConfig();
  if(!config||!checkoutAvailable(config,process.env))return reply({error:'Mercado Pago todavía no está disponible.'},503);
  let input;
@@ -16,7 +31,7 @@ export async function POST(request:Request){
   const db=orderDb(),hash=await visitor(true);
   if(!hash)return reply({error:'No pudimos identificar esta sesión.'},400);
   const requestHash=digest(JSON.stringify({name:input.name,email:input.email,lines:input.lines,expected_total_cents:input.expected_total_cents,delivery_address:input.delivery_address}));
-  const {data:previous,error:readError}=await db.from('tienda_pedidos').select('*').eq('mode',config.mode).eq('visitor_hash',hash).eq('request_key',input.request_key).maybeSingle();
+  const {data:previous,error:readError}=await db.from('tienda_pedidos').select('*').eq('mode',config.mode).eq('payment_flow','checkout_pro').eq('visitor_hash',hash).eq('request_key',input.request_key).maybeSingle();
   if(readError)throw new Error('No pudimos consultar el pedido.');
   let order=previous;
   if(!order){

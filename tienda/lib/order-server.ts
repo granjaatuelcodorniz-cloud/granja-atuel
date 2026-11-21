@@ -20,7 +20,7 @@ export function orderDb(){
 export const digest=(s:string)=>createHash('sha256').update(s).digest('hex');
 export async function visitor(create=false){
  const jar=await cookies();let token=jar.get('ga_order_visitor')?.value;
- if(!token&&create){token=randomBytes(32).toString('hex');jar.set('ga_order_visitor',token,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax',path:'/',maxAge:2592000});}
+ if(create&&!/^[a-f0-9]{64}$/.test(token??'')){token=randomBytes(32).toString('hex');jar.set('ga_order_visitor',token,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax',path:'/',maxAge:2592000});}
  return token&&/^[a-f0-9]{64}$/.test(token)?digest(token):null;
 }
 export class PaymentVerificationError extends Error {
@@ -47,7 +47,7 @@ async function recordPayment(config:PaymentConfig,payment:Record<string,unknown>
  if(String(payment.id)!==lookupId||(expectedOrderId&&reference!==expectedOrderId))throw new PaymentVerificationError('PAYMENT_REFERENCE');
  if(typeof reference!=='string'||!orderIdPattern.test(reference))return false;
  const db=orderDb();
- const {data:order,error}=await db.from('tienda_pedidos').select('id,total_cents,payment_collector_id').eq('id',reference).eq('mode',config.mode).maybeSingle();
+ const {data:order,error}=await db.from('tienda_pedidos').select('id,total_cents,payment_collector_id').eq('id',reference).eq('mode',config.mode).eq('payment_flow','checkout_pro').maybeSingle();
  if(error)throw new PaymentVerificationError('PAYMENT_ORDER_READ');
  if(!order)return false;
  const seller=config.mode==='test'?GranjaAtuelTestSeller:order.payment_collector_id;

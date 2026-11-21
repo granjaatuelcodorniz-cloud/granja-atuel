@@ -22,3 +22,20 @@
 .recipes-single p{white-space:pre-line;margin:10px 0}
 .recipes-single img{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:8px;margin:25px 0}
 .recipes-single .button{margin-top:22px}
+
+.checkout-grid{grid-template-areas:"details summary"}
+.checkout-fields{grid-area:details}
+.checkout-summary{grid-area:summary}
+.checkout-fields h1{font-size:clamp(28px,5vw,40px);margin:9px 0 12px}
+.checkout-fields fieldset{border:0;padding:0;margin:15px 0;min-width:0;display:grid;gap:12px}
+.checkout-field-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.checkout-summary .inc-small{margin-top:12px}
+.link-order-pay{margin-top:22px;display:grid;gap:13px}
+.link-order-pay summary{cursor:pointer}
+.link-order-pay form{margin-top:12px}
+@media(max-width:700px){.checkout-grid{grid-template-areas:"summary" "details";gap:16px}}
+@media(max-width:420px){.checkout-field-row{grid-template-columns:1fr}}
+.act-link-payment{display:grid;gap:12px;margin-top:12px;align-items:start}
+.act-link-payment .dash-inline{display:flex;flex-direction:row;align-items:center}
+.act-link-payment input[type=checkbox]{width:auto;margin:0}
+.act-link-payment button{justify-self:start}

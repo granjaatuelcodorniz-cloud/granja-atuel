@@ -14,7 +14,7 @@ export async function POST(request:Request){
  if(b.payment_id!==undefined&&(typeof b.payment_id!=='string'||!paymentIdPattern.test(b.payment_id)))return reply({error:'Identificador de pago inválido.'},400);
  try{
   const hash=await visitor();if(!hash)return reply({error:'Pedido no disponible en esta sesión.'},404);
-  const {data:order,error}=await orderDb().from('tienda_pedidos').select('id').eq('mode',config.mode).eq('id',b.id).eq('visitor_hash',hash).maybeSingle();
+  const {data:order,error}=await orderDb().from('tienda_pedidos').select('id').eq('mode',config.mode).eq('payment_flow','checkout_pro').eq('id',b.id).eq('visitor_hash',hash).maybeSingle();
   if(error)return reply({error:'No pudimos consultar el pedido.'},503);
   if(!order)return reply({error:'Pedido no disponible en esta sesión.'},404);
   const matched=await reconcileOrder(config,order.id,b.payment_id);

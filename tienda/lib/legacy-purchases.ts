@@ -1,3 +1,4 @@
+import 'server-only';
 import {canBuy,type Product} from './catalog.ts';
 
 // Published links and price snapshots from the former storefront.
@@ -12,7 +13,4 @@ export function legacyPurchaseLink(product:Product){
  if(!canBuy(product)||!Object.hasOwn(activeLinks,product.id))return null;
  const link=activeLinks[product.id];
  return link.price===product.price?link.url:null;
-}
-export function productInquiry(p:Product,whatsapp:string){
- return 'https://wa.me/'+whatsapp+'?text='+encodeURIComponent('Hola, quería consultar por '+p.name+' · '+p.description+'.');
 }

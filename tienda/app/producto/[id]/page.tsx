@@ -2,6 +2,7 @@ import Link from 'next/link';
 import {notFound} from 'next/navigation';
 import {getCatalog} from '@/lib/products';
 import {getShopSettings} from '@/lib/shop-settings';
+import {legacyPurchaseLink} from '@/lib/legacy-purchases';
 import {getPurchaseMode} from '@/lib/current-purchase';
 import {publicMetadata} from '@/lib/seo';
 import ProductDetail from '@/components/ProductDetail';
@@ -21,8 +22,9 @@ export default async function ProductPage({params}:Props){
  const [catalog,settings]=await Promise.all([getCatalog(),getShopSettings()]);
  const p=catalog.products.find(p=>p.id===id);
  if(!p)notFound();
+ const mode=getPurchaseMode();
  return <main className="inc-shell"><header className="inc-header">
   <Link href="/"><img className="logo" src="/logo-granja-atuel-web.webp" alt="Granja Atuel"/></Link>
   <Link className="text-link" href="/#productos">← Volver a la tienda</Link>
- </header><ProductDetail product={p} purchaseMode={getPurchaseMode()} whatsapp={settings.whatsapp}/></main>;
+ </header><ProductDetail product={p} purchaseMode={mode} linkPurchase={mode==='links'&&!!legacyPurchaseLink(p)} whatsapp={settings.whatsapp}/></main>;
 }
