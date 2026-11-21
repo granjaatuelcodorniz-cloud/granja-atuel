@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import {headers} from 'next/headers';
+import {MessageCircle} from 'lucide-react';
+import {getShopSettings} from '@/lib/shop-settings';
 import {currentPaymentConfig,orderDb,visitor} from '@/lib/order-server';
 import {paymentLabel,type OrderItem} from '@/lib/checkout';
 import {orderIdPattern,paymentIdPattern} from '@/lib/payment-config';
@@ -29,6 +31,10 @@ export default async function OrderPage({params,searchParams}:{params:Promise<{i
  }
  const order=linkOrder??integrated;
  const mode=linkOrder?'production':config?.mode??'test',test=mode==='test';
+ const reference='#'+id.slice(0,8);
+ const contact=order&&!test?await getShopSettings():null;
+ const chat=contact?'https://wa.me/'+contact.whatsapp+'?text='+encodeURIComponent('Hola, quisiera consultar por el pedido '+reference+'.'):null;
+ const email=contact?.contact_email?'mailto:'+encodeURIComponent(contact.contact_email).replace('%40','@')+'?subject='+encodeURIComponent('Consulta por el pedido '+reference):null;
  return <main className="inc-shell">
   <header className="inc-header"><Link href="/"><img className="logo" src="/logo-granja-atuel-web.webp" alt="Granja Atuel"/></Link><Link className="text-link" href="/#productos">Volver a la tienda</Link></header>
   <section className="inc-panel" style={{marginTop:25}}>
@@ -36,7 +42,7 @@ export default async function OrderPage({params,searchParams}:{params:Promise<{i
     <p>{readFailed?'Volvé a intentar en unos segundos.':'Abrí este pedido desde el navegador donde lo creaste.'}</p></>:<>
     <p className="eyebrow">{test?'PEDIDO DE PRUEBA · SIN ENTREGA REAL':'TU PEDIDO · GRANJA ATUEL'}</p>
     <h1 style={{fontSize:40,margin:'15px 0'}}>{linkOrder?.link_reported_payment&&order.status==='awaiting_payment'?'Pago informado':paymentLabel(order.status,mode)}</h1>
-    <p className="inc-small">Pedido #{order.id.slice(0,8)}</p>
+    <p className="inc-small">Pedido {reference}</p>
     {(order.items as OrderItem[]).map(i=><div className="checkout-item" key={i.id}><span>{i.title} × {i.quantity}</span><strong>{money(i.unit_price*i.quantity)}</strong></div>)}
     <div className="checkout-item"><strong>Total con envío incluido</strong><strong>{money(Number(order.total_cents)/100)}</strong></div>
     {test&&<p className="admin-status">Esta operación es una simulación. No genera venta, reserva, retiro ni envío real.</p>}
@@ -56,6 +62,14 @@ export default async function OrderPage({params,searchParams}:{params:Promise<{i
      <RefreshOrder id={order.id} paymentId={paymentId} status={order.status}/>
      {integrated&&!['approved','pending','refunded','charged_back'].includes(order.status)&&integrated.checkout_url&&Date.parse(order.expires_at)>Date.now()&&<a className="text-link" href={integrated.checkout_url}>Volver a Mercado Pago</a>}
     </>}
+    {chat&&<aside className="order-support" aria-labelledby="order-help">
+     <h2 id="order-help">¿Necesitás ayuda con este pedido?</h2>
+     <p className="inc-small">Escribinos desde acá. El mensaje ya incluye la referencia {reference}.</p>
+     <div className="inc-actions">
+      <a className="button" href={chat} target="_blank" rel="noreferrer"><MessageCircle size={17} aria-hidden="true"/>Consultar por WhatsApp</a>
+      {email&&<a className="text-link" href={email}>Escribinos por correo</a>}
+     </div>
+    </aside>}
    </>}
   </section>
  </main>;

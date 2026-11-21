@@ -68,3 +68,7 @@
  .act-publications td{display:block;min-width:0!important;border:0;padding:5px 0}
  .act-publications td:first-child,.act-publications td:last-child{grid-column:1/-1}
 }
+.dash-settings .recipient-dni-setting{display:flex;flex-direction:row;align-items:center;gap:10px}
+.recipient-dni-setting input[type=checkbox]{width:auto;margin:0}
+.act-order-dni{margin-top:14px}
+.act-order-dni .dash-inline{flex-wrap:wrap}

@@ -9,7 +9,7 @@ export type AdminOrder={id:string;mode:PaymentMode;customer_name:string;customer
 export const adminOrderFields='id,mode,customer_name,customer_email,payment_flow,link_reported_payment,link_verified_payment,total_cents,status,created_at,items,fulfillment_status,fulfillment_version,admin_notes,shipping_carrier,tracking_code,delivery_address' as const;
 export const fulfillmentLabels:Record<string,string>={new:'Por preparar',preparing:'En preparación',ready:'Listo para entregar',dispatched:'Despachado',delivered:'Entregado',cancelled:'Cancelado'};
 export const categoryLabels:Record<string,string>={consumo:'Huevos de consumo',fertiles:'Huevos fértiles',insumos:'Insumos'};
-export const defaultSettings={
+const defaultTextSettings={
  business_name:'Granja Atuel',location:'San Rafael, Mendoza',whatsapp:'5492604351288',contact_email:'granjaatuel.codorniz@gmail.com',instagram:'',
  hero_title:'Huevos de codorniz',hero_accent:'de nuestra granja.',hero_description:'Elegí tu presentación para cocinar, incubar o abastecer tu negocio. Todos los precios incluyen el envío.',
  hero_image:'/el-corazon-esta-en-cada-detalle.webp',hero_alt:'Huevo de codorniz servido en una cuchara',
@@ -19,6 +19,7 @@ export const defaultSettings={
  wholesale_title:'¿Comprás para tu negocio?',
  wholesale_description:'Si tenés una dietética, verdulería, restaurante o almacén, contanos qué necesitás. Te ayudamos a elegir una presentación y coordinamos entregas por volumen.',
 };
+export const defaultSettings={...defaultTextSettings,require_recipient_dni:false};
 export type ShopSettings=typeof defaultSettings;
 export const publicationLabels:Record<PublicationState,string>={draft:'Borrador',published:'Publicada',paused:'Pausada',archived:'Archivada'};
 export const publicationActions:Record<PublicationState,PublicationState[]>={draft:['published','archived'],published:['paused','archived'],paused:['published','archived'],archived:['draft']};
@@ -52,7 +53,9 @@ export function validateStock(b:Record<string,unknown>){
 export function validateSettings(b:Record<string,unknown>):ShopSettings{
  const required=['business_name','location','hero_title','hero_description','about_title','about_description','wholesale_title','wholesale_description'];
  const long=['hero_description','about_description','wholesale_description'];
- const out=Object.fromEntries(Object.keys(defaultSettings).map(k=>[k,text(b,k,long.includes(k)?700:200,required.includes(k))])) as ShopSettings;
+ if(b.require_recipient_dni!==undefined&&typeof b.require_recipient_dni!=='boolean')throw new Error('Revisá la configuración de DNI para el envío.');
+ const fields=Object.fromEntries(Object.keys(defaultTextSettings).map(k=>[k,text(b,k,long.includes(k)?700:200,required.includes(k))])) as typeof defaultTextSettings;
+ const out={...fields,require_recipient_dni:b.require_recipient_dni===true};
  if(!/^\d{8,15}$/.test(out.whatsapp))throw new Error('WhatsApp debe incluir país y área, solo números.');
  if(out.contact_email&&!/^\S+@\S+\.\S+$/.test(out.contact_email))throw new Error('Correo inválido.');
  if(out.instagram&&!/^https:\/\/(www\.)?instagram\.com\/[a-zA-Z0-9_.]+\/?$/.test(out.instagram))throw new Error('Ingresá el enlace de tu perfil de Instagram.');
@@ -71,7 +74,7 @@ export function resolveSettings(raw:unknown): ShopSettings {
  }
  if(values.hero_image==='/hero-web.webp'&&values.hero_alt===undefined) delete values.hero_image;
  if(values.hero_image&&values.hero_alt===undefined) values.hero_alt='';
- try{return validateSettings({...defaultSettings,...values});}catch{return defaultSettings;}
+ try{return validateSettings({...defaultSettings,...values});}catch{return {...defaultSettings,require_recipient_dni:values.require_recipient_dni===true};}
 }
 export function validateOrderUpdate(b:Record<string,unknown>){
  if(typeof b.id!=='string'||!/^[a-f0-9-]{36}$/i.test(b.id)||typeof b.fulfillment_status!=='string'||!Object.hasOwn(fulfillmentLabels,b.fulfillment_status))throw new Error('Pedido o estado inválido.');

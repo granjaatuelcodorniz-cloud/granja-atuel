@@ -6,15 +6,24 @@ import {checkoutAvailable,preferenceSeller} from '@/lib/payment-config';
 import {getPurchaseMode} from '@/lib/current-purchase';
 import {indexableHost} from '@/lib/site-release';
 import {LinkOrderError,linkOrdersConfigured,saveLinkOrder} from '@/lib/link-orders';
+import {getShopSettings} from '@/lib/shop-settings';
 
 export async function POST(request:Request){
  const reply=(b:unknown,status=200)=>NextResponse.json(b,{status,headers:{'Cache-Control':'private, no-store'}});
  if(!sameOrigin(request))return reply({error:'Origen no permitido.'},403);
- if(getPurchaseMode()==='links'){
+ const useLink=getPurchaseMode()==='links',config=currentPaymentConfig();
+ if(useLink){
   if(!indexableHost(request.headers.get('host')))return reply({error:'Abrí la tienda desde su dirección oficial.'},403);
   if(!linkOrdersConfigured())return reply({error:'La compra en línea no está disponible ahora.'},503);
-  let input;
-  try{input=validateCheckout(await readSmallJson(request));}catch(e){return reply({error:e instanceof Error?e.message:'Revisá el pedido.'},400);}
+ }else if(!config||!checkoutAvailable(config,process.env))return reply({error:'Mercado Pago todavía no está disponible.'},503);
+ let body;
+ try{body=await readSmallJson(request);}catch(e){return reply({error:e instanceof Error?e.message:'Revisá el pedido.'},400);}
+ let requiresDni;
+ try{requiresDni=(await getShopSettings({strict:true})).require_recipient_dni;}
+ catch{return reply({error:'No pudimos verificar los datos que requiere el envío. Intentá de nuevo.'},503);}
+ let input;
+ try{input=validateCheckout(body,requiresDni);}catch(e){return reply({error:e instanceof Error?e.message:'Revisá el pedido.'},400);}
+ if(useLink){
   try{
    const hash=await visitor(true);
    if(!hash)return reply({error:'No pudimos identificar esta sesión.'},400);
@@ -22,10 +31,7 @@ export async function POST(request:Request){
    return reply({redirect:'/pedido/'+id});
   }catch(e){return e instanceof LinkOrderError?reply({error:e.message},e.status):reply({error:'No pudimos guardar tus datos. Intentá de nuevo.'},503);}
  }
- const config=currentPaymentConfig();
- if(!config||!checkoutAvailable(config,process.env))return reply({error:'Mercado Pago todavía no está disponible.'},503);
- let input;
- try{input=validateCheckout(await readSmallJson(request));}catch(e){return reply({error:e instanceof Error?e.message:'Revisá el pedido.'},400);}
+ if(!config)return reply({error:'Mercado Pago todavía no está disponible.'},503);
  try{
   const returnOrigin=checkoutOrigin(request,config);
   const db=orderDb(),hash=await visitor(true);

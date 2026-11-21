@@ -9,7 +9,8 @@ import {api,Modal,Message,Empty,date} from './shared';
 
 export default function Orders({orders,updated,verified,initialOrderId,testMode}:{orders:AdminOrder[];updated:(o:AdminOrder)=>void;verified:(o:AdminOrder)=>void;initialOrderId?:string;testMode:boolean}){
  const [search,setSearch]=useState(''),[status,setStatus]=useState('all'),[prep,setPrep]=useState('all'),[selected,setSelected]=useState<AdminOrder|null>(orders.find(o=>o.id===initialOrderId)??null);
- const shown=orders.filter(o=>(status==='all'||o.status===status)&&(prep==='all'||o.fulfillment_status===prep)&&[o.customer_name,o.customer_email,o.id,o.delivery_address?.city,o.link_reported_payment,o.link_verified_payment,o.tracking_code].join(' ').toLowerCase().includes(search.trim().toLowerCase()));
+ const term=search.trim().replace(/^#(?=[a-f0-9])/i,'').toLowerCase();
+ const shown=orders.filter(o=>(status==='all'||o.status===status)&&(prep==='all'||o.fulfillment_status===prep)&&[o.customer_name,o.customer_email,o.id,o.delivery_address?.city,o.link_reported_payment,o.link_verified_payment,o.tracking_code].join(' ').toLowerCase().includes(term));
  return <>
   <div className="dash-section-heading act-heading"><div><p className="eyebrow">PAGO, PREPARACIÓN Y DESPACHO</p><h1>Pedidos</h1><p>Revisá los últimos 200 pedidos y registrá el seguimiento cuando despaches.</p></div>{testMode&&<span className="dash-badge gold">ENTORNO DE PRUEBAS</span>}</div>
   <div className="dash-note">El envío está incluido en el total. Desde el detalle podés copiar los datos del destinatario y registrar el envío que gestionaste por tu cuenta.</div>
@@ -29,6 +30,12 @@ function OrderEditor({order,close,saved,verified}:{order:AdminOrder;close:()=>vo
  const [checking,setChecking]=useState(false),[paymentMessage,setPaymentMessage]=useState(''),[paymentId,setPaymentId]=useState(order.link_reported_payment??''),[confirmed,setConfirmed]=useState(false);
  const linkPayment=o.payment_flow==='payment_link';
  const address=o.delivery_address;
+ const [showDni,setShowDni]=useState(false),[dniCopied,setDniCopied]=useState(false);
+ async function copyDni(){
+  if(!address?.dni)return;
+  try{await navigator.clipboard.writeText(address.dni);setDniCopied(true);}
+  catch{setShowDni(true);setError('Seleccioná el DNI para copiarlo desde este navegador.');}
+ }
  async function verifyPayment(){
   if(checking||busy||(linkPayment&&(!confirmed||!/^\d{1,30}$/.test(paymentId.trim()))))return;
   setChecking(true);setError('');setPaymentMessage('');
@@ -76,7 +83,14 @@ function OrderEditor({order,close,saved,verified}:{order:AdminOrder;close:()=>vo
    </div>
    <div className="act-delivery">
     <h3><MapPin size={17}/> Datos de entrega</h3>
-    {address?<><p>{address.address}{address.reference?' · '+address.reference:''}<br/>{address.postal_code} · {address.city}, {address.province}<br/>{address.phone}</p><button className="dash-secondary small" type="button" onClick={copyAddress}><ClipboardCopy size={15}/>{copied?'Datos copiados':'Copiar datos para el despacho'}</button><span className="sr-only" role="status">{copied?'Datos de entrega copiados.':''}</span></>:<p>Pedido de prueba anterior, sin domicilio registrado.</p>}
+    {address?<><p>{address.address}{address.reference?' · '+address.reference:''}<br/>{address.postal_code} · {address.city}, {address.province}<br/>{address.phone}</p><button className="dash-secondary small" type="button" onClick={copyAddress}><ClipboardCopy size={15}/>{copied?'Datos copiados':'Copiar datos para el despacho'}</button><span className="sr-only" role="status">{copied?'Datos de entrega copiados.':''}</span>
+    {address.dni&&<div className="act-order-dni">
+     <p>DNI de quien recibe: <strong>{showDni?address.dni:'•••• '+address.dni.slice(-3)}</strong></p>
+     <div className="dash-inline">
+      <button className="dash-secondary small" type="button" onClick={()=>setShowDni(v=>!v)}>{showDni?'Ocultar DNI':'Mostrar DNI'}</button>
+      <button className="dash-secondary small" type="button" onClick={copyDni}>{dniCopied?'DNI copiado':'Copiar DNI'}</button>
+     </div>
+    </div>}</>:<p>Pedido de prueba anterior, sin domicilio registrado.</p>}
    </div>
    <div className="dash-order-items">{o.items.map(i=><div key={i.id}><span>{i.title} × {i.quantity}</span><strong>{money(i.unit_price*i.quantity)}</strong></div>)}<div><b>Total con envío incluido</b><b>{money(o.total_cents/100)}</b></div></div>
    <label>Estado de preparación<select value={o.fulfillment_status} onChange={e=>setO({...o,fulfillment_status:e.target.value})}>{Object.entries(fulfillmentLabels).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>

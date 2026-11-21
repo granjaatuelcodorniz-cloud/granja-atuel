@@ -9,7 +9,7 @@ type Props={initial:ShopSettings;version:string;media:Media[];saved:(s:ShopSetti
 
 export default function Settings({initial,version,media,saved,uploaded}:Props){
  const [s,setS]=useState(initial),[error,setError]=useState(''),[success,setSuccess]=useState(''),[busy,setBusy]=useState(false);
- const update=(key:keyof ShopSettings,value:string)=>setS(old=>({...old,[key]:value}));
+ const update=<K extends keyof ShopSettings,>(key:K,value:ShopSettings[K])=>setS(old=>({...old,[key]:value}));
  function imagePicker(label:string,imageKey:'hero_image'|'about_image',altKey:'hero_alt'|'about_alt'){
   const selected=s[imageKey];
   return <>
@@ -59,6 +59,11 @@ export default function Settings({initial,version,media,saved,uploaded}:Props){
     <div className="dash-field-row"><label>Nombre comercial<input required maxLength={200} value={s.business_name} onChange={e=>update('business_name',e.target.value)}/></label><label>Localidad y provincia<input required maxLength={200} value={s.location} onChange={e=>update('location',e.target.value)}/></label></div>
     <div className="dash-field-row"><label>WhatsApp<input required inputMode="numeric" pattern="[0-9]{8,15}" value={s.whatsapp} onChange={e=>update('whatsapp',e.target.value)}/><small>País + área + número, sin espacios.</small></label><label>Correo de contacto<input type="email" maxLength={200} value={s.contact_email} onChange={e=>update('contact_email',e.target.value)}/></label></div>
     <label>Perfil de Instagram (opcional)<input type="url" placeholder="https://www.instagram.com/granjaatuel" maxLength={200} value={s.instagram} onChange={e=>update('instagram',e.target.value)}/></label>
+   </section>
+   <section className="dash-panel">
+    <h2>Datos de envío</h2>
+    <label className="recipient-dni-setting"><input type="checkbox" checked={s.require_recipient_dni} onChange={e=>update('require_recipient_dni',e.target.checked)}/> Pedir DNI de quien recibe</label>
+    <small>Activá esta opción cuando tu transportista te pida el número para generar el envío. Se solicitará en los próximos pedidos, antes del pago.</small>
    </section>
    <div className="act-settings-save"><Message error={error} success={success}/><button className="dash-primary" disabled={busy||!version}><Save size={17}/>{busy?'Guardando…':'Guardar cambios'}</button></div>
   </form>
