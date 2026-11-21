@@ -8,11 +8,15 @@ export async function supabaseServer() {
     cookies:{getAll:()=>jar.getAll(), setAll:values=>{try {values.forEach(({name,value,options})=>jar.set(name,value,{...options,httpOnly:true,sameSite:'lax',secure:process.env.NODE_ENV==='production'}));} catch { /* Read-only Server Component. Route handlers refresh sessions. */ }}}
   });
 }
-export async function getAdmin() {
+export async function getAdminSession() {
   if(!databaseConfigured()) return null;
   const db=await supabaseServer();
   const {data:{user},error}=await db.auth.getUser();
   if(error||!user) return null;
-  const {data}=await db.from('tienda_admins').select('user_id').eq('user_id',user.id).maybeSingle();
-  return data ? user : null;
+  const [{data:member},claims]=await Promise.all([
+    db.from('tienda_admins').select('user_id').eq('user_id',user.id).maybeSingle(),
+    db.auth.getClaims(),
+  ]);
+  if(!member||claims.error||claims.data?.claims.sub!==user.id)return null;
+  return {db,user,verified:claims.data.claims.aal==='aal2'};
 }

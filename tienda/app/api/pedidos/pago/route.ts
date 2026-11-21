@@ -1,7 +1,7 @@
 import {NextResponse} from 'next/server';
 import {sameOrigin,readSmallJson} from '@/lib/request';
 import {indexableHost} from '@/lib/site-release';
-import {visitor} from '@/lib/order-server';
+import {orderVisitor} from '@/lib/order-access';
 import {orderIdPattern,paymentIdPattern} from '@/lib/payment-config';
 import {linkOrdersConfigured,reportLinkPayment} from '@/lib/link-orders';
 
@@ -14,7 +14,7 @@ export async function POST(request:Request){
  if(typeof input.id!=='string'||!orderIdPattern.test(input.id)||typeof input.payment_id!=='string'||!paymentIdPattern.test(input.payment_id))
   return reply({error:'Ingresá el número de operación de Mercado Pago (solo números).'},400);
  try{
-  const hash=await visitor();
+  const hash=await orderVisitor(input.id);
   if(!hash||!await reportLinkPayment(input.id,hash,input.payment_id))return reply({error:'El pedido no está disponible en este navegador o su pago ya fue revisado.'},404);
   return reply({ok:true});
  }catch{return reply({error:'No pudimos guardar el número de operación. Intentá de nuevo.'},503);}

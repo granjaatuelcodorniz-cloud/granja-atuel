@@ -2,17 +2,29 @@
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import {spawn} from 'node:child_process';
-import {randomUUID} from 'node:crypto';
+import {createHmac,randomUUID} from 'node:crypto';
 import {once} from 'node:events';
 import {seedProducts} from '../lib/catalog.ts';
 
 const activeHost='www.granjaatuel.com.ar',origin='https://'+activeHost,port=3105;
 const product=seedProducts.find(p=>p.id==='consumo-5');
 const orders=new Map(),requestKeys=new Map();
+const adminId=randomUUID(),factorId=randomUUID(),challengeId=randomUUID();
+const authUser={id:adminId,email:'operator@example.invalid',aud:'authenticated',role:'authenticated',app_metadata:{provider:'email'},user_metadata:{},factors:[]};
+function fixtureSession(aal){
+ const encode=value=>Buffer.from(JSON.stringify(value)).toString('base64url');
+ const head=encode({alg:'HS256',typ:'JWT'});
+ const body=encode({sub:adminId,role:'authenticated',aal,exp:Math.floor(Date.now()/1000)+3600});
+ const value=head+'.'+body;
+ const signature=createHmac('sha256','isolated-fixture').update(value).digest('base64url');
+ return {access_token:value+'.'+signature,refresh_token:'fixture-'+aal,token_type:'bearer',expires_in:3600,user:authUser};
+}
+const passwordSession=fixtureSession('aal1'),verifiedSession=fixtureSession('aal2');
 let creates=0,requiresDni=false,settingsUnavailable=false;
 const db=http.createServer(async (req,res)=>{
  try{
-  const pathname=new URL(req.url,'http://localhost').pathname;
+  const url=new URL(req.url,'http://localhost');
+  const pathname=url.pathname;
   const reply=(x,status=200)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(x));};
   if(pathname==='/rest/v1/tienda_productos')return reply([product]);
   if(pathname==='/rest/v1/tienda_configuracion'){
@@ -22,14 +34,44 @@ const db=http.createServer(async (req,res)=>{
   if(pathname==='/rest/v1/tienda_contenidos')return reply([]);
   const chunks=[];
   for await(const chunk of req)chunks.push(chunk);
-  const args=JSON.parse(Buffer.concat(chunks).toString());
+  const args=chunks.length?JSON.parse(Buffer.concat(chunks).toString()):{};
+  const authorized=req.headers.authorization==='Bearer '+verifiedSession.access_token;
+  const passwordOnly=req.headers.authorization==='Bearer '+passwordSession.access_token;
+  if(pathname==='/auth/v1/token'&&url.searchParams.get('grant_type')==='password')
+   return args.email===authUser.email&&args.password==='fixture-password'?reply(passwordSession):reply({message:'Invalid login'},400);
+  if(pathname==='/auth/v1/user')return authorized||passwordOnly?reply(authUser):reply({message:'Sign in required'},401);
+  if(pathname==='/auth/v1/factors'&&passwordOnly){
+   authUser.factors=[{id:factorId,factor_type:'totp',status:'unverified',friendly_name:'Granja Atuel'}];
+   return reply({id:factorId,type:'totp',totp:{qr_code:'<svg/>',secret:'LOCALFIXTURE',uri:'otpauth://totp/LocalFixture'}});
+  }
+  if(pathname==='/auth/v1/factors/'+factorId+'/challenge'&&passwordOnly)return reply({id:challengeId,type:'totp',expires_at:Math.floor(Date.now()/1000)+60});
+  if(pathname==='/auth/v1/factors/'+factorId+'/verify'&&passwordOnly){
+   if(args.challenge_id!==challengeId||args.code!=='123456')return reply({message:'Invalid code'},400);
+   authUser.factors[0].status='verified';
+   return reply(verifiedSession);
+  }
+  if(pathname==='/rest/v1/tienda_admins')return authorized||passwordOnly?reply([{user_id:adminId}]):reply([]);
+  if(pathname==='/rest/v1/tienda_pedidos'&&authorized){
+   const found=orders.get(url.searchParams.get('id')?.slice(3));
+   if(!found)return reply([]);
+   if(req.method==='PATCH')Object.assign(found.summary,args);
+   const row={...found.summary,visitor_hash:found.args.p_visitor,customer_email:found.args.p_email,payment_flow:'payment_link'};
+   return req.headers.accept?.includes('vnd.pgrst.object')?reply(row):reply([row]);
+  }
+  if(pathname==='/rest/v1/rpc/tienda_confirm_link_payment'&&authorized){
+   const found=orders.get(args.p_order);
+   if(!found||found.summary.link_reported_payment!==args.p_payment||found.summary.total_cents!==args.p_total_cents)return reply(false);
+   found.summary.status='approved';
+   found.summary.link_verified_payment=args.p_payment;
+   return reply(true);
+  }
   assert.equal(args.p_key,'a'.repeat(64));
   if(pathname==='/rest/v1/rpc/tienda_create_link_order'){
    creates++;
    const unique=args.p_visitor+args.p_request_key;
    if(requestKeys.has(unique))return reply(requestKeys.get(unique));
    const id=randomUUID();requestKeys.set(unique,id);
-   orders.set(id,{args,summary:{id,items:[{id:args.p_product,title:'Huevos de consumo',unit_price:product.price,quantity:1}],total_cents:args.p_total_cents,status:'awaiting_payment',expires_at:new Date(Date.now()+60000).toISOString(),fulfillment_status:'new',link_reported_payment:null}});
+   orders.set(id,{args,summary:{id,items:[{id:args.p_product,title:'Huevos de consumo',unit_price:product.price,quantity:1}],total_cents:args.p_total_cents,status:'awaiting_payment',expires_at:new Date(Date.now()+60000).toISOString(),fulfillment_status:'new',fulfillment_version:1,link_reported_payment:null}});
    return reply(id);
   }
   const found=orders.get(args.p_order);
@@ -50,14 +92,17 @@ const server=spawn(process.execPath,['node_modules/next/dist/bin/next','start','
 let logs='';
 server.stdout.on('data',s=>logs+=s);
 server.stderr.on('data',s=>logs+=s);
-function request(path,{body,cookie,source=origin,host=activeHost}={}){
+function request(path,{body,cookie,source=origin,host=activeHost,method}={}){
  const data=body===undefined?undefined:JSON.stringify(body);
  return new Promise((resolve,reject)=>{
-  const req=http.request({hostname:'127.0.0.1',port,path,method:data?'POST':'GET',
+  const req=http.request({hostname:'127.0.0.1',port,path,method:method??(data?'POST':'GET'),
    headers:{Host:host,'User-Agent':'Browser checkout test',...(cookie?{Cookie:cookie}:{}),...(data?{Origin:source,'Content-Type':'application/json','Content-Length':Buffer.byteLength(data)}:{})}},
    res=>{let body='';res.on('data',s=>body+=s);res.on('end',()=>resolve({status:res.statusCode,headers:res.headers,body}));});
   req.on('error',reject);req.end(data);
  });
+}
+function cookiesFrom(response){
+ return response.headers['set-cookie']?.map(value=>value.split(';')[0]).join('; ');
 }
 try{
  let online=false;
@@ -65,6 +110,11 @@ try{
  assert.ok(online);
  const form=await request('/checkout?producto=consumo-5');
  assert.equal(form.status,200);assert.match(form.body,/Datos de envío/);assert.doesNotMatch(form.body,/compra en línea no está disponible|mpago\.la|name="dni"/);
+ assert.match(form.body,/volvés a tu pedido para informar el número de operación/);
+ assert.match(form.body,/Privacidad de compra/);
+ assert.match(form.body,/Consultar por WhatsApp/);
+ assert.doesNotMatch(form.body,/_vercel\/insights/);
+ assert.match((await request('/privacidad-de-compra')).body,/Datos que usamos/);
  for(const name of ['name','email','phone','province','city','postal_code','address','reference'])assert.ok(form.body.includes('name="'+name+'"'));
  const delivery_address={province:'Mendoza',city:'San Rafael',postal_code:'m5600aaa',address:'Calle de prueba 123',phone:'260 4000000',reference:'Departamento 2'};
  const order={name:'Persona de prueba',email:'qa@example.invalid',cart:[{id:product.id,quantity:1}],request_key:randomUUID(),expected_total_cents:product.price*100,delivery_address};
@@ -94,19 +144,66 @@ try{
  assert.ok(chat);
  assert.equal(new URL(chat).searchParams.get('text'),'Hola, quisiera consultar por el pedido '+reference+'.');
  assert.match(review.body,/href="mailto:ventas@example\.invalid\?subject=Consulta%20por%20el%20pedido%20%23[a-f0-9]{8}"/);
- assert.doesNotMatch((await request(redirect)).body,/Consultar por WhatsApp|Escribinos por correo/);
+ const noAccess=(await request(redirect)).body;
+ assert.match(noAccess,/Pedido no disponible/);
+ assert.match(noAccess,/Consultar por WhatsApp|Escribinos por correo/);
+ assert.doesNotMatch(noAccess,/Total con envío incluido|Calle de prueba 123|qa@example.invalid/);
 
- const pay=await request(redirect+'/pagar',{cookie});
+ const recovery=review.body.match(/\/pedido\/[a-f0-9-]{36}\/recuperar#[A-Za-z0-9_-]+/)?.[0];
+ assert.ok(recovery,'Private recovery link available to the original browser');
+ const [recoveryPage,token]=recovery.split('#');
+ const recoveryView=await request(recoveryPage);
+ assert.equal(recoveryView.status,200);
+ assert.match(recoveryView.body,/Abrir mi pedido/);
+ assert.doesNotMatch(recoveryView.body,/_vercel\/insights/);
+ assert.equal(recoveryView.headers['referrer-policy'],'no-referrer');
+ const orderId=redirect.split('/').at(-1);
+ const restored=await request('/api/pedidos/recuperar',{body:{id:orderId,token}});
+ assert.equal(restored.status,200,restored.body);
+ assert.equal(JSON.parse(restored.body).redirect,redirect);
+ const recoveredCookie=cookiesFrom(restored);
+ assert.match(restored.headers['set-cookie'][0],/HttpOnly/i);
+ assert.match((await request(redirect,{cookie:recoveredCookie})).body,/Los datos de envío ya quedaron guardados/);
+
+ const pay=await request(redirect+'/pagar',{cookie:recoveredCookie});
  assert.equal(pay.status,303);assert.equal(pay.headers.location,'https://mpago.la/11TRxkJ');
  assert.equal(pay.headers['referrer-policy'],'no-referrer');
  const report={id:redirect.split('/').at(-1),payment_id:'9876543210'};
  assert.equal((await request('/api/pedidos/pago',{body:report})).status,404);
- assert.equal((await request('/api/pedidos/pago',{body:report,cookie})).status,200);
+ assert.equal((await request('/api/pedidos/pago',{body:report,cookie:recoveredCookie})).status,200);
  assert.match((await request(redirect,{cookie})).body,/Pago informado/);
  const noSecondPayment=await request(redirect+'/pagar',{cookie});
  assert.equal(noSecondPayment.status,303);assert.doesNotMatch(noSecondPayment.headers.location,/mpago\.la/);
  assert.equal(stored.summary.status,'awaiting_payment');
  assert.match((await request(redirect,{cookie})).body,/Consultar por WhatsApp/);
+
+ const login=await request('/api/admin/login',{body:{username:authUser.email,password:'fixture-password'}});
+ assert.equal(login.status,200,login.body);
+ const passwordCookie=cookiesFrom(login);
+ assert.equal((await request('/admin',{cookie:passwordCookie})).headers.location,'/admin/seguridad');
+ const confirm={...report,manual_confirmed:true};
+ assert.equal((await request('/api/admin/orders/payment',{body:confirm,cookie:passwordCookie})).status,403);
+ const enrollment=await request('/api/admin/seguridad',{body:{action:'enroll'},cookie:passwordCookie});
+ assert.equal(enrollment.status,200,enrollment.body);
+ assert.equal(JSON.parse(enrollment.body).factorId,factorId);
+ const verified=await request('/api/admin/seguridad',{body:{action:'verify',factorId,code:'123456'},cookie:passwordCookie});
+ assert.equal(verified.status,200,verified.body);
+ const adminCookie=cookiesFrom(verified);
+ assert.ok(adminCookie,'MFA completion returned a session cookie');
+ assert.equal((await request('/admin/seguridad',{cookie:adminCookie})).headers.location,'/admin');
+ const paid=await request('/api/admin/orders/payment',{body:confirm,cookie:adminCookie});
+ assert.equal(paid.status,200,paid.body);
+ assert.match((await request(redirect,{cookie:recoveredCookie})).body,/Pago aprobado/);
+ const fulfillment={id:orderId,fulfillment_version:1,fulfillment_status:'dispatched',shipping_carrier:'Transporte de prueba',tracking_code:'QA123',admin_notes:''};
+ const shipped=await request('/api/admin/orders',{method:'PUT',body:fulfillment,cookie:adminCookie});
+ assert.equal(shipped.status,200,shipped.body);
+ const receipt=await request(redirect,{cookie:recoveredCookie});
+ assert.match(receipt.body,/Transporte de prueba/);
+ assert.match(receipt.body,/QA123/);
+ const draft=await request('/api/admin/orders/recovery',{body:{id:orderId},cookie:adminCookie});
+ assert.equal(draft.status,200,draft.body);
+ assert.equal(decodeURIComponent(new URL(JSON.parse(draft.body).draft).pathname),order.email);
+ assert.doesNotMatch(decodeURIComponent(draft.body),/Calle de prueba 123|Departamento 2/);
 
  requiresDni=true;
  const withDni=await request('/checkout?producto=consumo-5');
@@ -122,9 +219,10 @@ try{
  const complete=await request('/api/checkout',{body:{...newOrder,delivery_address:{...delivery_address,dni:'12.345.678'}},cookie});
  assert.equal(complete.status,200,complete.body);
  const privateOrder=JSON.parse(complete.body).redirect;
+ assert.match((await request(privateOrder,{cookie:recoveredCookie})).body,/Pedido no disponible/);
  assert.equal(orders.get(privateOrder.split('/').at(-1)).args.p_delivery.dni,'12345678');
  const privateView=await request(privateOrder,{cookie});
  assert.match(privateView.body,/Consultar por WhatsApp/);
  assert.doesNotMatch(privateView.body,/12345678|12\.345\.678|Calle de prueba 123|qa@example.invalid/);
- console.log('Shipping checkout: payment requires a saved address, DNI follows the current store setting, and support links share only the short reference.');
+ console.log('Checkout saved the address, recovered access in a new session, accepted a reported payment, required MFA for confirmation, and published synthetic tracking. No payment or email was sent.');
 }catch(e){console.error(e,logs);process.exitCode=1;}finally{server.kill('SIGTERM');db.close();}

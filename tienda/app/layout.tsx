@@ -11,6 +11,7 @@ export const metadata:Metadata={
  robots:{index:false,follow:false},icons:{icon:'/favicon.png'},
 };
 export default async function RootLayout({children}:{children:React.ReactNode}){
- const track=indexableHost((await headers()).get('host'));
+ const requestHeaders=await headers();
+ const track=indexableHost(requestHeaders.get('host'))&&requestHeaders.get('x-atuel-order-page')!=='1';
  return <html lang="es-AR"><body>{children}{track&&<Script src="/_vercel/insights/script.js" strategy="afterInteractive"/>}</body></html>;
 }

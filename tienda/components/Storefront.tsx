@@ -170,7 +170,7 @@ export default function Storefront({products,source,settings,content,purchaseMod
    <div className="sf-footer-main">
     <div>{logo}<p>{settings.location}</p></div>
     <div><h2>Explorá</h2><a href="#productos">Productos</a><Link href="/recetas">Recetas</Link><a href="#puntos">Puntos de venta</a></div>
-    <div><h2>Te acompañamos</h2>{legacyIncubation?<a href="/incubacion">Control de incubaciones</a>:<Link href="/incubacion">Mis incubaciones</Link>}<Link href="/buenas-practicas">Buenas prácticas</Link><a href="#faq">Preguntas frecuentes</a></div>
+    <div><h2>Te acompañamos</h2>{legacyIncubation?<a href="/incubacion">Control de incubaciones</a>:<Link href="/incubacion">Mis incubaciones</Link>}<Link href="/buenas-practicas">Buenas prácticas</Link><a href="#faq">Preguntas frecuentes</a><Link href="/privacidad-de-compra">Privacidad de compra</Link></div>
     <div><h2>Contacto</h2><a href={wa} target="_blank" rel="noreferrer">WhatsApp <ArrowUpRight size={14}/></a>{settings.contact_email&&<a href={'mailto:'+settings.contact_email}>Correo electrónico</a>}{settings.instagram&&<a href={settings.instagram} target="_blank" rel="noreferrer">Instagram</a>}</div>
    </div>
    <div className="sf-footer-bottom"><span>© {new Date().getFullYear()} {settings.business_name}</span><Link href="/admin">Administración</Link></div>

@@ -2,6 +2,11 @@ import {createServerClient} from '@supabase/ssr';
 import {NextResponse,type NextRequest} from 'next/server';
 // Refresh private app sessions. Authorization is still enforced by routes and RLS.
 export async function proxy(request:NextRequest){
+  if(request.nextUrl.pathname==='/checkout'||request.nextUrl.pathname.startsWith('/pedido/')){
+    const requestHeaders=new Headers(request.headers);
+    requestHeaders.set('x-atuel-order-page','1');
+    return NextResponse.next({request:{headers:requestHeaders}});
+  }
   let response=NextResponse.next({request});
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -11,4 +16,4 @@ export async function proxy(request:NextRequest){
   response.headers.set('Cache-Control','private, no-store');
   return response;
 }
-export const config={matcher:['/admin/:path*','/api/admin/:path*','/incubacion/:path*','/api/incubacion/:path*']};
+export const config={matcher:['/admin/:path*','/api/admin/:path*','/incubacion/:path*','/api/incubacion/:path*','/checkout','/pedido/:path*']};

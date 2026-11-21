@@ -52,14 +52,22 @@ begin
     or summary ?| array['customer_name','customer_email','delivery_address','visitor_hash']
  then raise exception 'reported operation approved itself or summary leaked personal data'; end if;
  reset role;
- perform set_config('request.jwt.claim.sub',gen_random_uuid()::text,true);
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',gen_random_uuid(),'aal','aal2')::text,true);
  set local role authenticated;
  begin
   perform public.tienda_confirm_link_payment(sample,op,cents);
   raise exception 'a non-admin approved an operation';
  exception when insufficient_privilege then null;
  end;
- perform set_config('request.jwt.claim.sub',admin_id::text,true);
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',admin_id,'aal','aal1')::text,true);
+ if exists(select 1 from public.tienda_pedidos where id=sample) then raise exception 'AAL1 session read order data'; end if;
+ begin
+  perform public.tienda_confirm_link_payment(sample,op,cents);
+  raise exception 'AAL1 session confirmed a payment';
+ exception when insufficient_privilege then null;
+ end;
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',admin_id,'aal','aal2')::text,true);
+ if not exists(select 1 from public.tienda_pedidos where id=sample) then raise exception 'verified admin cannot read order'; end if;
  if public.tienda_confirm_link_payment(sample,'0',cents) then raise exception 'a different operation was accepted'; end if;
  if public.tienda_confirm_link_payment(sample,op,cents-1) then raise exception 'the wrong amount was accepted'; end if;
  if not public.tienda_confirm_link_payment(sample,op,cents) then raise exception 'admin confirmation failed'; end if;
@@ -69,11 +77,20 @@ begin
   raise exception 'duplicate operation was approved';
  exception when unique_violation then null;
  end;
+ update public.tienda_pedidos set fulfillment_status='dispatched',shipping_carrier='Transporte de prueba',tracking_code='QA123'
+ where id=sample and status='approved';
+ if not found then raise exception 'verified admin cannot save tracking'; end if;
  reset role;
  if not exists(select 1 from public.tienda_pedidos where id=sample and delivery_address=dest
     and link_verified_by=admin_id and status='approved')
     or not exists(select 1 from public.tienda_pagos where order_id=sample and payment_id=op and amount_cents=cents)
  then raise exception 'delivery or audit trail missing'; end if;
+ perform set_config('request.jwt.claims','{}',true);
+ set local role anon;
+ summary:=public.tienda_read_link_order(k,v,sample);
+ if summary->>'status'<>'approved' or summary->>'fulfillment_status'<>'dispatched' or summary->>'tracking_code'<>'QA123'
+ then raise exception 'buyer cannot see confirmation and tracking'; end if;
+ reset role;
 end
 $$;
 rollback;

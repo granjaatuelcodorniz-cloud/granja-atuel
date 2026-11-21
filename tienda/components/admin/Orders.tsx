@@ -31,6 +31,16 @@ function OrderEditor({order,close,saved,verified}:{order:AdminOrder;close:()=>vo
  const linkPayment=o.payment_flow==='payment_link';
  const address=o.delivery_address;
  const [showDni,setShowDni]=useState(false),[dniCopied,setDniCopied]=useState(false);
+ const [recoveryDraft,setRecoveryDraft]=useState(''),[preparingAccess,setPreparingAccess]=useState(false);
+ async function prepareAccess(){
+  if(preparingAccess)return;
+  setPreparingAccess(true);setRecoveryDraft('');setError('');
+  try{
+   const {draft}=await api('orders/recovery','POST',{id:o.id});
+   setRecoveryDraft(draft);
+  }catch(e){setError(e instanceof Error?e.message:'No pudimos preparar el acceso.');}
+  finally{setPreparingAccess(false);}
+ }
  async function copyDni(){
   if(!address?.dni)return;
   try{await navigator.clipboard.writeText(address.dni);setDniCopied(true);}
@@ -81,6 +91,14 @@ function OrderEditor({order,close,saved,verified}:{order:AdminOrder;close:()=>vo
     </div>:<details style={{marginTop:8}}><summary>Buscar por número de pago</summary><label>Número de pago en Mercado Pago<input value={paymentId} inputMode="numeric" maxLength={30} onChange={e=>setPaymentId(e.target.value)}/></label></details>}
     {paymentMessage&&<p role="status">{paymentMessage}</p>}
    </div>
+   {o.mode==='production'&&<div className="act-delivery">
+    <h3>Recuperar acceso al pedido</h3>
+    <p>Si el cliente perdió su enlace, prepará un acceso privado de 24 horas. El destinatario es el correo registrado en este pedido.</p>
+    <div className="dash-inline">
+     <button className="dash-secondary small" type="button" disabled={preparingAccess} onClick={()=>void prepareAccess()}>{preparingAccess?'Preparando…':'Preparar correo de acceso'}</button>
+     {recoveryDraft&&<a href={recoveryDraft} className="text-link">Abrir borrador de correo</a>}
+    </div>
+   </div>}
    <div className="act-delivery">
     <h3><MapPin size={17}/> Datos de entrega</h3>
     {address?<><p>{address.address}{address.reference?' · '+address.reference:''}<br/>{address.postal_code} · {address.city}, {address.province}<br/>{address.phone}</p><button className="dash-secondary small" type="button" onClick={copyAddress}><ClipboardCopy size={15}/>{copied?'Datos copiados':'Copiar datos para el despacho'}</button><span className="sr-only" role="status">{copied?'Datos de entrega copiados.':''}</span>

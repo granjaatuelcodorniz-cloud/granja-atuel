@@ -42,3 +42,15 @@
 .order-support{display:grid;gap:9px;margin-top:28px;padding-top:20px;border-top:1px solid var(--line)}
 .order-support h2{font-size:clamp(22px,4vw,28px);margin:0}
 .order-support .inc-actions{margin-top:4px}
+.checkout-payment-guide{margin:14px 0 10px;padding:12px 14px;background:#edf0e7;color:var(--brown);font-size:13px;line-height:1.6;border-radius:4px}
+.checkout-help{gap:8px 16px;margin:10px 0 4px}
+.purchase-privacy{max-width:760px;margin:25px auto 0;line-height:1.65}
+.purchase-privacy h1{margin-bottom:14px}
+.purchase-privacy h2{font-size:25px;margin:24px 0 7px}
+.purchase-privacy p{margin-bottom:9px}
+.admin-verification h1{font-size:clamp(30px,7vw,42px)}
+.admin-verification-qr{display:block;margin:14px auto;background:white;max-width:100%;height:auto}
+.admin-verification details code{display:block;margin:8px 0;overflow-wrap:anywhere}
+.admin-verification .text-link{margin-top:14px}
+.restore-order-action{margin:16px 0}
+.order-access-copy{width:100%;max-width:540px;padding:10px;border:1px solid var(--line)}

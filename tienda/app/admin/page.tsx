@@ -1,7 +1,6 @@
 import './dashboard.css';
 
-import {redirect} from 'next/navigation';
-import {getAdmin,supabaseServer} from '@/lib/supabase';
+import {requireAdmin} from '@/lib/admin-server';
 import Dashboard from '@/components/admin/Dashboard';
 import {adminOrderFields,managedProduct,resolveSettings,type AdminOrder,type Media,type StockMovement} from '@/lib/admin';
 import type {Product} from '@/lib/catalog';
@@ -12,8 +11,7 @@ import {shopMode} from '@/lib/payment-config';
 export const dynamic='force-dynamic';
 export default async function Admin({searchParams}:{searchParams:Promise<{section?:string}>}){
  const section=(await searchParams).section;
- const user=await getAdmin();if(!user)redirect('/admin/login');
- const db=await supabaseServer();
+ const {db,user}=await requireAdmin();
  const mode=shopMode(process.env);
  const [products,media,movements,orders,settings,content]=await Promise.all([
   db.from('tienda_productos').select('*').order('sort_order').order('name'),

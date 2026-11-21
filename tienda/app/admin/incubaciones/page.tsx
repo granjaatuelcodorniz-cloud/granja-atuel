@@ -1,13 +1,10 @@
-import {redirect} from 'next/navigation';
-import {getAdmin,supabaseServer} from '@/lib/supabase';
-import {adminService} from '@/lib/admin-server';
+import {adminService,requireAdmin} from '@/lib/admin-server';
 import type {Lot} from '@/lib/incubation';
 import type {Delivery} from '@/lib/incubation-report';
 import IncubationReport from '@/components/admin/IncubationReport';
 export const dynamic='force-dynamic';
 export default async function IncubationReports(){
- if(!await getAdmin())redirect('/admin/login');
- const db=await supabaseServer();let lots:Lot[]=[],deliveries:Delivery[]=[];
+ const {db}=await requireAdmin();let lots:Lot[]=[],deliveries:Delivery[]=[];
  // Explicit pagination avoids silently truncating histories at the API row limit.
  for(const table of ['incubacion_lotes','incubacion_entregas'] as const){
   for(let offset=0;;offset+=1000){

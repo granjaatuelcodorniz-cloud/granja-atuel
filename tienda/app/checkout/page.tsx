@@ -27,7 +27,7 @@ export default async function Checkout({searchParams}:{searchParams:Promise<{pro
      <h1>Elegí una presentación</h1>
      <p>{params.producto?'Esta opción de compra no está disponible en este momento.':'Volvé al catálogo y elegí el producto que querés recibir.'}</p>
      <div className="inc-actions"><Link className="button" href="/#productos">Ver productos</Link><a className="text-link" href={help}>Consultar por WhatsApp</a></div>
-    </section>:<CheckoutForm products={catalog.products} fixedProductId={fixed?product.id:undefined} enabled={enabled} testMode={testMode} requiresDni={settings.require_recipient_dni} help={help}/>}
+    </section>:<CheckoutForm products={catalog.products} fixedProductId={fixed?product.id:undefined} enabled={enabled} mode={mode} requiresDni={settings.require_recipient_dni} help={help}/>}
    </div>
   </main>
  </>;

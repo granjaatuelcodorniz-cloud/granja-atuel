@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import {redirect} from 'next/navigation';
-import {getAdmin} from '@/lib/supabase';
+import {requireAdmin} from '@/lib/admin-server';
 import {currentPaymentConfig} from '@/lib/order-server';
 import {getPurchaseMode} from '@/lib/current-purchase';
 import {linkOrdersConfigured} from '@/lib/link-orders';
@@ -8,7 +7,7 @@ import {checkoutAvailable} from '@/lib/payment-config';
 
 export const dynamic='force-dynamic';
 export default async function IntegrationStatus(){
- if(!await getAdmin())redirect('/admin/login');
+ await requireAdmin();
  const config=currentPaymentConfig();
  const links=getPurchaseMode()==='links'&&linkOrdersConfigured();
  const rows=[

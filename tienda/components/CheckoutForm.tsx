@@ -5,8 +5,10 @@ import {useEffect,useRef,useState} from 'react';
 import {Truck} from 'lucide-react';
 import {money,normalizeCart,summarizeCart,stockLimit,type Product,type CartLine} from '@/lib/catalog';
 import {provinces} from '@/lib/checkout';
+import type {PurchaseMode} from '@/lib/site-release';
 
-export default function CheckoutForm({products,fixedProductId,enabled,testMode,requiresDni,help}:{products:Product[];fixedProductId?:string;enabled:boolean;testMode:boolean;requiresDni:boolean;help:string}){
+export default function CheckoutForm({products,fixedProductId,enabled,mode,requiresDni,help}:{products:Product[];fixedProductId?:string;enabled:boolean;mode:PurchaseMode;requiresDni:boolean;help:string}){
+ const testMode=mode==='test';
  const [savedCart,setSavedCart]=useState<CartLine[]>([]),[loaded,setLoaded]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const attempt=useRef({body:'',key:''}),sending=useRef(false);
  const cart=fixedProductId?[{id:fixedProductId,quantity:1}]:savedCart;
@@ -38,7 +40,14 @@ export default function CheckoutForm({products,fixedProductId,enabled,testMode,r
   </section>
   <form className="inc-panel inc-form checkout-fields" onSubmit={submit}>
    <p className="eyebrow">{testMode?'COMPRA DE PRUEBA':'ENVÍO · ANTES DE PAGAR'}</p><h1>Datos de envío</h1>
-   {testMode?<p className="inc-small">Usá datos ficticios. Esta compra no genera una entrega ni reserva productos reales.</p>:<p className="inc-small">Ingresá los datos de quien va a recibir el pedido. Los usaremos para gestionar la entrega.</p>}
+   {testMode?<p className="inc-small">Usá datos ficticios. Esta compra no genera una entrega ni reserva productos reales.</p>:<>
+    <p className="inc-small">Ingresá los datos de quien va a recibir el pedido. Los usaremos para gestionar la entrega.</p>
+    {mode==='links'&&<p className="checkout-payment-guide">Primero guardás el pedido. Después pagás en Mercado Pago y volvés a tu pedido para informar el número de operación. Verificamos el pago antes de preparar el envío.</p>}
+    <nav className="inc-actions checkout-help" aria-label="Ayuda para comprar">
+     <a className="text-link" href={help} target="_blank" rel="noreferrer">Consultar por WhatsApp</a>
+     <Link className="text-link" href="/privacidad-de-compra" target="_blank" rel="noreferrer">Privacidad de compra</Link>
+    </nav>
+   </>}
    <fieldset disabled={!enabled||busy}>
     <label>Nombre y apellido<input name="name" required minLength={2} maxLength={100} autoComplete="shipping name"/></label>
     {requiresDni&&<label>DNI de quien recibe
@@ -57,10 +66,10 @@ export default function CheckoutForm({products,fixedProductId,enabled,testMode,r
     </div>
     <label>Piso, departamento o referencias (opcional)<input name="reference" maxLength={240} autoComplete="shipping address-line2"/></label>
    </fieldset>
-   {!enabled&&<p className="form-error">La compra en línea no está disponible ahora. <a href={help}>Consultanos por WhatsApp.</a></p>}
+   {!enabled&&<p className="form-error">La compra en línea no está disponible ahora.</p>}
    {changed&&<p className="form-error">Cambió la disponibilidad de un producto. Volvé al catálogo para revisar el pedido.</p>}
    {error&&<p role="alert" className="form-error">{error}</p>}
-   <button className="button" disabled={!enabled||changed||busy}>{busy?'Guardando los datos…':testMode?'Continuar a Mercado Pago de prueba':'Guardar datos y continuar al pago'}</button>
+   <button className="button" disabled={!enabled||changed||busy}>{busy?'Guardando los datos…':mode==='links'?'Guardar y revisar mi pedido':testMode?'Continuar a Mercado Pago de prueba':'Continuar a Mercado Pago'}</button>
   </form>
  </div>;
 }
