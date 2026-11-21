@@ -21,7 +21,7 @@ export async function POST(request:Request){
   for(const factor of abandoned){
    if((await db.auth.mfa.unenroll({factorId:factor.id})).error)return adminReply({error:'No pudimos reiniciar la configuración. Intentá de nuevo.'},503);
   }
-  const result=await db.auth.mfa.enroll({factorType:'totp',friendlyName:factorName});
+  const result=await db.auth.mfa.enroll({factorType:'totp',friendlyName:factorName,issuer:factorName});
   if(result.error)return adminReply({error:'No pudimos iniciar la configuración. Intentá de nuevo.'},503);
   return adminReply({factorId:result.data.id,qr:result.data.totp.qr_code,secret:result.data.totp.secret});
  }

@@ -41,6 +41,7 @@ const db=http.createServer(async (req,res)=>{
    return args.email===authUser.email&&args.password==='fixture-password'?reply(passwordSession):reply({message:'Invalid login'},400);
   if(pathname==='/auth/v1/user')return authorized||passwordOnly?reply(authUser):reply({message:'Sign in required'},401);
   if(pathname==='/auth/v1/factors'&&passwordOnly){
+   assert.equal(args.issuer,'Granja Atuel');
    authUser.factors=[{id:factorId,factor_type:'totp',status:'unverified',friendly_name:'Granja Atuel'}];
    return reply({id:factorId,type:'totp',totp:{qr_code:'<svg/>',secret:'LOCALFIXTURE',uri:'otpauth://totp/LocalFixture'}});
   }
