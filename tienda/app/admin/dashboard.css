@@ -72,3 +72,12 @@
 .recipient-dni-setting input[type=checkbox]{width:auto;margin:0}
 .act-order-dni{margin-top:14px}
 .act-order-dni .dash-inline{flex-wrap:wrap}
+.dash-editor-tabs{flex-wrap:wrap}
+.dash-editor-action{
+ display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;
+ margin:18px 0;padding:16px;border:1px solid #e3e7dd;border-radius:7px;
+ color:#536746;font-size:13px;
+}
+.dash-editor-action p{margin:4px 0}
+.dash-editor-action small{display:block}
+.dash-table .dash-purchase-status{white-space:normal}

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import {ArrowUpRight,Boxes,ChevronRight,Egg,ExternalLink,Image,LayoutDashboard,LogOut,Menu,Package,PanelsTopLeft,RefreshCw,Settings as SettingsIcon,ShoppingBag} from 'lucide-react';
 import {managedProduct,type ManagedProduct,type Media,type StockMovement,type AdminOrder,type ShopSettings} from '@/lib/admin';
 import type {SiteContent} from '@/lib/site-content';
+import type {PaymentLink} from '@/lib/payment-links';
+import type {PurchaseMode} from '@/lib/site-release';
 import ProductEditor from './ProductEditor';
 import Inventory from './Inventory';
 import MediaLibrary from './MediaLibrary';
@@ -26,11 +28,12 @@ const sections=[
 ] as const;
 type Tab=typeof sections[number]['id'];
 const tabOf=(value?:string|null):Tab=>sections.find(t=>t.id===value)?.id||'overview';
-type Props={products:ManagedProduct[];media:Media[];movements:StockMovement[];orders:AdminOrder[];settings:ShopSettings;settingsVersion:string;content:SiteContent[];email:string;testMode:boolean;error?:string;initialTab?:string};
+type Props={products:ManagedProduct[];media:Media[];movements:StockMovement[];orders:AdminOrder[];settings:ShopSettings;settingsVersion:string;content:SiteContent[];email:string;testMode:boolean;purchaseMode:PurchaseMode;paymentLinks:PaymentLink[];error?:string;initialTab?:string};
 
 export default function Dashboard(props:Props){
  const [tab,setTab]=useState(tabOf(props.initialTab)),[products,setProducts]=useState(props.products.map(managedProduct)),[media,setMedia]=useState(props.media),[movements,setMovements]=useState(props.movements),[orders,setOrders]=useState(props.orders),[settings,setSettings]=useState(props.settings),[settingsVersion,setSettingsVersion]=useState(props.settingsVersion),[content,setContent]=useState(props.content);
  const [editor,setEditor]=useState<{p:ManagedProduct;isNew:boolean}|null>(null),[toast,setToast]=useState(''),[mobile,setMobile]=useState(false),[orderFocus,setOrderFocus]=useState<string>();
+ const [paymentLinks,setPaymentLinks]=useState<Record<string,PaymentLink>>(()=>Object.fromEntries(props.paymentLinks.map(link=>[link.product_id,link])));
  const low=products.filter(p=>p.active&&p.stock_tracking&&p.stock_quantity<=p.stock_minimum);
  const pending=orders.filter(o=>o.status==='approved'&&['new','preparing','ready'].includes(o.fulfillment_status));
  useEffect(()=>{
@@ -60,6 +63,14 @@ export default function Dashboard(props:Props){
   else setToast('Publicación guardada.');
   setEditor(null);
  }
+ function stockSaved(p:ManagedProduct,m:StockMovement){
+  productUpdated(p);
+  setMovements(old=>[m,...old.filter(x=>x.id!==m.id)].slice(0,100));
+  setToast('Movimiento registrado.');
+ }
+ function linkSaved(link:PaymentLink){
+  setPaymentLinks(old=>({...old,[link.product_id]:link}));
+ }
  function uploaded(m:Media){setMedia(old=>[m,...old]);setToast('Imagen lista en tu biblioteca.');}
 
  return <div className="dashboard action-centre">
@@ -85,15 +96,15 @@ export default function Dashboard(props:Props){
    <main className="dash-content">
     <Message error={props.error} success={toast}/>
     {tab==='overview'&&<Overview products={products} pending={pending} low={low} onNew={newProduct} openOrder={o=>go('orders',o.id)} openProduct={p=>setEditor({p,isNew:false})} go={go} testMode={props.testMode}/>}
-    {tab==='products'&&<Publications products={products} onNew={newProduct} onEdit={p=>setEditor({p,isNew:false})} onDuplicate={duplicate} onUpdate={productUpdated}/>}
+    {tab==='products'&&<Publications products={products} purchaseMode={props.purchaseMode} paymentLinks={paymentLinks} onNew={newProduct} onEdit={p=>setEditor({p,isNew:false})} onDuplicate={duplicate} onUpdate={productUpdated}/>}
     {tab==='orders'&&<Orders orders={orders} initialOrderId={orderFocus} testMode={props.testMode} verified={o=>setOrders(old=>old.map(x=>x.id===o.id?o:x))} updated={o=>{setOrders(old=>old.map(x=>x.id===o.id?o:x));setToast('Seguimiento guardado.');}}/>}
-    {tab==='inventory'&&<Inventory products={products} movements={movements} saved={(p,m)=>{productUpdated(p);setMovements(old=>[m,...old.filter(x=>x.id!==m.id)].slice(0,100));setToast('Movimiento registrado.');}}/>}
+    {tab==='inventory'&&<Inventory products={products} movements={movements} saved={stockSaved}/>}
     {tab==='content'&&<Content entries={content} media={media} updated={entry=>setContent(old=>[...old.filter(c=>c.id!==entry.id),entry])} uploaded={uploaded}/>}
     {tab==='media'&&<MediaLibrary media={media} uploaded={uploaded} updated={m=>setMedia(old=>old.map(x=>x.id===m.id?m:x))}/>}
     {tab==='settings'&&<Settings initial={settings} version={settingsVersion} media={media} uploaded={uploaded} saved={(s,revision)=>{setSettings(s);setSettingsVersion(revision);}}/>}
     <div className="dash-bottomline"><span>Central de acción · Granja Atuel</span><button type="button" onClick={()=>window.location.reload()}><RefreshCw size={14}/> Actualizar datos</button></div>
    </main>
   </div>
-  {editor&&<ProductEditor initial={editor.p} isNew={editor.isNew} media={media} close={()=>setEditor(null)} saved={productSaved} uploaded={uploaded}/>}
+  {editor&&<ProductEditor initial={editor.p} isNew={editor.isNew} media={media} purchaseMode={props.purchaseMode} paymentLink={paymentLinks[editor.p.id]} close={()=>setEditor(null)} saved={productSaved} stockSaved={stockSaved} linkSaved={linkSaved} uploaded={uploaded}/>}
  </div>;
 }

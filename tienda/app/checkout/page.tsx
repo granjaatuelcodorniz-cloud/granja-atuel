@@ -5,17 +5,17 @@ import {getCatalog} from '@/lib/products';
 import {getShopSettings} from '@/lib/shop-settings';
 import {currentPaymentConfig} from '@/lib/order-server';
 import {checkoutAvailable} from '@/lib/payment-config';
-import {linkOrdersConfigured} from '@/lib/link-orders';
-import {legacyPurchaseLink} from '@/lib/legacy-purchases';
+import {getPaymentLinks,linkOrdersConfigured} from '@/lib/payment-links-server';
+import {paymentLinkFor} from '@/lib/payment-links';
 import {canBuy,productInquiry} from '@/lib/catalog';
 
 export const dynamic='force-dynamic';
 export const metadata={title:'Datos de envío · Granja Atuel'};
 export default async function Checkout({searchParams}:{searchParams:Promise<{producto?:string|string[]}>}){
  const mode=getPurchaseMode(),testMode=mode==='test';
- const [catalog,settings,params]=await Promise.all([getCatalog(),getShopSettings(),searchParams]);
+ const [catalog,settings,params,links]=await Promise.all([getCatalog(),getShopSettings(),searchParams,mode==='links'?getPaymentLinks():undefined]);
  const product=catalog.products.find(p=>p.id===params.producto);
- const fixed=mode!=='test'&&product&&(mode==='links'?!!legacyPurchaseLink(product):canBuy(product));
+ const fixed=mode!=='test'&&product&&(mode==='links'?!!paymentLinkFor(product,links?.get(product.id)):canBuy(product));
  const enabled=catalog.source==='database'&&(mode==='links'?linkOrdersConfigured():checkoutAvailable(currentPaymentConfig(),process.env));
  const help=product?productInquiry(product,settings.whatsapp):'https://wa.me/'+settings.whatsapp;
  return <>

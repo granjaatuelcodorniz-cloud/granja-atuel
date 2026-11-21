@@ -1,7 +1,8 @@
 import {getCatalog} from '@/lib/products';
 import {getShopSettings} from '@/lib/shop-settings';
 import {getPublicContent} from '@/lib/site-content-server';
-import {legacyPurchaseLink} from '@/lib/legacy-purchases';
+import {paymentLinkFor} from '@/lib/payment-links';
+import {getPaymentLinks} from '@/lib/payment-links-server';
 import {getPurchaseMode} from '@/lib/current-purchase';
 import {legacyRecipeSlugs,recipeSlug} from '@/lib/recipe-links';
 import {homeDescription,homeTitle,publicMetadata} from '@/lib/seo';
@@ -14,9 +15,9 @@ export const dynamic='force-dynamic';
 export const generateMetadata=()=>publicMetadata('/',homeTitle,homeDescription);
 
 export default async function Home(){
- const [catalog,settings,content]=await Promise.all([getCatalog(),getShopSettings(),getPublicContent()]);
  const mode=getPurchaseMode();
- const linkProductIds=mode==='links'?catalog.products.filter(p=>legacyPurchaseLink(p)).map(p=>p.id):[];
+ const [catalog,settings,content,links]=await Promise.all([getCatalog(),getShopSettings(),getPublicContent(),mode==='links'?getPaymentLinks():undefined]);
+ const linkProductIds=links?catalog.products.filter(p=>paymentLinkFor(p,links.get(p.id))).map(p=>p.id):[];
  const recipePaths=Object.fromEntries(content.flatMap(r=>r.kind==='recipe'?[[r.id,recipeSlug(r)]]:[]));
  const recipeAliases=Object.fromEntries(Object.entries(legacyRecipeSlugs).filter(([id])=>recipePaths[id]).map(([id,slug])=>['receta-'+slug,recipePaths[id]]));
  const business={

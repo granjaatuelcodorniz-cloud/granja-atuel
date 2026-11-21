@@ -2,7 +2,8 @@ import Link from 'next/link';
 import {notFound} from 'next/navigation';
 import {getCatalog} from '@/lib/products';
 import {getShopSettings} from '@/lib/shop-settings';
-import {legacyPurchaseLink} from '@/lib/legacy-purchases';
+import {paymentLinkFor} from '@/lib/payment-links';
+import {getPaymentLinks} from '@/lib/payment-links-server';
 import {getPurchaseMode} from '@/lib/current-purchase';
 import {publicMetadata} from '@/lib/seo';
 import ProductDetail from '@/components/ProductDetail';
@@ -19,12 +20,12 @@ export async function generateMetadata({params}:Props){
 }
 export default async function ProductPage({params}:Props){
  const {id}=await params;
- const [catalog,settings]=await Promise.all([getCatalog(),getShopSettings()]);
+ const mode=getPurchaseMode();
+ const [catalog,settings,links]=await Promise.all([getCatalog(),getShopSettings(),mode==='links'?getPaymentLinks():undefined]);
  const p=catalog.products.find(p=>p.id===id);
  if(!p)notFound();
- const mode=getPurchaseMode();
  return <main className="inc-shell"><header className="inc-header">
   <Link href="/"><img className="logo" src="/logo-granja-atuel-web.webp" alt="Granja Atuel"/></Link>
   <Link className="text-link" href="/#productos">← Volver a la tienda</Link>
- </header><ProductDetail product={p} purchaseMode={mode} linkPurchase={mode==='links'&&!!legacyPurchaseLink(p)} whatsapp={settings.whatsapp}/></main>;
+ </header><ProductDetail product={p} purchaseMode={mode} linkPurchase={!!paymentLinkFor(p,links?.get(id))} whatsapp={settings.whatsapp}/></main>;
 }

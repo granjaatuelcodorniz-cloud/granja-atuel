@@ -4,13 +4,15 @@ import {useState} from 'react';
 import Link from 'next/link';
 import {Archive,Copy,ExternalLink,Pause,Play,Plus,RotateCcw} from 'lucide-react';
 import {categoryLabels,managedProduct,publicationLabels,type ManagedProduct} from '@/lib/admin';
-import {canBuy,money,type PublicationState} from '@/lib/catalog';
+import {money,type PublicationState} from '@/lib/catalog';
+import {purchaseStatus,type PaymentLink} from '@/lib/payment-links';
+import type {PurchaseMode} from '@/lib/site-release';
 import {api,Empty,Message,Modal} from './shared';
 
 const states:Record<PublicationState,string>={draft:'neutral',published:'green',paused:'gold',archived:'neutral'};
 const actionNames:Partial<Record<PublicationState,string>>={draft:'Recuperar',published:'Publicar',paused:'Pausar',archived:'Archivar'};
-type Props={products:ManagedProduct[];onNew:()=>void;onEdit:(p:ManagedProduct)=>void;onDuplicate:(p:ManagedProduct)=>void;onUpdate:(p:ManagedProduct)=>void};
-export default function Publications({products,onNew,onEdit,onDuplicate,onUpdate}:Props){
+type Props={products:ManagedProduct[];purchaseMode:PurchaseMode;paymentLinks:Record<string,PaymentLink>;onNew:()=>void;onEdit:(p:ManagedProduct)=>void;onDuplicate:(p:ManagedProduct)=>void;onUpdate:(p:ManagedProduct)=>void};
+export default function Publications({products,purchaseMode,paymentLinks,onNew,onEdit,onDuplicate,onUpdate}:Props){
  const [search,setSearch]=useState(''),[category,setCategory]=useState('all'),[visibility,setVisibility]=useState('current'),[busy,setBusy]=useState(''),[error,setError]=useState(''),[message,setMessage]=useState(''),[confirm,setConfirm]=useState<ManagedProduct|null>(null);
  const shown=products.filter(p=>
   (visibility==='all'||(visibility==='current'?p.publication_state!=='archived':p.publication_state===visibility))&&
@@ -42,7 +44,7 @@ export default function Publications({products,onNew,onEdit,onDuplicate,onUpdate
     return <tr key={p.id}>
      <td><button className="dash-product-cell" type="button" onClick={()=>onEdit(p)}><img src={p.image} alt=""/><span><strong>{p.name}</strong><small>{p.description}</small><small>{categoryLabels[p.category]}{p.sku?' · '+p.sku:''}</small></span></button></td>
      <td><strong>{money(p.price)}</strong><small>Envío incluido</small></td>
-     <td><span className={'dash-badge '+states[p.publication_state]}>{publicationLabels[p.publication_state]}</span>{p.active&&!canBuy(p)&&<small>Sin disponibilidad</small>}{p.stock_tracking&&<small>{p.stock_quantity} en stock</small>}</td>
+     <td><span className={'dash-badge '+states[p.publication_state]}>{publicationLabels[p.publication_state]}</span>{p.active&&<small className="dash-purchase-status">{purchaseStatus(p,purchaseMode,paymentLinks[p.id])}</small>}{p.stock_tracking&&<small>{p.stock_quantity} en stock</small>}</td>
      <td><div className="dash-inline act-row-actions">
       <button className="dash-secondary small" type="button" onClick={()=>onEdit(p)}>Editar</button>
       <button className="dash-secondary small" type="button" disabled={!!busy} onClick={()=>changeState(p,next)}><Icon size={14}/>{busy===p.id?'Guardando…':label}</button>

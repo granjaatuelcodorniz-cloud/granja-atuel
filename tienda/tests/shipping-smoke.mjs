@@ -8,6 +8,13 @@ import {seedProducts} from '../lib/catalog.ts';
 
 const activeHost='www.granjaatuel.com.ar',origin='https://'+activeHost,port=3105;
 const product=seedProducts.find(p=>p.id==='consumo-5');
+const bulk={...seedProducts.find(p=>p.id==='consumo-10'),price:42000,stock_tracking:true,stock_quantity:0,updated_at:'2026-11-21T00:00:00.000Z'};
+const products=[product,bulk];
+const links=new Map(products.map((p,i)=>[p.id,{
+ product_id:p.id,url:i?'https://mpago.la/FixtureOld':'https://mpago.la/11TRxkJ',
+ amount_ars:i?38000:25000,updated_at:'2026-11-21T00:00:00.000Z'
+}]));
+const movements=new Map();
 const orders=new Map(),requestKeys=new Map();
 const adminId=randomUUID(),factorId=randomUUID(),challengeId=randomUUID();
 const authUser={id:adminId,email:'operator@example.invalid',aud:'authenticated',role:'authenticated',app_metadata:{provider:'email'},user_metadata:{},factors:[]};
@@ -26,7 +33,13 @@ const db=http.createServer(async (req,res)=>{
   const url=new URL(req.url,'http://localhost');
   const pathname=url.pathname;
   const reply=(x,status=200)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(x));};
-  if(pathname==='/rest/v1/tienda_productos')return reply([product]);
+  if(pathname==='/rest/v1/tienda_productos'){
+   const id=url.searchParams.get('id')?.slice(3);
+   if(!id)return reply(products);
+   const row=products.find(p=>p.id===id);
+   if(!row)return reply([]);
+   return req.headers.accept?.includes('vnd.pgrst.object')?reply(row):reply([row]);
+  }
   if(pathname==='/rest/v1/tienda_configuracion'){
    if(settingsUnavailable)return reply({message:'Temporary fixture failure'},503);
    return reply({data:{require_recipient_dni:requiresDni,whatsapp:'541100000000',contact_email:'ventas@example.invalid'}});
@@ -52,6 +65,29 @@ const db=http.createServer(async (req,res)=>{
    return reply(verifiedSession);
   }
   if(pathname==='/rest/v1/tienda_admins')return authorized||passwordOnly?reply([{user_id:adminId}]):reply([]);
+  if(pathname==='/rest/v1/tienda_enlaces_pago'&&authorized){
+   if(req.method==='GET')return reply([...links.values()]);
+   const row=links.get(url.searchParams.get('product_id')?.slice(3));
+   if(!row||row.updated_at!==url.searchParams.get('updated_at')?.slice(3))return reply([]);
+   Object.assign(row,args);
+   return reply([row]);
+  }
+  if(pathname==='/rest/v1/rpc/tienda_adjust_stock_as_admin'&&authorized){
+   const row=products.find(p=>p.id===args.p_product_id);
+   const prior=movements.get(args.p_request_key);
+   if(prior)return reply(prior.new_quantity);
+   if(row.stock_quantity!==args.p_expected_quantity)return reply({message:'Stock changed'},409);
+   const now=new Date().toISOString();
+   const movement={id:randomUUID(),product_id:row.id,delta:args.p_delta,previous_quantity:row.stock_quantity,new_quantity:row.stock_quantity+args.p_delta,reason:args.p_reason,created_at:now};
+   movements.set(args.p_request_key,movement);
+   row.stock_quantity=movement.new_quantity;
+   row.updated_at=now;
+   return reply(row.stock_quantity);
+  }
+  if(pathname==='/rest/v1/tienda_stock_movimientos'&&authorized){
+   const row=movements.get(url.searchParams.get('request_key')?.slice(3));
+   return reply(row??[]);
+  }
   if(pathname==='/rest/v1/tienda_pedidos'&&authorized){
    const found=orders.get(url.searchParams.get('id')?.slice(3));
    if(!found)return reply([]);
@@ -67,6 +103,9 @@ const db=http.createServer(async (req,res)=>{
    return reply(true);
   }
   assert.equal(args.p_key,'a'.repeat(64));
+  if(pathname==='/rest/v1/rpc/tienda_payment_links'){
+   return reply(products.filter(p=>p.active&&p.available&&(!p.stock_tracking||p.stock_quantity>0)&&links.get(p.id)?.amount_ars===p.price).map(p=>links.get(p.id)));
+  }
   if(pathname==='/rest/v1/rpc/tienda_create_link_order'){
    creates++;
    const unique=args.p_visitor+args.p_request_key;
@@ -116,6 +155,8 @@ try{
  assert.match(form.body,/Consultar por WhatsApp/);
  assert.doesNotMatch(form.body,/_vercel\/insights/);
  assert.match((await request('/privacidad-de-compra')).body,/Datos que usamos/);
+ assert.match((await request('/')).body,/href="\/checkout\?producto=consumo-5"/);
+ assert.doesNotMatch((await request('/')).body,/href="\/checkout\?producto=consumo-10"/);
  for(const name of ['name','email','phone','province','city','postal_code','address','reference'])assert.ok(form.body.includes('name="'+name+'"'));
  const delivery_address={province:'Mendoza',city:'San Rafael',postal_code:'m5600aaa',address:'Calle de prueba 123',phone:'260 4000000',reference:'Departamento 2'};
  const order={name:'Persona de prueba',email:'qa@example.invalid',cart:[{id:product.id,quantity:1}],request_key:randomUUID(),expected_total_cents:product.price*100,delivery_address};
@@ -192,6 +233,31 @@ try{
  const adminCookie=cookiesFrom(verified);
  assert.ok(adminCookie,'MFA completion returned a session cookie');
  assert.equal((await request('/admin/seguridad',{cookie:adminCookie})).headers.location,'/admin');
+ const adjustment={product_id:bulk.id,delta:2,expected_quantity:0,reason:'Recuento de stock',request_key:randomUUID()};
+ assert.equal((await request('/api/admin/inventory',{body:adjustment,cookie:passwordCookie})).status,403);
+ const stock=await request('/api/admin/inventory',{body:adjustment,cookie:adminCookie});
+ assert.equal(stock.status,200,stock.body);
+ assert.equal(JSON.parse(stock.body).product.stock_quantity,2);
+ assert.equal(JSON.parse(stock.body).movement.new_quantity,2);
+ assert.equal((await request('/api/admin/inventory',{body:adjustment,cookie:adminCookie})).status,200);
+ assert.equal(movements.size,1,'A retry must reuse the original inventory movement');
+ assert.doesNotMatch((await request('/')).body,/href="\/checkout\?producto=consumo-10"/,'More stock cannot bypass a mismatched payment link');
+ const replacement={product_id:bulk.id,url:'https://mpago.la/FixtureNew',amount_ars:42000,expected_updated_at:links.get(bulk.id).updated_at};
+ const linkRoute='/api/admin/products/payment-link';
+ assert.equal((await request(linkRoute,{method:'PUT',body:replacement,cookie:passwordCookie})).status,403);
+ assert.equal((await request(linkRoute,{method:'PUT',body:{...replacement,url:'https://example.invalid/'},cookie:adminCookie})).status,400);
+ const changed=await request(linkRoute,{method:'PUT',body:replacement,cookie:adminCookie});
+ assert.equal(changed.status,200,changed.body);
+ assert.equal(JSON.parse(changed.body).link.amount_ars,bulk.price);
+ assert.equal((await request(linkRoute,{method:'PUT',body:replacement,cookie:adminCookie})).status,409);
+ for(const path of ['/','/producto/consumo-10']){
+  const page=await request(path);
+  assert.match(page.body,/href="\/checkout\?producto=consumo-10"/);
+  assert.doesNotMatch(page.body,/mpago\.la/);
+ }
+ const bulkCheckout=await request('/checkout?producto=consumo-10');
+ assert.match(bulkCheckout.body,/Datos de envío/);
+ assert.match(bulkCheckout.body,/42\.000/);
  const paid=await request('/api/admin/orders/payment',{body:confirm,cookie:adminCookie});
  assert.equal(paid.status,200,paid.body);
  assert.match((await request(redirect,{cookie:recoveredCookie})).body,/Pago aprobado/);
@@ -225,5 +291,5 @@ try{
  const privateView=await request(privateOrder,{cookie});
  assert.match(privateView.body,/Consultar por WhatsApp/);
  assert.doesNotMatch(privateView.body,/12345678|12\.345\.678|Calle de prueba 123|qa@example.invalid/);
- console.log('Checkout saved the address, recovered access in a new session, accepted a reported payment, required MFA for confirmation, and published synthetic tracking. No payment or email was sent.');
+ console.log('Checkout, order recovery and tracking passed. MFA protected stock adjustments and link edits; matching stock and price opened the checkout. No payment or email was sent.');
 }catch(e){console.error(e,logs);process.exitCode=1;}finally{server.kill('SIGTERM');db.close();}
