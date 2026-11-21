@@ -9,7 +9,7 @@ import {api,Modal,Message,Empty,date} from './shared';
 
 export default function Orders({orders,updated,verified,initialOrderId,testMode}:{orders:AdminOrder[];updated:(o:AdminOrder)=>void;verified:(o:AdminOrder)=>void;initialOrderId?:string;testMode:boolean}){
  const [search,setSearch]=useState(''),[status,setStatus]=useState('all'),[prep,setPrep]=useState('all'),[selected,setSelected]=useState<AdminOrder|null>(orders.find(o=>o.id===initialOrderId)??null);
- const shown=orders.filter(o=>(status==='all'||o.status===status)&&(prep==='all'||o.fulfillment_status===prep)&&[o.customer_name,o.customer_email,o.id,o.delivery_address?.city,o.tracking_code].join(' ').toLowerCase().includes(search.trim().toLowerCase()));
+ const shown=orders.filter(o=>(status==='all'||o.status===status)&&(prep==='all'||o.fulfillment_status===prep)&&[o.customer_name,o.customer_email,o.id,o.delivery_address?.city,o.link_reported_payment,o.link_verified_payment,o.tracking_code].join(' ').toLowerCase().includes(search.trim().toLowerCase()));
  return <>
   <div className="dash-section-heading act-heading"><div><p className="eyebrow">PAGO, PREPARACIÓN Y DESPACHO</p><h1>Pedidos</h1><p>Revisá los últimos 200 pedidos y registrá el seguimiento cuando despaches.</p></div>{testMode&&<span className="dash-badge gold">ENTORNO DE PRUEBAS</span>}</div>
   <div className="dash-note">El envío está incluido en el total. Desde el detalle podés copiar los datos del destinatario y registrar el envío que gestionaste por tu cuenta.</div>
@@ -19,23 +19,24 @@ export default function Orders({orders,updated,verified,initialOrderId,testMode}
    <select aria-label="Filtrar preparación" value={prep} onChange={e=>setPrep(e.target.value)}><option value="all">Toda la preparación</option>{Object.entries(fulfillmentLabels).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select>
   </div>
   {shown.length?<div className="dash-table-wrap"><table className="dash-table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Total</th><th>Pago</th><th>Preparación</th><th></th></tr></thead><tbody>{shown.map(o=><tr key={o.id}>
-   <td><strong>#{o.id.slice(0,8)}</strong><small>{date(o.created_at)}</small></td><td><strong>{o.customer_name}</strong><small>{[o.delivery_address?.city,o.delivery_address?.province].filter(Boolean).join(', ')||o.customer_email}</small></td><td>{money(o.total_cents/100)}</td><td><span className={'dash-badge '+(o.status==='approved'?'green':o.status==='rejected'?'red':'neutral')}>{paymentLabel(o.status,o.mode)}</span></td><td>{fulfillmentLabels[o.fulfillment_status]}</td><td><button className="dash-icon" type="button" aria-label={'Abrir pedido '+o.id.slice(0,8)} onClick={()=>setSelected(o)}><ChevronRight size={18}/></button></td>
+   <td><strong>#{o.id.slice(0,8)}</strong><small>{date(o.created_at)}</small></td><td><strong>{o.customer_name}</strong><small>{[o.delivery_address?.city,o.delivery_address?.province].filter(Boolean).join(', ')||o.customer_email}</small></td><td>{money(o.total_cents/100)}</td><td><span className={'dash-badge '+(o.status==='approved'?'green':o.status==='rejected'?'red':'neutral')}>{o.link_reported_payment&&o.status==='awaiting_payment'?'Pago informado':paymentLabel(o.status,o.mode)}</span></td><td>{fulfillmentLabels[o.fulfillment_status]}</td><td><button className="dash-icon" type="button" aria-label={'Abrir pedido '+o.id.slice(0,8)} onClick={()=>setSelected(o)}><ChevronRight size={18}/></button></td>
   </tr>)}</tbody></table></div>:<Empty title="No hay pedidos para mostrar." description="Probá con otro filtro o volvé cuando entre un pedido."/>}</div>
   {selected&&<OrderEditor order={selected} verified={verified} close={()=>setSelected(null)} saved={o=>{updated(o);setSelected(null);}}/>}
  </>;
 }
 function OrderEditor({order,close,saved,verified}:{order:AdminOrder;close:()=>void;saved:(o:AdminOrder)=>void;verified:(o:AdminOrder)=>void}){
  const [o,setO]=useState(order),[busy,setBusy]=useState(false),[error,setError]=useState(''),[copied,setCopied]=useState(false);
- const [checking,setChecking]=useState(false),[paymentMessage,setPaymentMessage]=useState(''),[paymentId,setPaymentId]=useState('');
+ const [checking,setChecking]=useState(false),[paymentMessage,setPaymentMessage]=useState(''),[paymentId,setPaymentId]=useState(order.link_reported_payment??''),[confirmed,setConfirmed]=useState(false);
+ const linkPayment=o.payment_flow==='payment_link';
  const address=o.delivery_address;
  async function verifyPayment(){
-  if(checking||busy)return;
+  if(checking||busy||(linkPayment&&(!confirmed||!/^\d{1,30}$/.test(paymentId.trim()))))return;
   setChecking(true);setError('');setPaymentMessage('');
   try{
-   const d=await api('orders/payment','POST',{id:o.id,...(paymentId.trim()?{payment_id:paymentId.trim()}:{})});
-   setO(old=>({...old,status:d.order.status}));
+   const d=await api('orders/payment','POST',{id:o.id,...(paymentId.trim()?{payment_id:paymentId.trim()}:{}),...(linkPayment?{manual_confirmed:confirmed}:{})});
+   setO(old=>({...old,status:d.order.status,link_reported_payment:d.order.link_reported_payment,link_verified_payment:d.order.link_verified_payment}));
    verified(d.order);
-   setPaymentMessage(d.matched?'Estado confirmado con Mercado Pago.':'Mercado Pago todavía no informó un pago para este pedido.');
+   setPaymentMessage(d.manual?'Pago confirmado en el pedido.':d.matched?'Estado confirmado con Mercado Pago.':'Mercado Pago todavía no informó un pago para este pedido.');
   }catch(e){setError(e instanceof Error?e.message:'No pudimos consultar Mercado Pago.');}
   finally{setChecking(false);}
  }
@@ -60,10 +61,17 @@ function OrderEditor({order,close,saved,verified}:{order:AdminOrder;close:()=>vo
    <div className="act-delivery">
     <h3>Pago en Mercado Pago</h3>
     <div className="dash-inline" style={{flexWrap:'wrap',marginTop:8}}>
-     <span className={'dash-badge '+(o.status==='approved'?'green':'neutral')}>{paymentLabel(o.status,o.mode)}</span>
-     <button className="dash-secondary small" type="button" onClick={verifyPayment} disabled={checking||busy}><RefreshCw size={15}/>{checking?'Consultando…':'Consultar estado del pago'}</button>
+     <span className={'dash-badge '+(o.status==='approved'?'green':'neutral')}>{o.link_reported_payment&&o.status==='awaiting_payment'?'Pago informado':paymentLabel(o.status,o.mode)}</span>
+     {!linkPayment&&<button className="dash-secondary small" type="button" onClick={verifyPayment} disabled={checking||busy}><RefreshCw size={15}/>{checking?'Consultando…':'Consultar estado del pago'}</button>}
     </div>
-    <details style={{marginTop:8}}><summary>Buscar por número de pago</summary><label>Número de pago en Mercado Pago<input value={paymentId} inputMode="numeric" maxLength={30} onChange={e=>setPaymentId(e.target.value)}/></label></details>
+    {linkPayment?<div className="act-link-payment">
+     {o.link_verified_payment?<p>Operación confirmada: {o.link_verified_payment}</p>:o.status==='awaiting_payment'&&o.fulfillment_status!=='cancelled'?<>
+      <p>Comprobá en Mercado Pago de Granja Atuel que la operación esté aprobada y que el importe sea {money(o.total_cents/100)}.</p>
+      <label>Número de operación<input value={paymentId} inputMode="numeric" maxLength={30} onChange={e=>{setPaymentId(e.target.value);setConfirmed(false);}} readOnly={!!o.link_reported_payment}/></label>
+      <label className="dash-inline"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/> Verifiqué la operación y el importe en Mercado Pago.</label>
+      <button className="dash-secondary small" type="button" onClick={verifyPayment} disabled={checking||busy||!confirmed||!/^\d{1,30}$/.test(paymentId.trim())}>{checking?'Confirmando…':'Confirmar pago'}</button>
+     </>:null}
+    </div>:<details style={{marginTop:8}}><summary>Buscar por número de pago</summary><label>Número de pago en Mercado Pago<input value={paymentId} inputMode="numeric" maxLength={30} onChange={e=>setPaymentId(e.target.value)}/></label></details>}
     {paymentMessage&&<p role="status">{paymentMessage}</p>}
    </div>
    <div className="act-delivery">

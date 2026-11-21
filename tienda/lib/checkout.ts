@@ -21,7 +21,7 @@ export function validateDeliveryAddress(value:unknown): DeliveryAddress {
 }
 export const statusLabels:Record<string,string>={awaiting_payment:'Esperando pago',pending:'Pago pendiente',approved:'Pago de prueba aprobado',rejected:'Pago rechazado',cancelled:'Pago cancelado',refunded:'Pago devuelto',charged_back:'Pago contracargado'};
 export function validateCheckout(b:Record<string,unknown>){
- if(typeof b.name!=='string'||b.name.trim().length<2||b.name.length>100||typeof b.email!=='string'||b.email.length>254||!/^\S+@\S+\.\S+$/.test(b.email))throw new Error('Revisá el nombre y el correo.');
+ if(typeof b.name!=='string'||b.name.trim().length<2||b.name.length>100||/[\x00-\x1F\x7F]/.test(b.name)||typeof b.email!=='string'||b.email.length>254||!/^\S+@\S+\.\S+$/.test(b.email))throw new Error('Revisá el nombre y el correo.');
  if(typeof b.request_key!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(b.request_key))throw new Error('Identificador de pedido inválido.');
  if(!Array.isArray(b.cart)||!b.cart.length||b.cart.length>20)throw new Error('Revisá tu carrito.');
  if(!Number.isSafeInteger(b.expected_total_cents)||Number(b.expected_total_cents)<100)throw new Error('Revisá el importe del pedido.');

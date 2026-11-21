@@ -53,3 +53,7 @@ export function validateProduct(input:unknown): Product {
   for(const field of dimensions) if(p[field]!==null && (typeof p[field]!=='number'||!Number.isInteger(p[field])||Number(p[field])<1||Number(p[field])>100000)) throw new Error('Peso y medidas deben ser enteros positivos o quedar vacíos.');
   return {id:p.id,name:p.name.trim(),description:p.description,category:p.category as Product['category'],price:p.price,image:p.image,active:p.active,available:p.available,weight_grams:p.weight_grams as number|null,height_cm:p.height_cm as number|null,width_cm:p.width_cm as number|null,length_cm:p.length_cm as number|null};
 }
+
+export function productInquiry(p:Product,whatsapp:string){
+ return 'https://wa.me/'+whatsapp+'?text='+encodeURIComponent('Hola, quería consultar por '+p.name+' · '+p.description+'.');
+}
