@@ -25,3 +25,11 @@ test('the dashboard-verified sandbox collector may report live_mode true; other 
  assert.equal(validPayment({...payment,live_mode:undefined},order,'3450457878'),false);
  for(const mismatch of [{external_reference:'other'},{transaction_amount:1},{currency_id:'USD'}])assert.equal(validPayment({...payment,...mismatch},order,'3450457878'),false);
 });
+
+test('checkout collects the recipient DNI only when the delivery setting requires it',()=>{
+ const withDni={...body,delivery_address:{...body.delivery_address,dni:'12.345.678'}};
+ assert.equal(validateCheckout(withDni,true).delivery_address.dni,'12345678');
+ assert.ok(!Object.hasOwn(validateCheckout(withDni).delivery_address,'dni'));
+ for(const dni of [undefined,'','00000000','20-12345678-1','123456789','1234','DNI 12345678',12345678])
+  assert.throws(()=>validateCheckout({...body,delivery_address:{...body.delivery_address,dni}},true),/DNI de quien recibe/);
+});

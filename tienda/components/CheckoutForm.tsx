@@ -6,7 +6,7 @@ import {Truck} from 'lucide-react';
 import {money,normalizeCart,summarizeCart,stockLimit,type Product,type CartLine} from '@/lib/catalog';
 import {provinces} from '@/lib/checkout';
 
-export default function CheckoutForm({products,fixedProductId,enabled,testMode,help}:{products:Product[];fixedProductId?:string;enabled:boolean;testMode:boolean;help:string}){
+export default function CheckoutForm({products,fixedProductId,enabled,testMode,requiresDni,help}:{products:Product[];fixedProductId?:string;enabled:boolean;testMode:boolean;requiresDni:boolean;help:string}){
  const [savedCart,setSavedCart]=useState<CartLine[]>([]),[loaded,setLoaded]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const attempt=useRef({body:'',key:''}),sending=useRef(false);
  const cart=fixedProductId?[{id:fixedProductId,quantity:1}]:savedCart;
@@ -17,7 +17,7 @@ export default function CheckoutForm({products,fixedProductId,enabled,testMode,h
   e.preventDefault();if(!enabled||changed||sending.current)return;
   const f=new FormData(e.currentTarget);
   setError('');setBusy(true);sending.current=true;
-  const body={name:f.get('name'),email:f.get('email'),cart,expected_total_cents:total*100,delivery_address:Object.fromEntries(['province','city','postal_code','address','phone','reference'].map(k=>[k,f.get(k)]))};
+  const body={name:f.get('name'),email:f.get('email'),cart,expected_total_cents:total*100,delivery_address:Object.fromEntries(['province','city','postal_code','address','phone','reference',...(requiresDni?['dni']:[])].map(k=>[k,f.get(k)]))};
   const signature=JSON.stringify(body);
   if(signature!==attempt.current.body)attempt.current={body:signature,key:crypto.randomUUID()};
   try{
@@ -41,6 +41,10 @@ export default function CheckoutForm({products,fixedProductId,enabled,testMode,h
    {testMode?<p className="inc-small">Usá datos ficticios. Esta compra no genera una entrega ni reserva productos reales.</p>:<p className="inc-small">Ingresá los datos de quien va a recibir el pedido. Los usaremos para gestionar la entrega.</p>}
    <fieldset disabled={!enabled||busy}>
     <label>Nombre y apellido<input name="name" required minLength={2} maxLength={100} autoComplete="shipping name"/></label>
+    {requiresDni&&<label>DNI de quien recibe
+     <input name="dni" required inputMode="numeric" autoComplete="off" maxLength={12} aria-describedby="dni-help"/>
+     <small id="dni-help">Ingresá solo el número. Lo usamos para preparar el envío con el transportista.</small>
+    </label>}
     <label>Correo electrónico<input name="email" required type="email" maxLength={254} autoComplete="shipping email"/></label>
     <label>Teléfono<input name="phone" type="tel" required minLength={6} maxLength={32} autoComplete="shipping tel"/></label>
     <div className="checkout-field-row">

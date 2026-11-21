@@ -9,13 +9,16 @@ import {seedProducts} from '../lib/catalog.ts';
 const activeHost='www.granjaatuel.com.ar',origin='https://'+activeHost,port=3105;
 const product=seedProducts.find(p=>p.id==='consumo-5');
 const orders=new Map(),requestKeys=new Map();
-let creates=0;
+let creates=0,requiresDni=false,settingsUnavailable=false;
 const db=http.createServer(async (req,res)=>{
  try{
   const pathname=new URL(req.url,'http://localhost').pathname;
   const reply=(x,status=200)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(x));};
   if(pathname==='/rest/v1/tienda_productos')return reply([product]);
-  if(pathname==='/rest/v1/tienda_configuracion')return reply({data:{}});
+  if(pathname==='/rest/v1/tienda_configuracion'){
+   if(settingsUnavailable)return reply({message:'Temporary fixture failure'},503);
+   return reply({data:{require_recipient_dni:requiresDni,whatsapp:'541100000000',contact_email:'ventas@example.invalid'}});
+  }
   if(pathname==='/rest/v1/tienda_contenidos')return reply([]);
   const chunks=[];
   for await(const chunk of req)chunks.push(chunk);
@@ -61,7 +64,7 @@ try{
  for(let i=0;i<45;i++){try{await request('/robots.txt');online=true;break;}catch{await new Promise(r=>setTimeout(r,200));}}
  assert.ok(online);
  const form=await request('/checkout?producto=consumo-5');
- assert.equal(form.status,200);assert.match(form.body,/Datos de envío/);assert.doesNotMatch(form.body,/compra en línea no está disponible|mpago\.la/);
+ assert.equal(form.status,200);assert.match(form.body,/Datos de envío/);assert.doesNotMatch(form.body,/compra en línea no está disponible|mpago\.la|name="dni"/);
  for(const name of ['name','email','phone','province','city','postal_code','address','reference'])assert.ok(form.body.includes('name="'+name+'"'));
  const delivery_address={province:'Mendoza',city:'San Rafael',postal_code:'m5600aaa',address:'Calle de prueba 123',phone:'260 4000000',reference:'Departamento 2'};
  const order={name:'Persona de prueba',email:'qa@example.invalid',cart:[{id:product.id,quantity:1}],request_key:randomUUID(),expected_total_cents:product.price*100,delivery_address};
@@ -70,7 +73,7 @@ try{
  assert.equal((await request('/api/checkout',{body:{...order,expected_total_cents:100}})).status,409);
  assert.equal((await request('/api/checkout',{body:{...order,cart:[{id:product.id,quantity:2}]}})).status,409);
  assert.equal(creates,0);
- const create=await request('/api/checkout',{body:order});
+ const create=await request('/api/checkout',{body:{...order,delivery_address:{...delivery_address,dni:'12.345.678'}}});
  assert.equal(create.status,200,create.body);
  const {redirect}=JSON.parse(create.body);
  const [setCookie]=create.headers['set-cookie'],cookie=setCookie.split(';')[0];
@@ -86,6 +89,13 @@ try{
  const review=await request(redirect,{cookie});
  assert.match(review.body,/Los datos de envío ya quedaron guardados/);assert.match(review.body,/Continuar a Mercado Pago/);
  assert.doesNotMatch(review.body,/Calle de prueba 123|qa@example.invalid|mpago\.la/);
+ const reference='#'+redirect.split('/').at(-1).slice(0,8);
+ const chat=review.body.match(/href="(https:\/\/wa\.me\/541100000000\?text=[^"]+)"/)?.[1];
+ assert.ok(chat);
+ assert.equal(new URL(chat).searchParams.get('text'),'Hola, quisiera consultar por el pedido '+reference+'.');
+ assert.match(review.body,/href="mailto:ventas@example\.invalid\?subject=Consulta%20por%20el%20pedido%20%23[a-f0-9]{8}"/);
+ assert.doesNotMatch((await request(redirect)).body,/Consultar por WhatsApp|Escribinos por correo/);
+
  const pay=await request(redirect+'/pagar',{cookie});
  assert.equal(pay.status,303);assert.equal(pay.headers.location,'https://mpago.la/11TRxkJ');
  assert.equal(pay.headers['referrer-policy'],'no-referrer');
@@ -96,5 +106,25 @@ try{
  const noSecondPayment=await request(redirect+'/pagar',{cookie});
  assert.equal(noSecondPayment.status,303);assert.doesNotMatch(noSecondPayment.headers.location,/mpago\.la/);
  assert.equal(stored.summary.status,'awaiting_payment');
- console.log('Shipping checkout: destination saved first, errors stay on-site, payment handoff is private, reported operations are not approved.');
+ assert.match((await request(redirect,{cookie})).body,/Consultar por WhatsApp/);
+
+ requiresDni=true;
+ const withDni=await request('/checkout?producto=consumo-5');
+ assert.match(withDni.body,/<input[^>]*required=""[^>]*name="dni"/);
+ const beforeDni=creates;
+ const newOrder={...order,request_key:randomUUID()};
+ assert.equal((await request('/api/checkout',{body:newOrder,cookie})).status,400);
+ assert.equal((await request('/api/checkout',{body:{...newOrder,delivery_address:{...delivery_address,dni:'abc'}},cookie})).status,400);
+ settingsUnavailable=true;
+ assert.equal((await request('/api/checkout',{body:newOrder,cookie})).status,503);
+ assert.equal(creates,beforeDni);
+ settingsUnavailable=false;
+ const complete=await request('/api/checkout',{body:{...newOrder,delivery_address:{...delivery_address,dni:'12.345.678'}},cookie});
+ assert.equal(complete.status,200,complete.body);
+ const privateOrder=JSON.parse(complete.body).redirect;
+ assert.equal(orders.get(privateOrder.split('/').at(-1)).args.p_delivery.dni,'12345678');
+ const privateView=await request(privateOrder,{cookie});
+ assert.match(privateView.body,/Consultar por WhatsApp/);
+ assert.doesNotMatch(privateView.body,/12345678|12\.345\.678|Calle de prueba 123|qa@example.invalid/);
+ console.log('Shipping checkout: payment requires a saved address, DNI follows the current store setting, and support links share only the short reference.');
 }catch(e){console.error(e,logs);process.exitCode=1;}finally{server.kill('SIGTERM');db.close();}

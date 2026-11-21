@@ -12,3 +12,8 @@
 - El cliente completa el domicilio antes de pagar. Puede informar el número de operación al volver desde Mercado Pago. Los datos de envío quedan en **Pedidos**.
 - Compará el número, el pagador y el importe con la operación aprobada en la cuenta de Granja Atuel. Confirmá el pago en el pedido y cargá el seguimiento cuando despaches. Un número confirmado no puede usarse en otro pedido.
 - Los enlaces fijos permiten una presentación por pedido. Checkout Pro conserva su verificación automática y el carrito cuando se habilita en producción.
+
+## Atención y datos de envío
+
+- En la ficha privada del pedido, WhatsApp y el correo de contacto usan los datos de **Portada y contacto**. La consulta se abre con la referencia corta del pedido.
+- En **Portada y contacto → Datos de envío**, activá **Pedir DNI de quien recibe** si tu operador lo necesita para el despacho. Se solicita en los próximos pedidos y se consulta en el detalle de entrega del panel.
