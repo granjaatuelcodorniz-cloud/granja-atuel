@@ -11,11 +11,12 @@ test('production credentials cannot open checkout in preview or open live checko
  assert.equal(paymentConfig(preview)?.token,'fixture-test');
  assert.equal(paymentConfig({...preview,MERCADOPAGO_TEST_SELLER_ID:'99'}),null);
  assert.equal(paymentConfig({...preview,MERCADOPAGO_MODE:'production',MERCADOPAGO_ENABLE_PRODUCTION:'true'}),null);
- const live={...base,VERCEL_ENV:'production',MERCADOPAGO_MODE:'production'};
+ const live={...base,VERCEL_ENV:'production',MERCADOPAGO_MODE:'production',ATUEL_PUBLIC_SITE:'true'};
  const config=paymentConfig(live);
  assert.equal(config?.token,'fixture-production');
  assert.equal(checkoutAvailable(config,live),false);
  assert.equal(checkoutAvailable(config,{...live,MERCADOPAGO_ENABLE_PRODUCTION:'true'}),true);
+ assert.equal(checkoutAvailable(config,{...live,MERCADOPAGO_ENABLE_PRODUCTION:'true',ATUEL_PUBLIC_SITE:'false'}),false);
  assert.equal(paymentConfig({...live,MERCADOPAGO_PRODUCTION_WEBHOOK_SECRET:''}),null);
  assert.equal(paymentConfig({...live,MERCADOPAGO_PRODUCTION_ACCESS_TOKEN:''}),null);
 });

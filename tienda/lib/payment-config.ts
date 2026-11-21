@@ -14,7 +14,7 @@ export function shopMode(env:PaymentEnvironment):PaymentMode {
 
 // Production always needs the separate credentials and an explicit switch.
 export function checkoutAvailable(config:PaymentConfig|null,env:PaymentEnvironment):boolean {
- return !!config&&(config.mode==='test'||env.MERCADOPAGO_ENABLE_PRODUCTION==='true');
+ return !!config&&(config.mode==='test'||(env.ATUEL_PUBLIC_SITE==='true'&&env.MERCADOPAGO_ENABLE_PRODUCTION==='true'));
 }
 export function paymentConfig(env:PaymentEnvironment):PaymentConfig|null {
  if(!env.SUPABASE_SECRET_KEY?.trim()||!env.NEXT_PUBLIC_SUPABASE_URL)return null;

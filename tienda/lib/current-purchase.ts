@@ -1,9 +1,8 @@
 import 'server-only';
-import {checkoutAvailable} from './payment-config';
-import {currentPaymentConfig} from './order-server';
 import {publicRelease,type PurchaseMode} from './site-release';
 
 export function getPurchaseMode():PurchaseMode {
  if(!publicRelease())return 'test';
- return checkoutAvailable(currentPaymentConfig(),process.env)?'checkout':'links';
+ // Keep new orders in the selected payment flow if a credential becomes unavailable.
+ return process.env.MERCADOPAGO_ENABLE_PRODUCTION==='true'?'checkout':'links';
 }
